@@ -26,45 +26,31 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useContext, useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { ThemeContext } from "../../../theme/ThemeContext";
 
 const DoccumentUpload = () => {
+  const { regCrmClient, setRegCrmClient } = useContext(ThemeContext);
+  const navigate = useNavigate();
+
+  let cid = JSON.parse(sessionStorage.getItem("cid"));
   //store array
   const [file, setFile] = useState("");
+
   //store array
-  const [documents, setDocuments] = useState([
-    {
-      type: "PDF",
-      name: "Screen Shot",
-      timestamps: new Date().getTime(),
-      size: 1.2,
-    },
-    {
-      type: "PNG",
-      name: "Screen Shot",
-      timestamps: new Date().getTime(),
-      size: 2,
-    },
-    {
-      type: "Word",
-      name: "Screen Shot",
-      timestamps: new Date().getTime(),
-      size: 3,
-    },
-    {
-      type: "Excel",
-      name: "Screen Shot",
-      timestamps: new Date().getTime(),
-      size: 2.2,
-    },
-    {
-      type: "JPG",
-      name: "Screen Shot",
-      timestamps: new Date().getTime(),
-      size: 5,
-    },
-  ]);
+  const [documents, setDocuments] = useState([]);
+  const [edit, setEdit] = useState(false);
+
+  useEffect(() => {
+    let editData = JSON.parse(sessionStorage.getItem("edit-data"));
+    if (editData?.id) {
+      setEdit(true);
+      if (editData?.documents) {
+        setDocuments([...editData?.documents]);
+      }
+    }
+  }, []);
 
   const insuranceType = [
     {
@@ -95,9 +81,75 @@ const DoccumentUpload = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   //add member function
-  const handleAddMember = () => {};
+  const handleAddMember = () => {
+    const myHeaders = new Headers();
+    myHeaders.append("x-api-key", "5cf783e5-51a5-4dcc-9bc5-0b9a414c88a3");
+    if (!file) {
+      alert("file not selected");
+      return;
+    }
+    if (file) {
+      const MAX_SIZE = 20 * 1024 * 1024;
+      if (file?.size > MAX_SIZE) {
+        // If file size is too large, update error state
+        alert("File size should not exceed 20MB.");
+        setFile(null);
+        return;
+      }
+    }
+    const formdata = new FormData();
+    formdata.append("file", file);
+
+    const requestOptions = {
+      method: "POST",
+      headers: myHeaders,
+      body: formdata,
+      redirect: "follow",
+    };
+    if (doccument?.name && doccument?.type) {
+      fetch("https://db.enivesh.com/storage/upload-file", requestOptions)
+        .then((response) => response.json())
+        .then((result) => {
+          console.log(result);
+          setDocuments([
+            ...documents,
+            {
+              ...doccument,
+              ...result,
+            },
+          ]);
+        })
+        .catch((error) => console.error(error));
+    } else {
+      alert("All field Required");
+    }
+  };
   //add member function
-  const handleDeleteMember = (e) => {};
+  const handleDeleteMember = (path, i) => {
+    const myHeaders = new Headers();
+    myHeaders.append("x-api-key", "5cf783e5-51a5-4dcc-9bc5-0b9a414c88a3");
+    myHeaders.append("Content-Type", "application/json");
+
+    const raw = JSON.stringify({
+      fileName: path,
+    });
+
+    const requestOptions = {
+      method: "DELETE",
+      headers: myHeaders,
+      body: raw,
+      redirect: "follow",
+    };
+
+    fetch("https://db.enivesh.com/storage/delete", requestOptions)
+      .then((response) => response.text())
+      .then((result) => {
+        console.log(result);
+        const newDocuments = documents.filter((_, index) => index !== i);
+        setDocuments(newDocuments);
+      })
+      .catch((error) => console.error(error));
+  };
 
   //open add member form control
   const handleOpenForm = () => {
@@ -112,6 +164,38 @@ const DoccumentUpload = () => {
     const month = date.getMonth() + 1; // Months are 0-indexed
     const day = date.getDate();
     return `${day}/${month}/${year}`;
+  };
+
+  const handleSubmit = () => {
+    const myHeaders = new Headers();
+    myHeaders.append("x-api-key", "5cf783e5-51a5-4dcc-9bc5-0b9a414c88a3");
+    myHeaders.append("Content-Type", "application/json");
+
+    const raw = JSON.stringify({
+      documents,
+    });
+
+    const requestOptions = {
+      method: "PUT",
+      headers: myHeaders,
+      body: raw,
+      redirect: "follow",
+    };
+    if (cid && documents?.length > 0) {
+      fetch(
+        `https://db.enivesh.com/firestore/single/crm_clients/${cid}`,
+        requestOptions
+      )
+        .then((response) => response.text())
+        .then((result) => {
+          alert(edit ? "Updated" : "added");
+          setDocuments([]);
+          navigate("/crm/profile");
+        })
+        .catch((error) => console.error(error));
+    } else {
+      alert("Documents Not add");
+    }
   };
 
   return (
@@ -160,9 +244,11 @@ const DoccumentUpload = () => {
                     <Select
                       labelId="demo-simple-select-label"
                       id="demo-simple-select"
-                      // value={age}
+                      value={doccument?.type}
                       label="  Insurance Type  "
-                      // onChange={handleChange}
+                      onChange={(e) =>
+                        setDoccument({ ...doccument, type: e.target.value })
+                      }
                     >
                       {insuranceType?.map((item, index) => (
                         <MenuItem key={index} value={item?.value}>
@@ -192,7 +278,9 @@ const DoccumentUpload = () => {
                     label="File Name"
                     placeholder="File Name"
                     size="small"
-                    onChange={(e) => setFile(e.target.files[0])}
+                    onChange={(e) =>
+                      setDoccument({ ...doccument, name: e.target.value })
+                    }
                     fullWidth
                   />
                 </Grid2>
@@ -225,7 +313,7 @@ const DoccumentUpload = () => {
         )}
         <Grid2 size={{ xs: 12 }}>
           <Typography variant="subtitle2" color="grey">
-            Members
+            Documents
           </Typography>
           <TableContainer
             component={Paper}
@@ -281,7 +369,7 @@ const DoccumentUpload = () => {
                       <Button
                         size="small"
                         color="error"
-                        onClick={(e) => handleDeleteMember(index)}
+                        onClick={(e) => handleDeleteMember(item?.path, index)}
                       >
                         <Delete />
                       </Button>
@@ -293,28 +381,43 @@ const DoccumentUpload = () => {
           </TableContainer>
         </Grid2>
         <Grid2 size={{ xs: 6, md: 9 }} my={{ xs: 2, md: 3 }}>
-          <Button
-            startIcon={<ArrowBack />}
-            fullWidth
-            color="inherit"
-            variant="outlined"
-            sx={{ maxWidth: 200 }}
-            component={Link}
-            to={-1}
-          >
-            Back
-          </Button>
+          {isOpen ? (
+            <Button
+              startIcon={<ArrowBack />}
+              fullWidth
+              color="info"
+              variant="outlined"
+              sx={{ maxWidth: 200 }}
+              onClick={() => setIsOpen(false)}
+            >
+              Back
+            </Button>
+          ) : (
+            <Button
+              startIcon={<ArrowBack />}
+              fullWidth
+              color="inherit"
+              variant="outlined"
+              sx={{ maxWidth: 200 }}
+              component={Link}
+              to={-1}
+            >
+              Back
+            </Button>
+          )}
         </Grid2>
         {!isOpen && (
           <Grid2 size={{ xs: 6, md: 3 }} my={{ xs: 2, md: 3 }}>
             <Button
               startIcon={<Save />}
               fullWidth
-              color="info"
+              color={edit ? "success" : "info"}
               variant="contained"
               sx={{ maxWidth: 200 }}
+              onClick={() => handleSubmit()}
+              disabled={documents?.length === 0}
             >
-              Save{" "}
+              {edit ? "Update" : "Save"}
             </Button>
           </Grid2>
         )}

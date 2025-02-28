@@ -10,10 +10,82 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useContext, useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { ThemeContext } from "../../../theme/ThemeContext";
 
 const BankDetails = () => {
+  const { regCrmClient, setRegCrmClient } = useContext(ThemeContext);
+  let cid = JSON.parse(sessionStorage.getItem("cid"));
+  const [edit, setEdit] = useState(false);
+  useEffect(() => {
+    let editData = JSON.parse(sessionStorage.getItem("edit-data"));
+    if (editData?.id) {
+      setEdit(true);
+      if (editData?.bank) {
+        setFormData({ ...editData?.bank });
+      }
+    }
+  }, []);
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({
+    cid: "",
+    acNumber: "",
+    bankName: "",
+    acCreationDate: "",
+    relationshipDate: "",
+    clientTag: "",
+    custmerStatus: "",
+  });
+
+  const handleSubmit = () => {
+    const myHeaders = new Headers();
+    myHeaders.append("x-api-key", "5cf783e5-51a5-4dcc-9bc5-0b9a414c88a3");
+    myHeaders.append("Content-Type", "application/json");
+
+    const raw = JSON.stringify({
+      bank: { ...formData },
+    });
+
+    const requestOptions = {
+      method: "PUT",
+      headers: myHeaders,
+      body: raw,
+      redirect: "follow",
+    };
+    if (
+      cid &&
+      formData?.bankName &&
+      formData?.acNumber &&
+      formData?.acCreationDate &&
+      formData?.relationshipDate &&
+      formData?.clientTag &&
+      formData?.custmerStatus
+    ) {
+      fetch(
+        `https://db.enivesh.com/firestore/single/crm_clients/${cid}`,
+        requestOptions
+      )
+        .then((response) => response.text())
+        .then((result) => {
+          alert(edit ? "Updated" : "Added");
+          setFormData({
+            acNumber: "",
+            bankName: "",
+            acCreationDate: "",
+            relationshipDate: "",
+            clientTag: "",
+            custmerStatus: "",
+          });
+          navigate("/crm/documents");
+        })
+        .catch((error) => console.error(error));
+    } else {
+      alert("All Field Required");
+    }
+  };
+
   return (
     <Container>
       <Grid2 container spacing={{ xs: 2, md: 3 }} px={2}>
@@ -35,8 +107,12 @@ const BankDetails = () => {
             name=""
             placeholder="Bank Name"
             label="Bank Name"
+            value={formData?.bankName}
             size="small"
             fullWidth
+            onChange={(e) =>
+              setFormData({ ...formData, bankName: e.target.value })
+            }
           />
         </Grid2>
         <Grid2 size={{ xs: 12 }}>
@@ -46,7 +122,11 @@ const BankDetails = () => {
             placeholder="Bank Account Number"
             label="Bank Account Number"
             size="small"
+            value={formData.acNumber}
             fullWidth
+            onChange={(e) =>
+              setFormData({ ...formData, acNumber: e.target.value })
+            }
           />
         </Grid2>
         <Grid2 size={{ xs: 12 }}>
@@ -57,6 +137,10 @@ const BankDetails = () => {
             name=""
             placeholder="Account Creation Date"
             label="Account Creation Date"
+            value={formData?.acCreationDate}
+            onChange={(e) =>
+              setFormData({ ...formData, acCreationDate: e.target.value })
+            }
             size="small"
             fullWidth
           />
@@ -68,7 +152,11 @@ const BankDetails = () => {
             color="#777"
             name=""
             placeholder="Relationship Date"
+            onChange={(e) =>
+              setFormData({ ...formData, relationshipDate: e.target.value })
+            }
             label="Relationship Date"
+            value={formData?.relationshipDate}
             size="small"
             fullWidth
           />
@@ -79,9 +167,11 @@ const BankDetails = () => {
             <Select
               labelId="demo-simple-select-label"
               id="demo-simple-select"
-              // value={age}
+              value={formData?.clientTag}
               label="Client Tag"
-              // onChange={handleChange}
+              onChange={(e) =>
+                setFormData({ ...formData, clientTag: e.target.value })
+              }
             >
               <MenuItem value={10}>Tag1</MenuItem>
               <MenuItem value={20}>Tag2</MenuItem>
@@ -97,9 +187,11 @@ const BankDetails = () => {
             <Select
               labelId="demo-simple-select-label"
               id="demo-simple-select"
-              // value={age}
+              value={formData?.custmerStatus}
               label=" Customer Status"
-              // onChange={handleChange}
+              onChange={(e) =>
+                setFormData({ ...formData, custmerStatus: e.target.value })
+              }
             >
               <MenuItem value={10}>Status1</MenuItem>
               <MenuItem value={20}>Status2</MenuItem>
@@ -124,11 +216,12 @@ const BankDetails = () => {
           <Button
             startIcon={<Save />}
             fullWidth
-            color="info"
+            onClick={() => handleSubmit()}
+            color={edit ? "success" : "info"}
             variant="contained"
             sx={{ maxWidth: 200 }}
           >
-            Save{" "}
+            {edit ? "Update" : "Save"}
           </Button>
         </Grid2>
       </Grid2>

@@ -11,11 +11,16 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import HeadlineTag from "../../components/options/HeadlineTag";
+import { collection, onSnapshot } from "firebase/firestore";
+import { firestore } from "../../firebase/config";
+import { ProductionQuantityLimitsSharp } from "@mui/icons-material";
 import { Link } from "react-router-dom";
 
 const Subscriptions = () => {
+  const [data, setData] = useState([]);
+
   const [alert, setAlert] = useState({
     alertType: "",
     alertMsg: "",
@@ -34,24 +39,8 @@ const Subscriptions = () => {
 
   const handleSubmit = async () => {
     const myHeaders = new Headers();
-    // myHeaders.append("Origin", "http://localhost:5173");
+
     myHeaders.append("x-api-key", "5cf783e5-51a5-4dcc-9bc5-0b9a414c88a3");
-    myHeaders.append("Content-Type", "application/json");
-
-    const raw = JSON.stringify({
-      collectionName: "subscription",
-      data: {
-        ...formData,
-        timestamp: new Date().getTime(),
-      },
-    });
-
-    const requestOptions = {
-      method: "POST",
-      headers: myHeaders,
-      body: raw,
-      redirect: "follow",
-    };
 
     if (
       formData?.amount > 0 &&
@@ -60,21 +49,72 @@ const Subscriptions = () => {
       formData?.renewalDate &&
       formData?.serviceTakenFor
     ) {
-      fetch("https://db.enivesh.com/firestore/add", requestOptions)
+      const formdata = new FormData();
+      formdata.append(
+        "file",
+        formData?.bill,
+        "postman-cloud:///1efb1536-cd67-4290-be90-c318af78c49e"
+      );
+
+      const requestOptions = {
+        method: "POST",
+        headers: myHeaders,
+        body: formdata,
+        redirect: "follow",
+      };
+
+      fetch("https://db.enivesh.com/storage/upload-file", requestOptions)
         .then((response) => response.json())
         .then((result) => {
-          setAlert({
-            alertMsg: ` ${result?.message} : ${result?.docId} `,
-            alertType: "success",
-          });
+          {
+            const myHeaders1 = new Headers();
+            myHeaders1.append(
+              "x-api-key",
+              "5cf783e5-51a5-4dcc-9bc5-0b9a414c88a3"
+            );
+            myHeaders1.append("Content-Type", "application/json");
+            const raw = JSON.stringify({
+              collectionName: "subscription",
+              data: {
+                ...formData,
+                bill: result,
+                timestamp: new Date().getTime(),
+              },
+            });
+
+            const requestOptions = {
+              method: "POST",
+              headers: myHeaders1,
+              body: raw,
+              redirect: "follow",
+            };
+            fetch("https://db.enivesh.com/firestore/add", requestOptions)
+              .then((response) => response.json())
+              .then((result) => {
+                setAlert({
+                  alertMsg: ` ${result?.message} : ${result?.docId} `,
+                  alertType: "success",
+                });
+                setFormData({
+                  companyName: "",
+                  subscriptionDate: "",
+                  amount: 0,
+                  renewalDate: "",
+                  gstAmount: 0,
+                  paymentDetails: "",
+                  serviceTakenFor: "",
+                  bill: "",
+                });
+              })
+              .catch((error) => {
+                setAlert({
+                  alertMsg: `Failled`,
+                  alertType: "error",
+                });
+              });
+          }
         })
-        .catch((error) => {
-          console.error(error);
-          setAlert({
-            alertMsg: `Failled`,
-            alertType: "error",
-          });
-        });
+        .catch((error) => console.error(error));
     } else {
       console.error("Form Not FiIlled");
       setAlert({
@@ -83,7 +123,22 @@ const Subscriptions = () => {
       });
     }
   };
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      collection(firestore, "subscription"),
+      (snapshot) => {
+        const asets = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
 
+        setData(asets);
+      }
+    );
+
+    // Cleanup function to unsubscribe from real-time listener when the component unmounts
+    return () => unsubscribe();
+  }, []);
   return (
     <>
       {alert?.alertMsg && (
@@ -101,47 +156,116 @@ const Subscriptions = () => {
         <Grid2 size={{ xs: 12, md: 6 }}>
           <Paper elevation={0} sx={{ p: 2 }}>
             <HeadlineTag>Subscriptions</HeadlineTag>
-            {/* <Box my={2}>
-            <Card elevation={0} variant="outlined">
-              <CardContent>
-                <Stack
-                  flexDirection={"row"}
-                  alignItems={"center"}
-                  justifyContent={"flex-start"}
-                  gap={3}
-                >
-                  <Stack
-                    justifyContent={"center"}
-                    gap={2}
-                    alignItems={"center"}
-                  >
-                    <Avatar />
-                    <Typography variant="subtitle2" color="info">
-                      Hostinger VPS Server
-                    </Typography>
-                  </Stack>
-                  <Box>
-                    <Stack flexDirection={"row"} alignItems={"center"} gap={2}>
-                      <Typography variant="caption" color="grey">
-                        Renewal Date
-                      </Typography>
-                      <Typography variant="body2" color="initial">
-                        12/02/2025{" "}
-                      </Typography>
+            {data?.map((d, i) => (
+              <Box key={i} my={2}>
+                <Card elevation={0} variant="outlined">
+                  <CardContent>
+                    <Stack
+                      flexDirection={"row"}
+                      alignItems={"center"}
+                      justifyContent={"flex-start"}
+                      gap={3}
+                    >
+                      <Stack
+                        justifyContent={"center"}
+                        gap={2}
+                        alignItems={"center"}
+                      >
+                        <Avatar>
+                          <ProductionQuantityLimitsSharp />
+                        </Avatar>
+                        <Typography variant="subtitle2" color="info">
+                          {d?.companyName}
+                        </Typography>
+                      </Stack>
+                      <Box>
+                        <Stack
+                          flexDirection={"row"}
+                          alignItems={"center"}
+                          gap={2}
+                        >
+                          <Typography variant="caption" color="grey">
+                            Date Of Purchase
+                          </Typography>
+                          <Typography variant="body2" color="initial">
+                            {d?.subscriptionDate}
+                          </Typography>
+                        </Stack>
+
+                        <Stack
+                          flexDirection={"row"}
+                          alignItems={"center"}
+                          gap={2}
+                        >
+                          <Typography variant="caption" color="grey">
+                            Amount
+                          </Typography>
+                          <Typography variant="body2" color="initial">
+                            {d?.amount}
+                          </Typography>
+                        </Stack>
+
+                        <Stack
+                          flexDirection={"row"}
+                          alignItems={"center"}
+                          gap={2}
+                        >
+                          <Typography variant="caption" color="grey">
+                            Renewal Date
+                          </Typography>
+                          <Typography variant="body2" color="grey">
+                            {d?.renewalDate}{" "}
+                          </Typography>
+                        </Stack>
+
+                        <Stack
+                          flexDirection={"row"}
+                          alignItems={"center"}
+                          gap={2}
+                        >
+                          <Typography variant="caption" color="grey">
+                            Service For
+                          </Typography>
+                          <Typography variant="body2" color="grey">
+                            {d?.serviceTakenFor}
+                          </Typography>
+                        </Stack>
+                        <Stack
+                          flexDirection={"row"}
+                          alignItems={"center"}
+                          gap={2}
+                        >
+                          <Typography variant="caption" color="grey">
+                            Payment Details
+                          </Typography>
+                          <Typography variant="body2" color="grey">
+                            {d?.paymentDetails}
+                          </Typography>
+                        </Stack>
+                        <Stack
+                          flexDirection={"row"}
+                          alignItems={"center"}
+                          gap={2}
+                        >
+                          <Typography variant="caption" color="grey">
+                            Invoice Link
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            component={Link}
+                            color="info"
+                            target="_blank"
+                            to={d?.bill?.url}
+                          >
+                            Click Me
+                          </Typography>
+                        </Stack>
+                      </Box>
                     </Stack>
-                    <Stack flexDirection={"row"} alignItems={"center"} gap={2}>
-                      <Typography variant="caption" color="grey">
-                        Invoice Link
-                      </Typography>
-                      <Typography variant="body2" component={Link} color="info">
-                        Click Me
-                      </Typography>
-                    </Stack>
-                  </Box>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Box> */}
+                  </CardContent>
+                </Card>
+              </Box>
+            ))}
           </Paper>
         </Grid2>
         <Grid2 size={{ xs: 12, md: 6 }}>

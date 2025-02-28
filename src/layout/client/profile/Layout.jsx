@@ -1,4 +1,4 @@
-import { HealthAndSafety } from "@mui/icons-material";
+import { Edit, HealthAndSafety } from "@mui/icons-material";
 import {
   Avatar,
   Box,
@@ -20,80 +20,115 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
+import axios from "axios";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { FaCar, FaDotCircle, FaEye, FaEyeSlash } from "react-icons/fa";
 import { GiLifeBar } from "react-icons/gi";
 import { HiDotsVertical } from "react-icons/hi";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 
 const Layout = ({ sts = true }) => {
+  const { state } = useLocation();
+
+  const { profile } = useParams();
+
   const [hideDetails, setHideDetils] = useState(false);
+  const [data, setData] = useState(null);
+  const [categories, setCategories] = useState({
+    pd: [],
+    cd: [],
+    fd: [],
+  });
   const navigate = useNavigate();
+
+  const fetchData = async (id) => {
+    try {
+      const response = await axios.get(
+        `https://db.enivesh.com/firestore/single/crm_clients/${id}`,
+        {
+          headers: {
+            "x-api-key": "5cf783e5-51a5-4dcc-9bc5-0b9a414c88a3",
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setData(response?.data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (state) {
+      setData(state);
+    } else {
+      fetchData(profile);
+    }
+  }, []);
 
   const arr = [
     {
       label: "Material Status",
-      value: "Married",
+      value: data?.meterialStatus,
     },
     {
       label: "Email",
-      value: "example@example.com",
+      value: data?.email,
     },
     {
       label: "Phone ",
-      value: "+91 8989898989",
+      value: `+91 ${data?.primaryNumber}`,
     },
-    {
-      label: "Aadhar  ",
-      value: "3456 3423 4563",
-    },
+
     {
       label: "Annual Income  ",
-      value: " 12,00,000",
+      value: ` ${parseInt(data?.anualIncome)?.toLocaleString()}`,
+      code: <>&#8377;</>,
     },
     {
       label: "Occupation  ",
-      value: "",
+      value: data?.occupation,
     },
     {
       label: "Nationality  ",
-      value: "Indian",
+      value: data?.nationality,
     },
     {
       label: "Caste  ",
-      value: "Hindu",
+      value: data?.coste,
     },
-    {
-      label: "Nationality  ",
-      value: "Indian",
-    },
+
     {
       label: "Phone 2  ",
-      value: "+91 7878787878",
+      value: `+91 ${data?.secondaryNumber}`,
+    },
+    {
+      label: "PAN  ",
+      value: `${data?.panNumber}`,
     },
   ];
-  const arr2 = [
+  const communication = [
     {
       label: "Residential Address",
-      value: " Govind Nagar, Borivali West, Mumbai, Maharashtra 400091",
+      value: data?.communication?.residentialAddress,
     },
     {
       label: "Office Address",
-      value: "Govind Nagar, Borivali West, Mumbai, Maharashtra 400091",
+      value: data?.communication?.officeAddress,
     },
     {
       label: "Permanent Address",
-      value: "Govind Nagar, Borivali West, Mumbai, Maharashtra 400091",
+      value: data?.communication?.permanentAddress,
     },
     {
       label: "SOS Name  ",
-      value: "Rohan",
+      value: data?.communication?.emergencyContactName,
     },
     {
       label: "SOS Number ",
-      value: "+91 9898989898",
+      value: data?.communication?.emergencyContactNumber,
     },
   ];
   const arr3 = [
@@ -166,6 +201,12 @@ const Layout = ({ sts = true }) => {
     },
   ];
 
+  const handleEdit = () => {
+    sessionStorage.setItem("cid", JSON.stringify(data?.cin));
+    sessionStorage.setItem("cid-lock", JSON.stringify(true));
+    sessionStorage.setItem("edit-data", JSON.stringify(data));
+    navigate("/crm/parsonal/");
+  };
   return (
     <>
       <Grid2 container spacing={1} p={{ xs: 0, md: 2 }}>
@@ -181,7 +222,26 @@ const Layout = ({ sts = true }) => {
                 alignItems={"center"}
                 gap={1}
               >
-                <HiDotsVertical color="#ff5c00" /> Client Profile
+                <HiDotsVertical color="#ff5c00" />
+                <Stack
+                  flexDirection={"row"}
+                  width={"100%"}
+                  alignItems={"center"}
+                  justifyContent={"space-between"}
+                >
+                  Client Profile - {profile}
+                  <Button
+                    size="small"
+                    sx={{
+                      fontSize: 10,
+                    }}
+                    color="inherit"
+                    startIcon={<Edit fontSize={"8px"} />}
+                    onClick={() => handleEdit()}
+                  >
+                    Edit
+                  </Button>
+                </Stack>
               </Typography>
 
               <Grid2 container spacing={1}>
@@ -210,7 +270,7 @@ const Layout = ({ sts = true }) => {
                             color="textSecondary"
                             fontWeight={600}
                           >
-                            Mr. Rohan Goe
+                            {`${data?.fname} ${data?.lname}`}
                           </Typography>
                         </Box>
                       </Stack>
@@ -240,7 +300,7 @@ const Layout = ({ sts = true }) => {
                         color="textSecondary"
                         fontWeight={500}
                       >
-                        Jan 15 1984
+                        {data?.dob}
                       </Typography>
                     </Box>
                     <Box>
@@ -250,7 +310,7 @@ const Layout = ({ sts = true }) => {
                         color="grey"
                         fontWeight={500}
                       >
-                        CID
+                        CIN
                       </Typography>
                       <Typography
                         component={"h1"}
@@ -258,7 +318,7 @@ const Layout = ({ sts = true }) => {
                         color="textSecondary"
                         fontWeight={500}
                       >
-                        EN24g54
+                        {data?.cin || data?.id}
                       </Typography>
                     </Box>
                   </Stack>
@@ -288,8 +348,9 @@ const Layout = ({ sts = true }) => {
                         variant="body2"
                         color="textSecondary"
                         fontWeight={500}
+                        textTransform={"capitalize"}
                       >
-                        xxx
+                        {data?.clientType?.split("-").join(" ")}
                       </Typography>
                     </Box>
                     <Box>
@@ -305,9 +366,10 @@ const Layout = ({ sts = true }) => {
                         component={"h1"}
                         variant="body2"
                         color="textSecondary"
+                        textTransform={"capitalize"}
                         fontWeight={500}
                       >
-                        xxx
+                        {data?.customerType}
                       </Typography>
                     </Box>
                     <Box>
@@ -323,9 +385,10 @@ const Layout = ({ sts = true }) => {
                         component={"h1"}
                         variant="body2"
                         color="textSecondary"
+                        textTransform={"uppercase"}
                         fontWeight={500}
                       >
-                        xxx
+                        {data?.gender}
                       </Typography>
                     </Box>
                     <Box display={{ xs: "block", md: "none" }}>
@@ -343,7 +406,7 @@ const Layout = ({ sts = true }) => {
                         color="textSecondary"
                         fontWeight={500}
                       >
-                        Hindi
+                        {data?.communication?.languagePreference}
                       </Typography>
                     </Box>
                     <Box display={{ xs: "none", md: "block" }}>
@@ -361,7 +424,7 @@ const Layout = ({ sts = true }) => {
                         color="textSecondary"
                         fontWeight={500}
                       >
-                        Hindi
+                        {data?.communication?.languagePreference}
                       </Typography>
                     </Box>
                   </Stack>
@@ -388,7 +451,10 @@ const Layout = ({ sts = true }) => {
                   <Grid2 size={{ xs: 12 }}>
                     <GridRow data={arr} title={"Parsonal Details"} />
                     <Divider sx={{ my: 1 }} />
-                    <GridRow title={"Comunication Details"} data={arr2} />
+                    <GridRow
+                      title={"Comunication Details"}
+                      data={communication}
+                    />
                     <Divider sx={{ my: 1 }} />
                     <GridRow title={"Family Members"} data={arr3} />
                   </Grid2>
@@ -504,7 +570,7 @@ const Layout = ({ sts = true }) => {
                     {/* <TransparentBox value={34} label={"Toatal Insurances"} /> */}
                   </Stack>
                 </Grid2>
-                <Grid2 size={{ xs: 12, md: 12 }}>
+                {/* <Grid2 size={{ xs: 12, md: 12 }}>
                   <Stack
                     flexDirection={"row"}
                     alignItems={"center"}
@@ -614,7 +680,7 @@ const Layout = ({ sts = true }) => {
                       </TableBody>
                     </Table>
                   </TableContainer>
-                </Grid2>
+                </Grid2> */}
               </Grid2>
             </Box>
           </Paper>
@@ -858,7 +924,7 @@ const GridRow = ({ data = [], p, title, viewLimit }) => {
                 color="textSecondary"
                 fontWeight={400}
               >
-                {item?.value}
+                {item?.code} {item?.value}
               </Typography>
             </Box>
           </Grid2>

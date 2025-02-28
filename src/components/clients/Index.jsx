@@ -13,16 +13,42 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import React from "react";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 const Index = () => {
-  const data = [
-    { name: "John", details: "Software Developer" },
-    { name: "Alice", details: "Product Manager" },
-    { name: "Bob", details: "Designer" },
-    { name: "Tom", details: "QA Engineer" },
-  ];
+  const [data, setData] = useState();
+  // const data = [
+  //   { name: "John", details: "Software Developer" },
+  //   { name: "Alice", details: "Product Manager" },
+  //   { name: "Bob", details: "Designer" },
+  //   { name: "Tom", details: "QA Engineer" },
+  // ];
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(
+          "https://db.enivesh.com/firestore/single/crm_clients/enw6jm",
+          {
+            headers: {
+              "x-api-key": "5cf783e5-51a5-4dcc-9bc5-0b9a414c88a3",
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        setData(response?.data);
+
+        console.log("response.data?.documents: ", response?.data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   const MyCard = ({ addLink, viewLink, title, data = [] }) => (
     <Card>
       <CardContent>
@@ -90,28 +116,75 @@ const Index = () => {
       <Grid2 container spacing={1} p={1}>
         <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
           <MyCard
-            addLink={"parsonal"}
+            addLink={"/crm/parsonal"}
             title={"Parsonal Details"}
-            viewLink={"profile"}
-            data={data}
+            viewLink={"/crm/clients"}
+            data={[
+              {
+                name: data?.fname,
+                details: data?.clientType?.split("-")?.join(" "),
+              },
+              { name: "Alice", details: "Product Manager" },
+              { name: "Bob", details: "Designer" },
+              { name: "Tom", details: "QA Engineer" },
+            ]}
           />
         </Grid2>
         <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
           <MyCard
-            addLink={"communication"}
+            addLink={"/crm/communication"}
             title={"Cominication Details"}
-            data={data}
+            viewLink={"/crm/clients"}
+            data={[
+              { name: "John", details: "Software Developer" },
+              { name: "Alice", details: "Product Manager" },
+              { name: "Bob", details: "Designer" },
+              { name: "Tom", details: "QA Engineer" },
+            ]}
           />
         </Grid2>
         <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
-          <MyCard addLink={"family"} title={"Family Members"} data={data} />
+          <MyCard
+            addLink={"/crm/family"}
+            title={"Family Members"}
+            viewLink={"/crm/clients"}
+            data={[
+              {
+                name: data?.fname,
+                details: data?.clientType?.split("-").join(" "),
+              },
+              { name: "Alice", details: "Product Manager" },
+              { name: "Bob", details: "Designer" },
+              { name: "Tom", details: "QA Engineer" },
+            ]}
+          />
         </Grid2>
         <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
-          <MyCard title={"Bank Details"} data={data} addLink={"bank"} />
+          <MyCard
+            title={"Bank Details"}
+            data={[
+              { name: "John", details: "Software Developer" },
+              { name: "Alice", details: "Product Manager" },
+              { name: "Bob", details: "Designer" },
+              { name: "Tom", details: "QA Engineer" },
+            ]}
+            addLink={"/crm/bank"}
+            viewLink={"/crm/clients"}
+          />
         </Grid2>
 
         <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
-          <MyCard title={"Doccumemts"} data={data} addLink={"documents"} />
+          <MyCard
+            title={"Doccumemts"}
+            data={[
+              { name: "John", details: "Software Developer" },
+              { name: "Alice", details: "Product Manager" },
+              { name: "Bob", details: "Designer" },
+              { name: "Tom", details: "QA Engineer" },
+            ]}
+            addLink={"/crm/documents"}
+            viewLink={"/crm/clients"}
+          />
         </Grid2>
       </Grid2>
     </>

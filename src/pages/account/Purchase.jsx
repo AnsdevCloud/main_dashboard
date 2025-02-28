@@ -1,4 +1,11 @@
-import { Add, Analytics, Policy, Settings, Upload } from "@mui/icons-material";
+import {
+  Add,
+  Analytics,
+  List,
+  Policy,
+  Settings,
+  Upload,
+} from "@mui/icons-material";
 import { Button, Grid2, Paper, Stack, Typography } from "@mui/material";
 import React from "react";
 
@@ -27,7 +34,7 @@ const Purchase = () => {
               <Button
                 sx={{ justifyContent: "flex-start" }}
                 color={
-                  pathname === "/account/register/purchase/itc"
+                  pathname === "/account/register/purchase"
                     ? "success"
                     : "inherit"
                 }
@@ -35,61 +42,25 @@ const Purchase = () => {
                 size="small"
                 fullWidth
                 component={Link}
-                to="/account/register/purchase/itc"
+                to="/account/register/purchase"
               >
                 ITC
               </Button>
-              {/* <Button
+              <Button
                 sx={{ justifyContent: "flex-start" }}
-                startIcon={<Add />}
                 color={
-                  pathname === "/account/register/company-list"
+                  pathname === "/account/register/purchase/list"
                     ? "success"
                     : "inherit"
                 }
+                startIcon={<List />}
                 size="small"
                 fullWidth
                 component={Link}
-                to="/account/register/company-list"
+                to="/account/register/purchase/list"
               >
-                Add new Company
+                ITC List
               </Button>
-
-              <Button
-                sx={{ justifyContent: "flex-start", fontWeight: 400 }}
-                startIcon={<Policy />}
-                color={
-                  pathname === "/account/register/sale-overview"
-                    ? "success"
-                    : "inherit"
-                }
-                size="small"
-                component={Link}
-                to="/account/register/sale-overview"
-                fullWidth
-              >
-                Sales Overviews
-              </Button> */}
-              {/* <Button
-                sx={{ justifyContent: "flex-start" }}
-                startIcon={<BsActivity />}
-                color="inherit"
-                size="small"
-                fullWidth
-              >
-                All Activity
-              </Button>
-              <Button
-                sx={{ justifyContent: "flex-start" }}
-                startIcon={<Settings />}
-                color="inherit"
-                size="small"
-                fullWidth
-                component={Link}
-                to="/cpanel/policy-investment-overview"
-              >
-                System Settings
-              </Button> */}
             </Stack>
           </Paper>
         </Grid2>

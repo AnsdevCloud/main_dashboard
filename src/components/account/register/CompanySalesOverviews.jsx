@@ -16,9 +16,9 @@ import TransparentBox from "../../options/TransparentBox";
 import { useMediaQuery } from "react-responsive";
 import { useParams } from "react-router-dom";
 
-const fetchData = async (startDate, endDate, company) => {
+const fetchData = async (startDate, endDate, company, owncompany) => {
   const response = await fetch(
-    `http://localhost:25000/service/chart-data/company?startDate=${startDate}&endDate=${endDate}&slug=${company}`,
+    `https://db.enivesh.com/service/chart-data/company?startDate=${startDate}&endDate=${endDate}&slug=${company}&owncompany=${owncompany}`,
     {
       headers: {
         "Content-Type": "application/json",
@@ -33,8 +33,10 @@ const fetchData = async (startDate, endDate, company) => {
 };
 const CompanySalesOverviews = () => {
   const mainDate = JSON.parse(localStorage.getItem("fiterDate"));
+  const own = JSON.parse(localStorage.getItem("own"));
 
   const { company } = useParams();
+
   const isMobile = useMediaQuery({ maxWidth: 768 });
   const [chartData, setChartData] = useState([]);
   const [comInvoices, setComInvoices] = useState([]);
@@ -96,7 +98,9 @@ const CompanySalesOverviews = () => {
       const ComInv = await fetchCompanyData(
         filterDate?.startDate,
         filterDate?.endDate,
-        company
+        company,
+
+        own
       );
       setComInvoices(ComInv?.data || []);
     };
@@ -104,7 +108,8 @@ const CompanySalesOverviews = () => {
       const chartData = await fetchData(
         filterDate?.startDate,
         filterDate?.endDate,
-        company
+        company,
+        own
       );
 
       fetchCompany();
@@ -163,7 +168,7 @@ const CompanySalesOverviews = () => {
 
         <TransparentBox
           rgbColor="rgb(65, 140, 3)"
-          value={` ${chartData?.total?.toLocaleString()}`}
+          value={` ${parseInt(chartData?.total)?.toLocaleString()}`}
           caption={"Total Sales"}
         ></TransparentBox>
         <Stack
@@ -254,7 +259,7 @@ const CompanySalesOverviews = () => {
                     fontWeight={600}
                     color="success"
                   >
-                    &#8377; {item?.amount?.toLocaleString()}
+                    &#8377; {parseInt(item?.amount)?.toLocaleString()}
                   </Typography>
 
                   {/* <Button color="inherit"> Export</Button> */}
@@ -270,11 +275,11 @@ const CompanySalesOverviews = () => {
 
 export default CompanySalesOverviews;
 
-const fetchCompanyData = async (startDate, endDate, slug) => {
+const fetchCompanyData = async (startDate, endDate, slug, owncompany) => {
   const response = await fetch(
-    `http://localhost:25000/service/chart-data/company?startDate=${
+    `https://db.enivesh.com/service/chart-data/company?startDate=${
       startDate || "2024-09-01"
-    }&endDate=${endDate || "2024-11-1"}&slug=${slug}`,
+    }&endDate=${endDate || "2024-11-1"}&slug=${slug}&owncompany=${owncompany}`,
     {
       headers: {
         "Content-Type": "application/json",

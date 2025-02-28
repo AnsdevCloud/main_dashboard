@@ -22,11 +22,13 @@ import { ThemeContext } from "../../theme/ThemeContext";
 import defineFeatures from "../../settings/definefeatures";
 import { MdControlCamera, MdDashboard } from "react-icons/md";
 // import { Home } from "@mui/icons-material";
-import { GrAction } from "react-icons/gr";
+import { GrAction, GrActions } from "react-icons/gr";
 
 const SideBarNested = ({ isOpen, toggleDrawer }) => {
   const { siteSettings, role, swipeFuns, mySetting, setMySetting } =
     useContext(ThemeContext);
+  // console.log("mySetting: ", mySetting, role);
+
   let fe = JSON.parse(localStorage.getItem("fe")) || [];
 
   const location = useLocation(); // Get the current location
@@ -116,6 +118,25 @@ const SideBarNested = ({ isOpen, toggleDrawer }) => {
                   }}
                 >
                   {item.icon}
+                  {
+                    <Typography
+                      component={"span"}
+                      sx={{
+                        fontSize: 6,
+                        fontWeight: 600,
+                        position: "absolute",
+                        right: 1,
+                        top: "30%",
+                        bgcolor: `${item?.dev ? "red" : "green"}`,
+                        color: "#fff",
+
+                        px: 1,
+                        borderRadius: 2,
+                      }}
+                    >
+                      {item?.dev ? "in Dev" : "Live"}
+                    </Typography>
+                  }
                 </ListItemIcon>
                 {isOpen && <ListItemText primary={item.label} />}
                 {item.children && (
@@ -172,6 +193,25 @@ const SideBarNested = ({ isOpen, toggleDrawer }) => {
                           }}
                         >
                           {subItem.icon}
+                          {
+                            <Typography
+                              component={"span"}
+                              sx={{
+                                fontSize: 6,
+                                fontWeight: 600,
+                                position: "absolute",
+                                right: 1,
+                                top: "30%",
+                                bgcolor: `${subItem?.dev ? "red" : "green"}`,
+                                color: "#fff",
+
+                                px: 1,
+                                borderRadius: 2,
+                              }}
+                            >
+                              {subItem?.dev ? "in Dev" : "Live"}
+                            </Typography>
+                          }
                         </ListItemIcon>
                         {isOpen && <ListItemText primary={subItem.label} />}
                       </ListItem>
@@ -256,6 +296,23 @@ const SideBarNested = ({ isOpen, toggleDrawer }) => {
             }}
           >
             <MdControlCamera />
+            <Typography
+              component={"span"}
+              sx={{
+                fontSize: 6,
+                fontWeight: 600,
+                position: "absolute",
+                right: 1,
+                top: "30%",
+                bgcolor: "red",
+                color: "#fff",
+
+                px: 1,
+                borderRadius: 2,
+              }}
+            >
+              in Dev
+            </Typography>
           </ListItemIcon>
           {isOpen && <ListItemText primary={"C Panel"} />}
         </ListItem>
@@ -281,6 +338,25 @@ const SideBarNested = ({ isOpen, toggleDrawer }) => {
             }}
           >
             <MdDashboard />
+            {
+              <Typography
+                component={"span"}
+                sx={{
+                  fontSize: 6,
+                  fontWeight: 600,
+                  position: "absolute",
+                  right: 1,
+                  top: "30%",
+                  bgcolor: "red",
+                  color: "#fff",
+
+                  px: 1,
+                  borderRadius: 2,
+                }}
+              >
+                in Dev
+              </Typography>
+            }
           </ListItemIcon>
           {isOpen && <ListItemText primary={"Dashboard"} />}
         </ListItem>
@@ -327,6 +403,25 @@ const SideBarNested = ({ isOpen, toggleDrawer }) => {
                 }}
               >
                 {item.icon}
+                {item?.dev && (
+                  <Typography
+                    component={"span"}
+                    sx={{
+                      fontSize: 6,
+                      fontWeight: 600,
+                      position: "absolute",
+                      right: 1,
+                      top: "30%",
+                      bgcolor: "red",
+                      color: "#fff",
+
+                      px: 1,
+                      borderRadius: 2,
+                    }}
+                  >
+                    in Dev
+                  </Typography>
+                )}
               </ListItemIcon>
               {isOpen && <ListItemText primary={item.label} />}
               {item.children && (
@@ -350,6 +445,51 @@ const SideBarNested = ({ isOpen, toggleDrawer }) => {
         ))}
       </List>
       <Divider />
+      <ListItem
+        button
+        sx={{
+          backgroundColor:
+            location.pathname === "/cpanel" ? "info.light" : "inherit",
+          justifyContent: isOpen ? "flex-start" : "center",
+          px: 2,
+
+          display:
+            mySetting?.find(
+              (value, index, array) =>
+                value.name === "portal" && value?.status === "enabled"
+            ) === undefined && "none",
+        }}
+        onClick={() => navigate("/portal")}
+      >
+        <ListItemIcon
+          sx={{
+            justifyContent: "center",
+            color: "inherit",
+          }}
+        >
+          <GrActions />
+          {
+            <Typography
+              component={"span"}
+              sx={{
+                fontSize: 6,
+                fontWeight: 600,
+                position: "absolute",
+                right: 1,
+                top: "30%",
+                bgcolor: "red",
+                color: "#fff",
+
+                px: 1,
+                borderRadius: 2,
+              }}
+            >
+              in Dev
+            </Typography>
+          }
+        </ListItemIcon>
+        {isOpen && <ListItemText primary={"Portal"} />}
+      </ListItem>
       <Box
         sx={{
           display: "flex",

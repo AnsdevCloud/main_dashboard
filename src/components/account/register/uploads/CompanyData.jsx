@@ -6,15 +6,14 @@ import {
   TextField,
   MenuItem,
   InputLabel,
+  Typography,
 } from "@mui/material";
 import React, { useState } from "react";
 
-const CompanyData = () => {
+const CompanyData = ({ onExcel, onCompany, ownCompany, ExtractData = [] }) => {
   const [formData, setFormData] = useState({
-    companyName: "",
     file: null,
   });
-  console.log(formData);
 
   return (
     <Grid2 container spacing={2} my={2}>
@@ -28,9 +27,7 @@ const CompanyData = () => {
             id="demo-simple-select"
             // value={age}
             label="Company"
-            onChange={(e) =>
-              setFormData({ ...formData, companyName: e.target.value })
-            }
+            onChange={(e) => onCompany(e.target.value)}
             size="small"
           >
             <MenuItem value={"enivesh-finance"}>Enivesh Finance</MenuItem>
@@ -62,7 +59,11 @@ const CompanyData = () => {
             }
             type="file"
           />
-          {formData?.file ? formData?.file?.name : "Select File"}
+          {ExtractData?.length >= 1
+            ? "Total Data : " + ExtractData?.length
+            : formData?.file
+            ? formData?.file?.name
+            : "Select File"}
         </Button>
       </Grid2>
       <Grid2 size={{ xs: 12, md: 6 }}>
@@ -70,11 +71,20 @@ const CompanyData = () => {
           size="large"
           variant="contained"
           color="info"
+          disabled={!ownCompany}
           fullWidth
           sx={{ position: "relative" }}
+          onClick={() => onExcel(formData)}
         >
           Upload
         </Button>
+        {!ownCompany && (
+          <Typography component={"span"} variant="caption" color="grey">
+            {ExtractData?.length > 0
+              ? "Data not upload select company then try "
+              : "Select Company"}
+          </Typography>
+        )}
       </Grid2>
     </Grid2>
   );

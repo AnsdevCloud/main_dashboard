@@ -17,6 +17,16 @@ import Partner from "../pages/account/Partner";
 import RegularPayout from "../pages/account/RegularPayout";
 import ContextPayout from "../pages/account/ContextPayout";
 import Subscriptions from "../pages/account/Subscriptions";
+import Poratl from "../pages/Portal";
+import Pages from "../pages/portal/Pages";
+import PurchaseOverviews from "../pages/account/PurchaseReviews";
+import PurchaseList from "../pages/account/PurchaseList";
+import Auth from "../pages/auth/Auth";
+import Login from "../pages/auth/Login";
+import OTPVerification from "../pages/auth/OTP";
+import ClintListIndex from "../layout/client/List/ClintListIndex";
+import ClientsOutlet from "../layout/client/List/Outlet";
+import CrmUpload from "../components/clients/crm/CrmUpload";
 
 // Lazy-loaded clients components
 const GlobelIndex = React.lazy(() =>
@@ -73,7 +83,7 @@ const RelationShip = React.lazy(() =>
 
 // Lazy Loaded pages
 const Home = React.lazy(() => import("../pages/Home"));
-const About = React.lazy(() => import("../pages/About"));
+const About = React.lazy(() => import("../pages/Portal"));
 const Contact = React.lazy(() => import("../pages/Contact"));
 const Dashboard = React.lazy(() => import("../pages/Dashboard"));
 const Settings = React.lazy(() => import("../pages/Settings"));
@@ -110,6 +120,10 @@ const router = createBrowserRouter([
         path: "crm/",
         element: <ClientLayout />,
         children: [
+          {
+            path: "uploads",
+            element: <CrmUpload />,
+          },
           {
             path: "*",
             element: <ClintIndex />,
@@ -159,8 +173,18 @@ const router = createBrowserRouter([
             element: <DoccumentUpload />,
           },
           {
-            path: "profile",
-            element: <Profile />,
+            path: "clients",
+            element: <ClientsOutlet />,
+            children: [
+              {
+                path: "",
+                element: <ClintListIndex />,
+              },
+              {
+                path: ":profile",
+                element: <Profile />,
+              },
+            ],
           },
           {
             path: "life-insurance",
@@ -184,6 +208,10 @@ const router = createBrowserRouter([
                 path: "",
                 element: <Sales />,
                 children: [
+                  {
+                    path: "",
+                    element: <SalesOverviews />,
+                  },
                   {
                     path: "upload-data",
                     element: <Invoice />,
@@ -221,11 +249,11 @@ const router = createBrowserRouter([
                 children: [
                   {
                     path: "",
-                    element: <h1>ITC</h1>,
+                    element: <PurchaseOverviews />,
                   },
                   {
-                    path: "itc",
-                    element: <h1>ITC</h1>,
+                    path: "list",
+                    element: <PurchaseList />,
                   },
                 ],
               },
@@ -300,8 +328,36 @@ const router = createBrowserRouter([
         element: <Dashboard />,
         children: [{ path: "settings", element: <Settings /> }],
       },
+      {
+        path: "portal",
+        element: <Poratl />,
+        children: [
+          {
+            path: "",
+            element: <Pages />,
+          },
+          {
+            path: "pages",
+            element: <Pages />,
+          },
+        ],
+      },
     ],
   },
   { path: "*", element: <NotFound /> },
+  {
+    path: "auth",
+    element: <Auth />,
+    children: [
+      {
+        path: "",
+        element: <Login />,
+      },
+      {
+        path: "otp",
+        element: <OTPVerification />,
+      },
+    ],
+  },
 ]);
 export default router;

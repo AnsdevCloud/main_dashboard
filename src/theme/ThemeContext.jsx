@@ -8,7 +8,7 @@ const ThemeContext = createContext();
 // Provider component
 const ThemeProviderWrapper = ({ children }) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [role, setRole] = useState("account");
+  const [role, setRole] = useState("admin");
   const [swipeFuns, setSwipeFuns] = useState({
     left: false,
     right: false,
@@ -53,6 +53,12 @@ const ThemeProviderWrapper = ({ children }) => {
   };
   const [mySetting, setMySetting] = useState([]);
 
+  const [regCrmClient, setRegCrmClient] = useState({
+    clientID: null,
+    data: null,
+  });
+
+  const [genOTP, setOTP] = useState(null);
   return (
     <ThemeContext.Provider
       value={{
@@ -71,6 +77,10 @@ const ThemeProviderWrapper = ({ children }) => {
         setIsSideBar,
         setMySetting,
         mySetting,
+        setRegCrmClient,
+        regCrmClient,
+        genOTP,
+        setOTP,
       }}
     >
       <ThemeProvider theme={currentTheme}>

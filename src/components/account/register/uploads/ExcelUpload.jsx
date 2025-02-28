@@ -1,8 +1,15 @@
-import { Button, Grid2, TextField } from "@mui/material";
+import { Button, Grid2, Stack, TextField } from "@mui/material";
 import React, { useState } from "react";
 import TransparentBox from "../../../options/TransparentBox";
 
-const ExcelUpload = ({ onExcel, onUpload, disabled }) => {
+const ExcelUpload = ({
+  onExcel,
+  status,
+  onUpload,
+  disabled,
+  lastInvoice,
+  ExtractedData = [],
+}) => {
   const [file, setFile] = useState(null);
   const handleFile = (e) => {
     onExcel(e);
@@ -12,7 +19,7 @@ const ExcelUpload = ({ onExcel, onUpload, disabled }) => {
     <Grid2 container spacing={2} my={2}>
       <Grid2 size={{ xs: 12 }}>
         <TransparentBox
-          value={232342}
+          value={lastInvoice}
           caption={"Last Invoice Number"}
           rupeeLabal={false}
         />
@@ -39,21 +46,27 @@ const ExcelUpload = ({ onExcel, onUpload, disabled }) => {
             onChange={(e) => handleFile(e.target.files[0])}
             type="file"
           />
-          {file ? file?.name : "  Select File"}
+          {ExtractedData[0]
+            ? `Sheet Name : ${ExtractedData[0]?.sheetName} ,  Row : ${ExtractedData[0]?.data?.length}`
+            : file
+            ? file?.name
+            : "  Select File"}
         </Button>
       </Grid2>
       <Grid2 size={{ xs: 12, md: 6 }}>
-        <Button
-          size="large"
-          disabled={disabled}
-          variant="contained"
-          color="info"
-          fullWidth
-          sx={{ position: "relative" }}
-          onClick={() => onUpload()}
-        >
-          Upload
-        </Button>
+        <Stack alignItems={"center"} justifyContent={"center"} width={"100%"}>
+          <Button
+            size="medium"
+            disabled={disabled}
+            variant="outlined"
+            color="info"
+            fullWidth
+            sx={{ position: "relative", maxWidth: 300 }}
+            onClick={() => onUpload()}
+          >
+            Upload
+          </Button>
+        </Stack>
       </Grid2>
     </Grid2>
   );

@@ -1,21 +1,48 @@
-import { Button, Grid2, TextField } from "@mui/material";
+import {
+  Button,
+  FormControl,
+  Grid2,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField,
+} from "@mui/material";
 import React, { useState } from "react";
 import TransparentBox from "../../../options/TransparentBox";
 
-const InvoiceForm = () => {
+const InvoiceForm = ({ lastInvoice, onExcel, disabled }) => {
   const [formData, setFormData] = useState({
-    invoiceNumber: 0,
+    invoiceNumber: lastInvoice,
     fileName: "",
     file: null,
     excel: null,
+    ouncompany: "",
   });
-  console.log(formData);
 
   return (
     <Grid2 container spacing={2} my={2}>
       <Grid2 size={{ xs: 12 }}>
+        <FormControl fullWidth size="small">
+          <InputLabel size="small" id="demo-simple-select-label">
+            Company
+          </InputLabel>
+          <Select
+            labelId="demo-simple-select-label"
+            id="demo-simple-select"
+            label="Company"
+            onChange={(e) =>
+              setFormData({ ...formData, ouncompany: e.target.value })
+            }
+            size="small"
+          >
+            <MenuItem value={"enivesh-finance"}>Enivesh Finance</MenuItem>
+            <MenuItem value={"enivesh-insurance"}>Enivesh Insurance</MenuItem>
+          </Select>
+        </FormControl>
+      </Grid2>
+      <Grid2 size={{ xs: 12 }}>
         <TransparentBox
-          value={232342}
+          value={lastInvoice || " "}
           caption={"Last Invoice Number"}
           rupeeLabal={false}
         />
@@ -26,6 +53,12 @@ const InvoiceForm = () => {
           label="Invoice Number"
           variant="standard"
           type="number"
+          value={formData?.invoiceNumber}
+          slotProps={{
+            inputLabel: {
+              shrink: true,
+            },
+          }}
           fullWidth
           onChange={(e) =>
             setFormData({ ...formData, invoiceNumber: e.target.value })
@@ -42,6 +75,11 @@ const InvoiceForm = () => {
           }
           variant="standard"
           type="text"
+          slotProps={{
+            inputLabel: {
+              shrink: true,
+            },
+          }}
         />
       </Grid2>
 
@@ -103,6 +141,7 @@ const InvoiceForm = () => {
           variant="contained"
           color="info"
           fullWidth
+          onClick={(e) => onExcel(formData)}
           sx={{ position: "relative" }}
         >
           Upload

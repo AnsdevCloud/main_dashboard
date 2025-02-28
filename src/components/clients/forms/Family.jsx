@@ -16,12 +16,28 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useContext, useEffect, useState } from "react";
+import { data, Link, useNavigate } from "react-router-dom";
+import { ThemeContext } from "../../../theme/ThemeContext";
 
 const Family = () => {
-  //store array
+  const { regCrmClient, setRegCrmClient } = useContext(ThemeContext);
+  let cid = JSON.parse(sessionStorage.getItem("cid"));
+  const navigate = useNavigate();
   const [members, setMembers] = useState([]);
+
+  const [edit, setEdit] = useState(false);
+  useEffect(() => {
+    let editData = JSON.parse(sessionStorage.getItem("edit-data"));
+    if (editData?.id) {
+      setEdit(true);
+      if (editData?.members) {
+        setMembers([...editData?.members]);
+      }
+    }
+  }, []);
+
+  //store array
 
   //single member obj
   const [memberObj, setMemberObj] = useState({
@@ -102,6 +118,38 @@ const Family = () => {
 
     return { years, months, days };
   }
+
+  const handleSubmit = () => {
+    const myHeaders = new Headers();
+    myHeaders.append("x-api-key", "5cf783e5-51a5-4dcc-9bc5-0b9a414c88a3");
+    myHeaders.append("Content-Type", "application/json");
+
+    const raw = JSON.stringify({
+      members: members,
+    });
+
+    const requestOptions = {
+      method: "PUT",
+      headers: myHeaders,
+      body: raw,
+      redirect: "follow",
+    };
+    if (members?.length > 0) {
+      fetch(
+        `https://db.enivesh.com/firestore/single/crm_clients/${cid}`,
+        requestOptions
+      )
+        .then((response) => response.text())
+        .then((result) => {
+          alert(edit ? "Updated" : "Added");
+          setMembers([]);
+          navigate("/crm/bank");
+        })
+        .catch((error) => console.error(error));
+    } else {
+      alert("Epty Members");
+    }
+  };
 
   return (
     <Container>
@@ -289,28 +337,43 @@ const Family = () => {
           </TableContainer>
         </Grid2>
         <Grid2 size={{ xs: 6, md: 9 }} my={{ xs: 2, md: 3 }}>
-          <Button
-            startIcon={<ArrowBack />}
-            fullWidth
-            color="inherit"
-            variant="outlined"
-            sx={{ maxWidth: 200 }}
-            component={Link}
-            to={-2}
-          >
-            Back
-          </Button>
+          {isOpen ? (
+            <Button
+              startIcon={<ArrowBack />}
+              fullWidth
+              color="info"
+              variant="outlined"
+              sx={{ maxWidth: 200 }}
+              onClick={() => setIsOpen(false)}
+            >
+              Back
+            </Button>
+          ) : (
+            <Button
+              startIcon={<ArrowBack />}
+              fullWidth
+              color="inherit"
+              variant="outlined"
+              sx={{ maxWidth: 200 }}
+              component={Link}
+              to={-1}
+            >
+              Back
+            </Button>
+          )}
         </Grid2>
         {!isOpen && (
           <Grid2 size={{ xs: 6, md: 3 }} my={{ xs: 2, md: 3 }}>
             <Button
+              onClick={() => handleSubmit()}
               startIcon={<Save />}
               fullWidth
-              color="info"
+              color={edit ? "success" : "info"}
               variant="contained"
+              disabled={members?.length === 0}
               sx={{ maxWidth: 200 }}
             >
-              Save{" "}
+              {edit ? "Update" : "Save"}
             </Button>
           </Grid2>
         )}

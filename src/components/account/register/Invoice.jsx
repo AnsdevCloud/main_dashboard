@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import HeadlineTag from "../../options/HeadlineTag";
 import {
   Grid2,
@@ -22,6 +22,14 @@ import TransparentBox from "../../options/TransparentBox";
 import InvoiceForm from "./uploads/InvoiceForm";
 import ExcelUpload from "./uploads/ExcelUpload";
 import CompanyData from "./uploads/CompanyData";
+import { firestore } from "../../../firebase/config";
+import {
+  collection,
+  limit,
+  onSnapshot,
+  orderBy,
+  query,
+} from "firebase/firestore";
 const states = [
   { key: 1, name: "Andhra Pradesh", code: "AP" },
   { key: 2, name: "Arunachal Pradesh", code: "AR" },
@@ -267,10 +275,12 @@ const Invoice = () => {
     pdf: false,
     excel: false,
   });
-  const [file, setFile] = useState("");
-  const [invoiceNumber, setInvoiceNumber] = useState("");
-  const [isInvoice, setIsInvoice] = useState(false);
-  const [extractedData, setExtractedData] = useState(null);
+  const [lastInvoice, setLastInvoice] = useState(null);
+  const [sheetName, setSheetName] = useState(null);
+  const [ownCompany, setOwnCompany] = useState(null);
+
+  const [uploading, setuploading] = useState(null);
+  const [extractedData, setExtractedData] = useState([]);
 
   const [isFormSelect, setIsFormSelect] = useState("");
 
@@ -293,7 +303,7 @@ const Invoice = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:3000/api/html-to-pdf",
+        "https://restfileconvert.ansdev.cloud/api/html-to-pdf",
         requestOptions
       );
 
@@ -344,11 +354,14 @@ const Invoice = () => {
       redirect: "follow",
     };
 
-    fetch("http://localhost:3000/api/excel-to-json", requestOptions)
+    fetch(
+      "https://restfileconvert.ansdev.cloud/api/excel-to-json",
+      requestOptions
+    )
       .then((response) => response.json())
       .then((result) => {
         setExtractedData(result || []);
-        console.log("result: ", result);
+
         setStatus({
           excel: false,
         });
@@ -357,7 +370,8 @@ const Invoice = () => {
   };
 
   const handleUpload = (data) => {
-    // setStatus({ excel: true });
+    setStatus({ excel: true });
+    setOwnCompany(data?.owncompany);
     let slug = data?.company?.split(" ").join("-").toLocaleLowerCase();
     const myHeaders = new Headers();
     myHeaders.append("x-api-key", "5cf783e5-51a5-4dcc-9bc5-0b9a414c88a3");
@@ -367,6 +381,7 @@ const Invoice = () => {
       collectionName: "invoices",
       docId: JSON.stringify(data?.invoicenumber),
       data: {
+        owncompany: data?.owncompany || ownCompany,
         amount: data?.amount || null,
         cgst: data?.cgst || null,
         company: data?.company || null,
@@ -380,8 +395,6 @@ const Invoice = () => {
       },
     });
 
-    // console.log(raw);
-
     const requestOptions = {
       method: "POST",
       headers: myHeaders,
@@ -389,92 +402,71 @@ const Invoice = () => {
       redirect: "follow",
     };
 
-    fetch("http://localhost:25000/service/invoice/set", requestOptions)
+    fetch("https://db.enivesh.com/service/invoice/set", requestOptions)
       .then((response) => response.text())
       .then((result) => {
-        console.log(result);
-
+        setuploading(data?.invoicenumber);
         setStatus({ excel: false });
       })
       .catch((error) => console.error(error));
   };
 
   const ExtractingUpload = () => {
-    let data = [
-      {
-        date: "10/10/2024",
-        company: "HDFC",
-        description: "Loan Payment",
-        amount: 15000,
-        invoiceNumber: "INV0011",
-      },
-      {
-        date: "25/10/2024",
-        company: "ICICI",
-        description: "Insurance Premium",
-        amount: 12000,
-        invoiceNumber: "INV0012",
-      },
-      {
-        date: "05/11/2024",
-        company: "Axis Bank",
-        description: "Account Maintenance",
-        amount: 5000,
-        invoiceNumber: "INV0013",
-      },
-      {
-        date: "18/11/2024",
-        company: "Kotak Mahindra",
-        description: "Business Loan EMI",
-        amount: 20000,
-        invoiceNumber: "INV0014",
-      },
-      {
-        date: "02/12/2024",
-        company: "SBI",
-        description: "Mutual Fund Investment",
-        amount: 30000,
-        invoiceNumber: "INV0015",
-      },
-      {
-        date: "15/12/2024",
-        company: "Bank of Baroda",
-        description: "Fixed Deposit",
-        amount: 25000,
-        invoiceNumber: "INV0016",
-      },
-      {
-        date: "28/12/2024",
-        company: "Canara Bank",
-        description: "Car Loan EMI",
-        amount: 18000,
-        invoiceNumber: "INV0017",
-      },
-      {
-        date: "05/01/2025",
-        company: "IDBI",
-        description: "Credit Card Payment",
-        amount: 10000,
-        invoiceNumber: "INV0018",
-      },
-      {
-        date: "12/01/2025",
-        company: "Union Bank",
-        description: "Overdraft Settlement",
-        amount: 22000,
-        invoiceNumber: "INV0019",
-      },
-      {
-        date: "20/01/2025",
-        company: "PNB",
-        description: "Home Loan EMI",
-        amount: 40000,
-        invoiceNumber: "INV0020",
-      },
-    ];
-    extractedData.forEach((value) =>
-      value?.data?.slice(1)?.forEach((val) => handleUpload(val))
+    if (ownCompany) {
+      extractedData.forEach((value) =>
+        value?.data?.forEach((val) => handleUpload(val))
+      );
+    } else {
+      setStatus({ excel: false });
+      alert("Company Not Defined");
+    }
+  };
+
+  useEffect(() => {
+    // Firestore query to get the last invoice in real-time
+    const invoicesQuery = query(
+      collection(firestore, "invoices"), // Collection name
+      orderBy("invoicenumber", "desc"), // Sort by invoiceId in descending order
+      limit(1) // Fetch only the last invoice
     );
+
+    // Real-time listener
+    const unsubscribe = onSnapshot(invoicesQuery, (snapshot) => {
+      if (!snapshot.empty) {
+        const invoiceData = snapshot.docs[0].data();
+        setLastInvoice(invoiceData);
+      }
+    });
+
+    // Cleanup listener on unmount
+    return () => unsubscribe();
+  }, []);
+
+  const handleCompanyDataUpload = (e) => {
+    handleGenerateExcel(e.file);
+    setOwnCompany(e.companyName);
+
+    if (extractedData[0]) {
+      ExtractingUpload();
+    }
+  };
+  const handleSingleDataUpload = (e) => {
+    if (e.excel) {
+      handleGenerateExcel(e.excel);
+    }
+
+    if (extractedData[0]) {
+      ExtractingUpload();
+    }
+  };
+
+  const handleExcelUpload = () => {
+    if (extractedData[0]) {
+      extractedData.forEach((value) => {
+        value?.data?.forEach((val) => handleUpload(val));
+        setSheetName(value?.sheetName);
+      });
+    }
   };
   return (
     <Grid2 container spacing={2} py={1}>
@@ -492,24 +484,58 @@ const Invoice = () => {
               height={"100%"}
             >
               Fill Data
+              {sheetName && (
+                <Button
+                  sx={{ textTransform: "uppercase", fontSize: 10 }}
+                  variant="text"
+                  color="success"
+                >
+                  Sheet Name - {sheetName}
+                </Button>
+              )}
+              {uploading && (
+                <Button
+                  sx={{ textTransform: "uppercase", fontSize: 10 }}
+                  variant="text"
+                  color="success"
+                >
+                  Uploaded - {uploading}
+                </Button>
+              )}
               <Button
                 sx={{ textTransform: "uppercase", fontSize: 10 }}
                 variant="outlined"
-                color={isInvoice ? "inherit" : "success"}
-                onClick={() => setIsInvoice(!isInvoice)}
               >
-                {isInvoice ? "Cancel " : "  Upload invoice"}
+                {ownCompany}
               </Button>
             </Stack>
           </HeadlineTag>
-          {isFormSelect === "singleInvoice" && <InvoiceForm />}
+
+          {isFormSelect === "singleInvoice" && (
+            <InvoiceForm
+              lastInvoice={lastInvoice?.invoicenumber}
+              onExcel={(e) => handleSingleDataUpload(e)}
+              disabled={!extractedData[0]}
+            />
+          )}
           {isFormSelect === "excelinvoice" && (
             <ExcelUpload
               onExcel={(e) => handleGenerateExcel(e)}
-              disabled={!extractedData}
+              disabled={!extractedData[0] || status?.excel}
+              status={status}
+              ExtractedData={extractedData}
+              lastInvoice={lastInvoice?.invoicenumber}
+              onUpload={() => handleExcelUpload()}
             />
           )}
-          {isFormSelect === "companydata" && <CompanyData />}
+          {isFormSelect === "companydata" && (
+            <CompanyData
+              onExcel={(e) => handleCompanyDataUpload(e)}
+              onCompany={(e) => setOwnCompany(e)}
+              ExtractData={extractedData || []}
+              ownCompany={ownCompany}
+            />
+          )}
         </Paper>
       </Grid2>
       <Grid2 size={{ xs: 12, md: 6 }}>
@@ -549,7 +575,7 @@ const Invoice = () => {
                       component={"h1"}
                       textTransform={"uppercase"}
                       fontWeight={600}
-                      color="success"
+                      color="error"
                     >
                       Invoice Upload
                     </Typography>
@@ -557,6 +583,7 @@ const Invoice = () => {
                       variant="caption"
                       textAlign={"center"}
                       component={"h1"}
+                      color="error"
                       fontWeight={500}
                     >
                       Single Invoice Upload
@@ -582,6 +609,7 @@ const Invoice = () => {
                       textAlign={"center"}
                       component={"h1"}
                       fontWeight={500}
+                      // color=""
                     >
                       Excel Invoice Upload
                     </Typography>

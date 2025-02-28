@@ -60,7 +60,8 @@ const Sales = () => {
                 sx={{ justifyContent: "flex-start", fontWeight: 400 }}
                 startIcon={<Policy />}
                 color={
-                  pathname === "/account/register/sale-overview"
+                  pathname === "/account/register/sale-overview" ||
+                  pathname === "/account/register"
                     ? "success"
                     : "inherit"
                 }

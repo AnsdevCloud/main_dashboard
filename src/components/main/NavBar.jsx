@@ -89,6 +89,12 @@ export default function NavBar() {
   };
 
   const menuId = "primary-search-account-menu";
+  const handlelogOut = () => {
+    localStorage.removeItem("db-id");
+    setAnchorEl(null);
+    handleMobileMenuClose();
+    window.location.reload();
+  };
   const renderMenu = (
     <Menu
       anchorEl={anchorEl}
@@ -107,6 +113,7 @@ export default function NavBar() {
     >
       <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
       <MenuItem onClick={handleMenuClose}>My account</MenuItem>
+      <MenuItem onClick={() => handlelogOut()}>Sign Out</MenuItem>
     </Menu>
   );
 

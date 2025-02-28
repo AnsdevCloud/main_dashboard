@@ -10,15 +10,19 @@ import {
   Tooltip,
   Typography,
   TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import HeadlineTag from "../../options/HeadlineTag";
 import TransparentBox from "../../options/TransparentBox";
-import { Bar } from "react-chartjs-2";
+
 import { useMediaQuery } from "react-responsive";
 import { Link } from "react-router-dom";
-const fetchCompaniesData = async (startDate, endDate) => {
+const fetchCompaniesData = async (startDate, endDate, owncompany) => {
   const response = await fetch(
-    `https://db.enivesh.com/service/chart-data/company?startDate=${startDate}&endDate=${endDate}`,
+    `https://db.enivesh.com/service/chart-data/company?startDate=${startDate}&endDate=${endDate}&owncompany=${owncompany}`,
     {
       headers: {
         "Content-Type": "application/json",
@@ -31,6 +35,8 @@ const fetchCompaniesData = async (startDate, endDate) => {
   return chartData;
 };
 const SalesOverviews = () => {
+  const [selsectOwnCompany, setSelectOwnCompany] =
+    useState("enivesh-insurance");
   const isMobile = useMediaQuery({ maxWidth: 768 });
   const [chartData, setChartData] = useState(null);
   const [comListData, setComListData] = useState([]);
@@ -87,12 +93,15 @@ const SalesOverviews = () => {
       if (callData) {
         const chartData = await fetchData(
           ftd?.startDate || "2024-01-01",
-          ftd?.endDate || "2024-12-30"
+          ftd?.endDate || "2024-12-30",
+          selsectOwnCompany
         );
         const companies = await fetchCompaniesData(
           ftd?.startDate || "2024-01-01",
-          ftd?.endDate || "2024-12-30"
+          ftd?.endDate || "2024-12-30",
+          selsectOwnCompany
         );
+
         sessionStorage.setItem(
           "Chart-Store",
           JSON.stringify({
@@ -137,14 +146,50 @@ const SalesOverviews = () => {
         );
       }
     };
+    localStorage.setItem("own", JSON.stringify(selsectOwnCompany));
 
     fetch();
   }, [isFilterAply]);
 
+  const handleSelectCompany = (e) => {
+    setSelectOwnCompany(e);
+    localStorage.setItem("own", JSON.stringify(e));
+  };
+
   return (
     <div>
       <Paper sx={{ p: 2, my: 1 }} elevation={0}>
-        <HeadlineTag>Total Sales</HeadlineTag>
+        <HeadlineTag>
+          <Stack
+            justifyContent={"space-between"}
+            width={"100%"}
+            flexDirection={"row"}
+            alignItems={"center"}
+          >
+            Total Sales
+            <FormControl
+              sx={{ maxWidth: 200, height: 20 }}
+              fullWidth
+              size="small"
+            >
+              <Select
+                labelId="demo-simple-select-label"
+                id="demo-simple-select"
+                value={selsectOwnCompany}
+                sx={{ height: 20, fontSize: 10 }}
+                onChange={(e) => handleSelectCompany(e.target.value)}
+                size="small"
+              >
+                <MenuItem sx={{ fontSize: 10 }} value={"enivesh-finance"}>
+                  Enivesh Finance
+                </MenuItem>
+                <MenuItem sx={{ fontSize: 10 }} value={"enivesh-insurance"}>
+                  Enivesh Insurance
+                </MenuItem>
+              </Select>
+            </FormControl>
+          </Stack>
+        </HeadlineTag>
         <Stack
           flexDirection={"row"}
           gap={2}
@@ -155,7 +200,7 @@ const SalesOverviews = () => {
           <TransparentBox
             width={{ xs: "100%", md: "50%" }}
             rgbColor="rgb(65, 140, 3)"
-            value={`${totalSalesAmount?.toLocaleString() || 0}`}
+            value={`${parseInt(totalSalesAmount)?.toLocaleString() || 0}`}
             caption={"Total Sales"}
           ></TransparentBox>
           <Stack
@@ -265,9 +310,9 @@ const SalesOverviews = () => {
 
 export default SalesOverviews;
 
-const fetchData = async (startDate, endDate) => {
+const fetchData = async (startDate, endDate, owncompany) => {
   const response = await fetch(
-    `https://db.enivesh.com/service/chart-data/home?startDate=${startDate}&endDate=${endDate}`,
+    `https://db.enivesh.com/service/chart-data/home?startDate=${startDate}&endDate=${endDate}&owncompany=${owncompany}`,
     {
       headers: {
         "Content-Type": "application/json",
@@ -276,32 +321,11 @@ const fetchData = async (startDate, endDate) => {
     }
   );
   const chartData = await response.json();
+
   return chartData;
 };
 
 const ListCard = ({ slug, startDate, endDate, data }) => {
-  // const isMobile = useMediaQuery({ maxWidth: 768 });
-  const [chartData, setChartData] = useState([]);
-
-  // useEffect(() => {
-  //   // Example Date Range
-  //   const fetch = async () => {
-  //     const chartData = await fetchCompanyData(startDate, endDate, slug);
-
-  //     const parseTooltips = {
-  //       invoices: chartData?.data?.map((value) => value.invoiceNumber),
-  //       company: chartData?.data[0]?.company,
-  //       total: chartData?.data?.reduce(
-  //         (accumulator, item) => accumulator + item.amount,
-  //         0
-  //       ),
-  //       amount: chartData?.data?.map((value) => value.amount),
-  //     };
-
-  //     setChartData(parseTooltips);
-  //   };
-  //   fetch();
-  // }, [slug]);
   return (
     <div>
       <Card variant="outlined">
@@ -314,7 +338,10 @@ const ListCard = ({ slug, startDate, endDate, data }) => {
             gap={1}
             width={"100%"}
           >
-            <Link to={`${slug}`} style={{ textDecoration: "none" }}>
+            <Link
+              to={`/account/register/sale-overview/${slug}`}
+              style={{ textDecoration: "none" }}
+            >
               <Typography
                 variant="subtitle1"
                 component={"h1"}
@@ -331,14 +358,17 @@ const ListCard = ({ slug, startDate, endDate, data }) => {
               width={{ xs: "100%", md: "auto" }}
               gap={4}
             >
-              <Link to={`${slug}`} style={{ textDecoration: "none" }}>
+              <Link
+                to={`/account/register/sale-overview/${slug}`}
+                style={{ textDecoration: "none" }}
+              >
                 <Typography
                   variant="subtitle1"
                   fontWeight={600}
                   component={"h1"}
                   color="success"
                 >
-                  &#8377; {data?.totalAmount?.toLocaleString()}
+                  &#8377; {parseInt(data?.totalAmount)?.toLocaleString()}
                 </Typography>
               </Link>
               <Tooltip
@@ -371,11 +401,11 @@ const ListCard = ({ slug, startDate, endDate, data }) => {
   );
 };
 
-const fetchCompanyData = async (startDate, endDate, slug) => {
+const fetchCompanyData = async (startDate, endDate, slug, owncompany) => {
   const response = await fetch(
     `https://db.enivesh.com/service/chart-data/company?startDate=${
       startDate || "2024-09-01"
-    }&endDate=${endDate || "2024-11-1"}&slug=${slug}`,
+    }&endDate=${endDate || "2024-11-1"}&slug=${slug}&owncompany=${owncompany}`,
     {
       headers: {
         "Content-Type": "application/json",
@@ -395,7 +425,8 @@ const aggregateSales = (data) => {
 
   data.forEach(
     ({ company, amount, invoicenumber, slug, description, date }) => {
-      const lowerCaseCompany = company.toLowerCase(); // Normalize company names to lowercase
+      const lowerCaseCompany = company?.toLowerCase(); // Normalize company names to lowercase
+      console.log("lowerCaseCompany: ", lowerCaseCompany);
 
       if (!salesMap.has(lowerCaseCompany)) {
         salesMap.set(lowerCaseCompany, {
