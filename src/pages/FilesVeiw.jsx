@@ -1,50 +1,106 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import PDFViewer from "../components/docs/PDFVeiwer";
 import {
   Box,
+  Button,
   Grid2,
   List,
   ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
   Paper,
+  Stack,
   Tooltip,
   Typography,
 } from "@mui/material";
-import { DocumentScanner } from "@mui/icons-material";
-import { GiLifeBar } from "react-icons/gi";
+import { ArrowBack, DocumentScanner } from "@mui/icons-material";
+import { GiHealthCapsule, GiLifeBar } from "react-icons/gi";
 import TransparentBox from "../components/options/TransparentBox";
 import { FaCar } from "react-icons/fa";
+import { grey } from "@mui/material/colors";
+import { Link } from "react-router-dom";
 
 const FilesVeiw = () => {
+  const [docs, setDocs] = useState(null);
+  const [activeDocs, setActiveDocs] = useState(null);
+  const [previesSource, setPreviewSource] = useState(null);
+  const [acitveSource, setAcitveSource] = useState(null);
+
+  useEffect(() => {
+    let store = JSON.parse(sessionStorage.getItem("x04_f4"));
+    // console.log("store: ", store);
+    setDocs(store);
+    setActiveDocs(store?.lifePCC);
+  }, []);
+
+  const handlePreviews = (e) => {
+    setAcitveSource(e.uid);
+    setPreviewSource(e.url);
+  };
   return (
     <Grid2 container spacing={1} p={1}>
       <Grid2 size={{ xs: 12, sm: 2, md: 3 }}>
         <Paper elevation={0} sx={{ p: 1 }}>
-          <Typography m={1} variant="body2" color="grey">
-            Policy Documents
-          </Typography>
-
+          <Stack
+            flexDirection={"row"}
+            justifyContent={"space-between"}
+            alignItems={"center"}
+          >
+            <Typography m={1} variant="body2" color="grey">
+              Policy Documents
+            </Typography>
+            <Button
+              sx={{ fontSize: 10, color: "grey" }}
+              startIcon={<ArrowBack color="disabled" fontSize="8px" />}
+              component={Link}
+              to={-1}
+              color="inherit"
+            >
+              Back
+            </Button>
+          </Stack>
           <Box>
             <List>
-              <ListItem>
-                <ListItemIcon>
-                  <DocumentScanner />
-                </ListItemIcon>
-                <ListItemText>Policy 02388239</ListItemText>
-              </ListItem>
+              {activeDocs?.map((el, i) => {
+                return (
+                  <React.Fragment key={i}>
+                    {el?.docciments?.map((sel, i) => (
+                      <ListItem
+                        key={i}
+                        sx={{
+                          bgcolor:
+                            acitveSource === sel?.uid ? grey[400] : grey[200],
+                          borderRadius: 10,
+                        }}
+                      >
+                        <ListItemButton
+                          sx={{ p: 0, bgcolor: "transparent" }}
+                          onClick={() => handlePreviews(sel)}
+                        >
+                          <ListItemIcon>
+                            <DocumentScanner />
+                          </ListItemIcon>
+                          <ListItemText>{sel?.title}</ListItemText>
+                        </ListItemButton>
+                      </ListItem>
+                    ))}
+                  </React.Fragment>
+                );
+              })}
             </List>
           </Box>
         </Paper>
       </Grid2>
       <Grid2 size={{ xs: 12, sm: 10, md: 6 }}>
-        {/* <PDFViewer
-          url={
-            "https://videos.pexels.com/video-files/4620563/4620563-uhd_1440_2732_25fps.mp4"
-          }
-        /> */}
-        {/* <PDFViewer url={"https://tmpfiles.org/dl/18000688/document.pdf"} /> */}
-        <PDFViewer url={"https://tmpfiles.org/dl/18004512/document.pdf"} />
+        {
+          <PDFViewer
+            url={
+              previesSource ||
+              "https://enivesh.com/images/eniveshicon/Enivesh_Insurance_LOGO.png"
+            }
+          />
+        }
       </Grid2>
       <Grid2 size={{ xs: 12, sm: 2, md: 3 }}>
         <Paper elevation={0} sx={{ p: 1 }}>
@@ -52,24 +108,45 @@ const FilesVeiw = () => {
             Other Insurance Policy Documents
           </Typography>
 
-          <Box my={2}>
-            <TransparentBox
-              value={<GiLifeBar fontSize="50px" />}
-              fontSize={"50px"}
-              caption={"Life Insurance Documents "}
-              fullWidth
-              rgbColor="rgb(99, 199, 0)"
-            />
-          </Box>
-          <Box my={2}>
-            <TransparentBox
-              value={<FaCar fontSize="50px" />}
-              fontSize={"50px"}
-              caption={"Car Insurance Documents "}
-              fullWidth
-              rgbColor="rgb(0, 80, 199)"
-            />
-          </Box>
+          {docs?.lifePCC?.length > 0 && (
+            <Box my={2}>
+              <TransparentBox
+                value={<GiLifeBar fontSize="50px" />}
+                rupeeLabal={false}
+                onClick={() => setActiveDocs(docs?.lifePCC)}
+                fontSize={"50px"}
+                caption={"Life Insurance Documents "}
+                fullWidth
+                rgbColor="rgb(99, 199, 0)"
+              />
+            </Box>
+          )}
+          {docs?.healthPCC?.length > 0 && (
+            <Box my={2}>
+              <TransparentBox
+                value={<GiHealthCapsule fontSize="50px" />}
+                rupeeLabal={false}
+                onClick={() => setActiveDocs(docs?.healthPCC)}
+                fontSize={"50px"}
+                caption={"Health Insurance Documents "}
+                fullWidth
+                rgbColor="rgb(15, 150, 107)"
+              />
+            </Box>
+          )}
+          {docs?.carPCC?.length > 0 && (
+            <Box my={2}>
+              <TransparentBox
+                value={<FaCar fontSize="50px" />}
+                fontSize={"50px"}
+                rupeeLabal={false}
+                onClick={() => setActiveDocs(docs?.carPCC)}
+                caption={"Car Insurance Documents "}
+                fullWidth
+                rgbColor="rgb(0, 80, 199)"
+              />
+            </Box>
+          )}
         </Paper>
       </Grid2>
     </Grid2>

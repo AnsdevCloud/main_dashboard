@@ -5,3 +5,12 @@ iframe .ytp-pause-overlay {
     display: none !important;
     
 }
+:root{
+    --LinkPath:"#ff5c00"
+}
+.custom-link {
+    stroke: #f0691b !important;
+  /* "  ✅ Orange connector line" */
+    stroke-width: 3px !important;
+    /* ✅ Thickness adjust */
+} 

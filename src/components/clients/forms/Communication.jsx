@@ -1,14 +1,24 @@
 import { ArrowBack, Save } from "@mui/icons-material";
-import { Button, Container, Grid2, TextField, Typography } from "@mui/material";
+import {
+  Alert,
+  Button,
+  Container,
+  Grid2,
+  TextField,
+  Typography,
+} from "@mui/material";
 import React, { useContext, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ThemeContext } from "../../../theme/ThemeContext";
 
 const Communication = () => {
   const { regCrmClient, setRegCrmClient } = useContext(ThemeContext);
+  const [ctData, setCTData] = useState(null);
+
   const [edit, setEdit] = useState(false);
   const navigate = useNavigate();
   let cid = JSON.parse(sessionStorage.getItem("cid"));
+  let ClintType = JSON.parse(sessionStorage.getItem("ct"));
   const [formData, setFormData] = useState({
     cid: "",
     residentialAddress: "",
@@ -20,6 +30,7 @@ const Communication = () => {
   });
   useEffect(() => {
     let editData = JSON.parse(sessionStorage.getItem("edit-data"));
+    setCTData(ClintType);
     if (editData?.id) {
       setEdit(true);
       setFormData({ ...editData?.communication });
@@ -45,9 +56,7 @@ const Communication = () => {
       formData?.emergencyContactName &&
       formData?.emergencyContactNumber &&
       formData?.languagePreference &&
-      formData?.officeAddress &&
-      formData?.permanentAddress &&
-      formData?.residentialAddress
+      formData?.officeAddress
     ) {
       fetch(
         `https://db.enivesh.com/firestore/single/crm_clients/${cid}`,
@@ -74,8 +83,11 @@ const Communication = () => {
 
   return (
     <Container>
-      <Grid2 container spacing={{ xs: 2, md: 3 }} px={2}>
-        <Grid2 size={{ xs: 12 }}>
+      <Grid2 container spacing={{ xs: 2, md: 3 }} py={2} px={2}>
+        <Grid2
+          size={{ xs: 12 }}
+          display={ctData === "group" ? "none" : "block"}
+        >
           <Typography
             variant="subtitle1"
             fontSize={{ xs: 24, md: 40 }}
@@ -87,13 +99,30 @@ const Communication = () => {
             Communication Details
           </Typography>
         </Grid2>
-
         <Grid2 size={{ xs: 12 }}>
+          {!cid && (
+            <Alert severity="error">
+              CID Not Set{" "}
+              <Link
+                to={"/crm/parsonal"}
+                style={{ color: "green", padding: "0 10px" }}
+              >
+                {" "}
+                Set here
+              </Link>
+            </Alert>
+          )}
+        </Grid2>
+        <Grid2
+          size={{ xs: 12 }}
+          display={ctData === "group" ? "none" : "block"}
+        >
           <TextField
             type="text"
             multiline
             rows={3}
             name=""
+            disabled={!cid}
             value={formData?.residentialAddress}
             placeholder="Residential Address"
             onChange={(e) =>
@@ -113,6 +142,7 @@ const Communication = () => {
               setFormData({ ...formData, officeAddress: e.target.value })
             }
             rows={3}
+            disabled={!cid}
             name=""
             placeholder="Office Address"
             label="Office Address"
@@ -120,7 +150,10 @@ const Communication = () => {
             fullWidth
           />
         </Grid2>
-        <Grid2 size={{ xs: 12 }}>
+        <Grid2
+          size={{ xs: 12 }}
+          display={ctData === "group" ? "none" : "block"}
+        >
           <TextField
             type="text"
             value={formData?.permanentAddress}
@@ -129,6 +162,7 @@ const Communication = () => {
             }
             multiline
             rows={3}
+            disabled={!cid}
             name=""
             placeholder="Permanent Address"
             label="Permanent Address"
@@ -140,6 +174,7 @@ const Communication = () => {
         <Grid2 size={{ xs: 12, md: 4 }}>
           <TextField
             type="text"
+            disabled={!cid}
             name=""
             placeholder="Emergency Contact Name"
             label="Emergency Contact Name"
@@ -154,6 +189,7 @@ const Communication = () => {
         <Grid2 size={{ xs: 12, md: 4 }}>
           <TextField
             type="number"
+            disabled={!cid}
             name=""
             value={formData?.emergencyContactNumber}
             onChange={(e) =>
@@ -171,6 +207,7 @@ const Communication = () => {
         <Grid2 size={{ xs: 12, md: 4 }}>
           <TextField
             type="text"
+            disabled={!cid}
             name=""
             value={formData?.languagePreference}
             onChange={(e) =>
@@ -202,6 +239,7 @@ const Communication = () => {
             fullWidth
             color={edit ? "success" : "info"}
             variant="contained"
+            disabled={!cid}
             sx={{ maxWidth: 200 }}
           >
             {edit ? "Update" : "Save"}

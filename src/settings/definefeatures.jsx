@@ -14,6 +14,7 @@ import {
   PersonAddAlt,
   Public,
   SafetyCheck,
+  Upload,
 } from "@mui/icons-material";
 import { TbReceiptRupee, TbReceiptTax } from "react-icons/tb";
 import {
@@ -32,6 +33,13 @@ const defineFeatures = [
     link: "",
     name: "crm",
     children: [
+      {
+        label: "Uploads ",
+        icon: <Upload />,
+        link: "/crm/uploads",
+        name: "register",
+        dev: false,
+      },
       {
         label: "Register ",
         icon: <PersonAddAlt />,

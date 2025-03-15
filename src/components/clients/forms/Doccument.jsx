@@ -7,6 +7,7 @@ import {
   Upload,
 } from "@mui/icons-material";
 import {
+  Alert,
   Box,
   Button,
   Container,
@@ -17,6 +18,7 @@ import {
   MenuItem,
   Paper,
   Select,
+  Stack,
   Table,
   TableBody,
   TableCell,
@@ -35,8 +37,10 @@ const DoccumentUpload = () => {
   const navigate = useNavigate();
 
   let cid = JSON.parse(sessionStorage.getItem("cid"));
+
   //store array
   const [file, setFile] = useState("");
+  const [ctData, setCTData] = useState(null);
 
   //store array
   const [documents, setDocuments] = useState([]);
@@ -44,30 +48,57 @@ const DoccumentUpload = () => {
 
   useEffect(() => {
     let editData = JSON.parse(sessionStorage.getItem("edit-data"));
+    let clinetType = JSON.parse(sessionStorage.getItem("ct"));
     if (editData?.id) {
       setEdit(true);
       if (editData?.documents) {
         setDocuments([...editData?.documents]);
       }
     }
+    setCTData(clinetType);
   }, []);
 
-  const insuranceType = [
+  const documentType = [
     {
-      value: "health_insurance",
-      name: "Health Insurance",
+      active: null,
+      value: "kycDocument",
+      name: "KYC Document",
     },
     {
-      value: "life_insurance",
-      name: "Life Insurance",
+      active: "group",
+
+      value: "pancard",
+      name: "Pan Card",
     },
     {
-      value: "car_insurance",
-      name: "Car Insurance",
+      active: "group",
+
+      value: "msmeCertificate",
+      name: "MSME Certificate",
     },
     {
-      value: "fund",
-      name: "Fund ",
+      active: "group",
+
+      value: "gstCertificate",
+      name: "GST Certificate ",
+    },
+    {
+      active: "group",
+
+      value: "addressProof",
+      name: "Address Proof",
+    },
+    {
+      active: "group",
+
+      value: "cancelledCheque",
+      name: "Cancelled Cheque",
+    },
+    {
+      active: "group",
+
+      value: "other",
+      name: "Other",
     },
   ];
   //single member obj
@@ -202,28 +233,55 @@ const DoccumentUpload = () => {
     <Container>
       <Grid2 container spacing={{ xs: 2, md: 3 }} px={2}>
         <Grid2 size={{ xs: 12 }}>
-          <Typography
-            variant="subtitle1"
-            fontSize={{ xs: 24, md: 40 }}
-            component={"h1"}
-            my={{ xs: 1, md: 2 }}
-            color="grey"
-            fontWeight={600}
+          <Stack
+            width={"100%"}
+            flexDirection={"row"}
+            alignItems={"center"}
+            justifyContent={"center"}
           >
-            Documents
-          </Typography>
+            <Typography
+              variant="subtitle1"
+              fontSize={{ xs: 24, md: 40 }}
+              component={"h1"}
+              my={{ xs: 1, md: 2 }}
+              color="grey"
+              fontWeight={600}
+            >
+              Documents
+            </Typography>
+          </Stack>
         </Grid2>
 
         <Grid2 size={{ xs: 12 }}>
-          <Button
-            disabled={isOpen}
-            variant="outlined"
-            onClick={() => handleOpenForm()}
-            size="small"
-            startIcon={<Add />}
+          <Stack
+            width={"100%"}
+            flexDirection={"row"}
+            alignItems={"center"}
+            justifyContent={"flex-start"}
+            gap={3}
           >
-            Add Documents
-          </Button>
+            <Button
+              disabled={isOpen}
+              variant="outlined"
+              onClick={() => handleOpenForm()}
+              size="small"
+              startIcon={<Add />}
+            >
+              Add Documents
+            </Button>
+            {!cid && (
+              <Alert severity="error">
+                CID Not Set{" "}
+                <Link
+                  to={"/crm/parsonal"}
+                  style={{ color: "green", padding: "0 10px" }}
+                >
+                  {" "}
+                  Set here
+                </Link>
+              </Alert>
+            )}
+          </Stack>
         </Grid2>
         {isOpen && (
           <Grid2 size={{ xs: 12 }}>
@@ -239,19 +297,29 @@ const DoccumentUpload = () => {
                 <Grid2 size={{ xs: 12, md: 2 }}>
                   <FormControl size="small" fullWidth>
                     <InputLabel id="demo-simple-select-label">
-                      Insurance Type
+                      Document Type
                     </InputLabel>
                     <Select
                       labelId="demo-simple-select-label"
                       id="demo-simple-select"
                       value={doccument?.type}
-                      label="  Insurance Type  "
+                      label=" Document Type "
                       onChange={(e) =>
                         setDoccument({ ...doccument, type: e.target.value })
                       }
                     >
-                      {insuranceType?.map((item, index) => (
-                        <MenuItem key={index} value={item?.value}>
+                      {documentType?.map((item, index) => (
+                        <MenuItem
+                          key={index}
+                          disabled={
+                            ctData === "group"
+                              ? item?.active === "group"
+                                ? false
+                                : true
+                              : item?.active === "group" && true
+                          }
+                          value={item?.value}
+                        >
                           {item?.name}
                         </MenuItem>
                       ))}
@@ -415,7 +483,7 @@ const DoccumentUpload = () => {
               variant="contained"
               sx={{ maxWidth: 200 }}
               onClick={() => handleSubmit()}
-              disabled={documents?.length === 0}
+              disabled={documents?.length === 0 || !cid}
             >
               {edit ? "Update" : "Save"}
             </Button>

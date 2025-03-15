@@ -1,12 +1,10 @@
-import { Analytics, Pages, Policy, Settings } from "@mui/icons-material";
+import { Pages } from "@mui/icons-material";
 import { Button, Grid2, Paper, Stack, Typography } from "@mui/material";
-import { BsActivity } from "react-icons/bs";
 
 import { Link, Outlet, useLocation } from "react-router-dom";
 
 const Poratl = () => {
   const { pathname } = useLocation();
-
   return (
     <Grid2 container spacing={1} p={1}>
       <Grid2 size={{ xs: 12, md: 10 }}>

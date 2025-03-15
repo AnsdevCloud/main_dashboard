@@ -1,5 +1,6 @@
 import { ArrowBack, Lock, LockOpen, Save } from "@mui/icons-material";
 import {
+  Alert,
   Button,
   Container,
   FormControl,
@@ -17,13 +18,15 @@ import React, { useContext, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ThemeContext } from "../../../theme/ThemeContext";
 import { RiAiGenerate } from "react-icons/ri";
+import ProfileImageCropper from "./ProfileUpload";
 
 const Parsonal = () => {
   const { regCrmClient, setRegCrmClient } = useContext(ThemeContext);
 
-  const [errorMsg, setErrorMsg] = useState({
-    name: null,
+  const [isMessage, setIsMessage] = useState({
+    type: null,
     msg: null,
+    open: false,
   });
 
   const navigate = useNavigate();
@@ -31,6 +34,8 @@ const Parsonal = () => {
   const [cinLock, setCinLock] = useState(null);
   let old = JSON.parse(sessionStorage.getItem("cid"));
   let editData = JSON.parse(sessionStorage.getItem("edit-data"));
+  let ct = JSON.parse(sessionStorage.getItem("ct"));
+  const [effectRun, setEffectRun] = useState(false);
 
   useEffect(() => {
     let cinLockstore = JSON.parse(sessionStorage.getItem("cid-lock"));
@@ -100,18 +105,19 @@ const Parsonal = () => {
       redirect: "follow",
     };
     if (
-      formData?.cin &&
-      formData?.anualIncome &&
-      formData?.clientType &&
-      formData?.email &&
-      formData?.panNumber &&
-      formData?.coste &&
-      formData?.fname &&
-      formData?.primaryNumber &&
-      formData?.dob &&
-      formData?.customerType &&
-      formData?.secondaryNumber &&
-      formData?.gender
+      (formData?.cin &&
+        formData?.anualIncome &&
+        formData?.clientType &&
+        formData?.email &&
+        formData?.panNumber &&
+        formData?.coste &&
+        formData?.fname &&
+        formData?.primaryNumber &&
+        formData?.dob &&
+        formData?.gender) ||
+      (formData?.clientType === "group" &&
+        formData?.firmName &&
+        formData?.groupName)
     ) {
       fetch(`https://db.enivesh.com/firestore/set`, requestOptions)
         .then((response) => response.text())
@@ -155,14 +161,44 @@ const Parsonal = () => {
   };
 
   const handleCINLock = (e) => {
+    if (e === false && !effectRun) {
+      setIsMessage({
+        open: true,
+        msg: `CIN is Unlocked , Lost your CIN "${old}" `,
+        type: "warning",
+      });
+    } else {
+      setIsMessage({
+        open: true,
+        msg: "CIN is locked ",
+        type: "success",
+      });
+      setTimeout(() => {
+        setIsMessage({
+          open: false,
+          msg: "",
+          type: "success",
+        });
+      }, 5000);
+    }
     if (editData?.id) {
       return;
     }
+
     if (old) {
-      sessionStorage.setItem("cid-lock", JSON.stringify(e));
-      setCinLock(e);
+      if (effectRun) {
+        sessionStorage.setItem("cid-lock", JSON.stringify(true));
+        setCinLock(true);
+      } else {
+        sessionStorage.setItem("cid-lock", JSON.stringify(e));
+        setCinLock(e);
+      }
     } else {
-      alert("CIN not set ");
+      setIsMessage({
+        open: true,
+        msg: "CIN is not set ",
+        type: "error",
+      });
     }
   };
 
@@ -210,133 +246,323 @@ const Parsonal = () => {
       }
     }
   };
+
+  useEffect(() => {
+    if (effectRun) {
+      setIsMessage({
+        open: true,
+        msg: "CIN is Locked because Important data Fill  ",
+        type: "success",
+      });
+      handleCINLock(true);
+    }
+
+    setTimeout(() => {
+      setIsMessage({
+        open: false,
+        msg: "",
+        type: "success",
+      });
+    }, 5000);
+  }, [effectRun]);
+
+  useEffect(() => {
+    // if (ct) {
+    //   setFormData({
+    //     ...formData,
+    //     clientType: ct || "",
+    //     cin: old,
+    //   });
+    // }
+    if (formData.clientType) {
+      sessionStorage.setItem("ct", JSON.stringify(formData.clientType));
+      sessionStorage.setItem(
+        "ctn",
+        JSON.stringify({ name: formData.fname, gender: formData.gender })
+      );
+    }
+    if (
+      formData?.fname &&
+      formData.lname &&
+      formData.cin &&
+      formData.panNumber &&
+      formData.clientType
+    ) {
+      setEffectRun(true);
+    } else {
+      setEffectRun(false);
+    }
+  }, [formData]);
+
   return (
     <Container>
       <Grid2 container spacing={{ xs: 2, md: 3 }} px={2}>
         <Grid2 size={{ xs: 12 }}>
-          <Typography
-            variant="subtitle1"
-            fontSize={{ xs: 24, md: 40 }}
-            component={"h1"}
-            my={{ xs: 1, md: 2 }}
-            color="grey"
-            fontWeight={600}
+          <Stack
+            width={"100%"}
+            flexDirection={"row"}
+            alignContent={"center"}
+            alignItems={"center"}
+            justifyContent={"flex-start"}
+            gap={2}
           >
-            Parsonal Details
+            <Typography
+              variant="subtitle1"
+              fontSize={{ xs: 24, md: 40 }}
+              component={"h1"}
+              my={{ xs: 1, md: 2 }}
+              color="grey"
+              fontWeight={600}
+            >
+              Parsonal Details
+            </Typography>
             <Tooltip title="New Form ">
               <Button
                 disabled={editData?.id ? false : cinLock}
                 onClick={() => handleNewReg()}
                 size="small"
                 sx={{ ml: 2 }}
+                variant="outlined"
               >
-                New
+                New Client
               </Button>
             </Tooltip>
-          </Typography>
-        </Grid2>
-        <Grid2 size={{ xs: 12, md: 4 }}>
-          <Stack
-            flexDirection={"row"}
-            alignItems={"center"}
-            justifyContent={"space-between"}
-            gap={2}
-          >
-            <TextField
-              onChange={(e) =>
-                setFormData({ ...formData, cin: e.target.value })
-              }
-              type="text"
-              disabled={!idStatus || cinLock}
-              placeholder="CIN"
-              value={formData?.cin}
-              label="CIN"
-              size="small"
-              slotProps={{
-                input: {
-                  readOnly: true,
-                },
-              }}
-              fullWidth
-            />
-            {!cinLock && (
-              <Tooltip title="Click Locked CIN">
-                <IconButton
-                  color="info"
-                  size="small"
-                  onClick={() => handleCINLock(true)}
-                >
-                  <LockOpen />
-                </IconButton>
-              </Tooltip>
-            )}
-            {cinLock && (
-              <Tooltip
-                title={
-                  editData?.id
-                    ? "Not Unlock , Update Mode Active "
-                    : "Click Unlocked"
-                }
+            {isMessage?.open && (
+              <Alert
+                variant="standard"
+                severity={isMessage?.type || "error"}
+                onClose={() => setIsMessage({ ...isMessage, open: false })}
               >
-                <IconButton
-                  color="success"
-                  size="small"
-                  onClick={() => handleCINLock(false)}
-                >
-                  <Lock />
-                </IconButton>
-              </Tooltip>
+                {isMessage?.msg}
+              </Alert>
             )}
-
-            <Tooltip title="Generate CIN">
-              <IconButton
-                color="primary"
-                size="small"
-                disabled={cinLock}
-                onClick={() => handleGenerateId()}
-              >
-                <RiAiGenerate />
-              </IconButton>
-            </Tooltip>
           </Stack>
         </Grid2>
-        <Grid2 size={{ xs: 12, md: 4 }}>
-          <FormControl fullWidth size="small">
-            <InputLabel id="demo-simple-select-label">Client Type</InputLabel>
-            <Select
-              labelId="demo-simple-select-label"
-              id="demo-simple-select"
-              value={formData?.clientType}
-              label="Client Type"
-              onChange={(e) =>
-                setFormData({ ...formData, clientType: e.target.value })
-              }
+        {/* -----===Control====------ */}
+        <Grid2
+          size={{ xs: 12 }}
+          bgcolor={(theme) => theme.palette.background.paper}
+          p={2}
+          borderRadius={1}
+        >
+          <Grid2 container spacing={2}>
+            <Grid2 size={{ xs: 12, md: 4 }}>
+              <Stack
+                flexDirection={"row"}
+                alignItems={"center"}
+                justifyContent={"space-between"}
+                gap={2}
+              >
+                <TextField
+                  onChange={(e) =>
+                    setFormData({ ...formData, cin: e.target.value })
+                  }
+                  type="text"
+                  disabled={!idStatus || cinLock}
+                  placeholder="CIN"
+                  value={formData?.cin}
+                  label="CIN"
+                  size="small"
+                  color="info"
+                  slotProps={{
+                    input: {
+                      readOnly: true,
+                    },
+                  }}
+                  fullWidth
+                />
+                {!cinLock && (
+                  <Tooltip title="Click Locked CIN">
+                    <IconButton
+                      color="info"
+                      size="small"
+                      onClick={() => handleCINLock(true)}
+                    >
+                      <LockOpen />
+                    </IconButton>
+                  </Tooltip>
+                )}
+                {cinLock && (
+                  <Tooltip
+                    title={
+                      editData?.id
+                        ? "Not Unlock , Update Mode Active "
+                        : "Click Unlocked"
+                    }
+                  >
+                    <IconButton
+                      color="success"
+                      size="small"
+                      onClick={() => handleCINLock(false)}
+                    >
+                      <Lock />
+                    </IconButton>
+                  </Tooltip>
+                )}
+
+                <Tooltip title="Generate CIN">
+                  <IconButton
+                    color="primary"
+                    size="small"
+                    disabled={cinLock}
+                    onClick={() => handleGenerateId()}
+                  >
+                    <RiAiGenerate />
+                  </IconButton>
+                </Tooltip>
+              </Stack>
+            </Grid2>
+            <Grid2 size={{ xs: 12, md: 4 }}>
+              <FormControl color="info" fullWidth size="small">
+                <InputLabel id="demo-simple-select-label">
+                  Client Type
+                </InputLabel>
+                <Select
+                  labelId="demo-simple-select-label"
+                  id="demo-simple-select"
+                  color="info"
+                  value={formData?.clientType}
+                  label="Client Type"
+                  onChange={(e) =>
+                    setFormData({ ...formData, clientType: e.target.value })
+                  }
+                >
+                  <MenuItem value={"family-wealth"}>Family Wealth</MenuItem>
+                  <MenuItem value={"group"}>Group</MenuItem>
+                  <MenuItem value={"retail"}>Retail</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid2>
+            <Grid2
+              size={{ xs: 12, md: 4 }}
+              display={formData?.clientType === "group" ? "block" : "none"}
             >
-              <MenuItem value={"family-wealth"}>Family Wealth</MenuItem>
-              <MenuItem value={"comprehansive"}>Comprehansive</MenuItem>
-              <MenuItem value={"new-relationship"}>New Relationship</MenuItem>
-            </Select>
-          </FormControl>
+              <TextField
+                onChange={(e) =>
+                  setFormData({ ...formData, groupName: e.target.value })
+                }
+                color="info"
+                type="text"
+                value={formData?.groupName}
+                name=""
+                placeholder="Group Name"
+                label="Group Name"
+                size="small"
+                fullWidth
+              />
+            </Grid2>
+          </Grid2>
         </Grid2>
-        <Grid2 size={{ xs: 12, md: 4 }}>
-          <FormControl fullWidth size="small">
-            <InputLabel id="demo-simple-select-label">Customer Type</InputLabel>
-            <Select
-              labelId="demo-simple-select-label"
-              id="demo-simple-select"
-              value={formData?.customerType}
-              label="Customer Type"
-              onChange={(e) =>
-                setFormData({ ...formData, customerType: e.target.value })
-              }
-            >
-              <MenuItem value={"silver"}>Silver</MenuItem>
-              <MenuItem value={"gold"}>Gold</MenuItem>
-              <MenuItem value={"dimond"}>Dimond</MenuItem>
-            </Select>
-          </FormControl>
+        {/* ----------Group------------ */}
+        <Grid2
+          size={{ xs: 12, md: 4 }}
+          display={formData?.clientType === "group" ? "block" : "none"}
+        >
+          <TextField
+            onChange={(e) =>
+              setFormData({ ...formData, firmName: e.target.value })
+            }
+            type="text"
+            value={formData?.firmName}
+            name=""
+            placeholder="Firm Name"
+            label="Firm Name"
+            size="small"
+            fullWidth
+          />
         </Grid2>
-        <Grid2 size={{ xs: 12, md: 4 }}>
+        <Grid2
+          size={{ xs: 12, md: 4 }}
+          display={formData?.clientType === "group" ? "block" : "none"}
+        >
+          <TextField
+            onChange={(e) =>
+              setFormData({ ...formData, gstNumber: e.target.value })
+            }
+            type="text"
+            value={formData?.gstNumber}
+            name=""
+            placeholder="GST Number"
+            label="GST Number"
+            size="small"
+            fullWidth
+          />
+        </Grid2>
+        <Grid2
+          size={{ xs: 12, md: 4 }}
+          display={formData?.clientType === "group" ? "block" : "none"}
+        >
+          <TextField
+            onChange={(e) =>
+              setFormData({ ...formData, incorporationDate: e.target.value })
+            }
+            type="date"
+            name=""
+            value={formData?.incorporationDate}
+            placeholder="Incorporation date"
+            label="Incorporation date"
+            size="small"
+            color="#000"
+            focused
+            fullWidth
+          />
+        </Grid2>
+        <Grid2
+          size={{ xs: 12, md: 4 }}
+          display={formData?.clientType === "group" ? "block" : "none"}
+        >
+          <TextField
+            onChange={(e) =>
+              setFormData({ ...formData, approxNumEmp: e.target.value })
+            }
+            type="number"
+            value={formData?.approxNumEmp}
+            name=""
+            placeholder="Approx Number of employees"
+            label="Approx No. of Emp."
+            size="small"
+            fullWidth
+          />
+        </Grid2>
+        <Grid2
+          size={{ xs: 12, md: 4 }}
+          display={formData?.clientType === "group" ? "block" : "none"}
+        >
+          <TextField
+            onChange={(e) =>
+              setFormData({ ...formData, director1: e.target.value })
+            }
+            type="text"
+            value={formData?.director1}
+            name=""
+            placeholder="Director 1"
+            label="Director 1"
+            size="small"
+            fullWidth
+          />
+        </Grid2>
+        <Grid2
+          size={{ xs: 12, md: 4 }}
+          display={formData?.clientType === "group" ? "block" : "none"}
+        >
+          <TextField
+            onChange={(e) =>
+              setFormData({ ...formData, director2: e.target.value })
+            }
+            type="text"
+            value={formData?.director2}
+            name=""
+            placeholder="Director 2"
+            label="Director 2"
+            size="small"
+            fullWidth
+          />
+        </Grid2>
+        {/* ----------Group------------- */}
+        <Grid2
+          size={{ xs: 12, md: 4 }}
+          display={formData?.clientType === "group" ? "none" : "block"}
+        >
           <TextField
             onChange={(e) =>
               setFormData({ ...formData, fname: e.target.value })
@@ -351,7 +577,10 @@ const Parsonal = () => {
             fullWidth
           />
         </Grid2>
-        <Grid2 size={{ xs: 12, md: 4 }}>
+        <Grid2
+          size={{ xs: 12, md: 4 }}
+          display={formData?.clientType === "group" ? "none" : "block"}
+        >
           <TextField
             onChange={(e) =>
               setFormData({ ...formData, lname: e.target.value })
@@ -365,7 +594,10 @@ const Parsonal = () => {
             fullWidth
           />
         </Grid2>
-        <Grid2 size={{ xs: 12, md: 4 }}>
+        <Grid2
+          size={{ xs: 12, md: 4 }}
+          display={formData?.clientType === "group" ? "none" : "block"}
+        >
           <FormControl fullWidth size="small">
             <InputLabel id="demo-simple-select-label">Gender</InputLabel>
             <Select
@@ -383,7 +615,10 @@ const Parsonal = () => {
             </Select>
           </FormControl>
         </Grid2>
-        <Grid2 size={{ xs: 12, md: 4 }}>
+        <Grid2
+          size={{ xs: 12, md: 4 }}
+          display={formData?.clientType === "group" ? "none" : "block"}
+        >
           <TextField
             onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
             type="date"
@@ -397,7 +632,10 @@ const Parsonal = () => {
             fullWidth
           />
         </Grid2>
-        <Grid2 size={{ xs: 12, md: 4 }}>
+        <Grid2
+          size={{ xs: 12, md: 4 }}
+          display={formData?.clientType === "group" ? "none" : "block"}
+        >
           <TextField
             onChange={(e) =>
               setFormData({ ...formData, nationality: e.target.value })
@@ -411,7 +649,11 @@ const Parsonal = () => {
             fullWidth
           />
         </Grid2>
-        <Grid2 size={{ xs: 12, md: 4 }}>
+        {/* native language---- */}
+        <Grid2
+          size={{ xs: 12, md: 4 }}
+          display={formData?.clientType === "group" ? "none" : "block"}
+        >
           <TextField
             onChange={(e) =>
               setFormData({ ...formData, coste: e.target.value })
@@ -425,7 +667,11 @@ const Parsonal = () => {
             fullWidth
           />
         </Grid2>
-        <Grid2 size={{ xs: 12, md: 4 }}>
+        {/* ---meterial status ---- */}
+        <Grid2
+          size={{ xs: 12, md: 4 }}
+          display={formData?.clientType === "group" ? "none" : "block"}
+        >
           <FormControl fullWidth size="small">
             <InputLabel id="demo-simple-select-label">
               Material Status
@@ -441,10 +687,11 @@ const Parsonal = () => {
             >
               <MenuItem value={"married"}>Married</MenuItem>
               <MenuItem value={"Unmarried"}>Unmarried</MenuItem>
-              <MenuItem value={"window"}>Window</MenuItem>
+              <MenuItem value={"window"}>Windo</MenuItem>
             </Select>
           </FormControl>
         </Grid2>
+        {/* ----pan--- */}
         <Grid2 size={{ xs: 12, md: 4 }}>
           <TextField
             onChange={(e) =>
@@ -459,6 +706,7 @@ const Parsonal = () => {
             fullWidth
           />
         </Grid2>
+        {/* -----------personal-EMail--------- */}
         <Grid2 size={{ xs: 12, md: 4 }}>
           <TextField
             onChange={(e) =>
@@ -473,6 +721,7 @@ const Parsonal = () => {
             fullWidth
           />
         </Grid2>
+        {/* ----primary number */}
         <Grid2 size={{ xs: 12, md: 4 }}>
           <TextField
             onChange={(e) =>
@@ -487,7 +736,10 @@ const Parsonal = () => {
             fullWidth
           />
         </Grid2>{" "}
-        <Grid2 size={{ xs: 12, md: 4 }}>
+        <Grid2
+          size={{ xs: 12, md: 4 }}
+          display={formData?.clientType === "group" ? "none" : "block"}
+        >
           <TextField
             onChange={(e) =>
               setFormData({ ...formData, secondaryNumber: e.target.value })
@@ -501,7 +753,10 @@ const Parsonal = () => {
             fullWidth
           />
         </Grid2>{" "}
-        <Grid2 size={{ xs: 12, md: 4 }}>
+        <Grid2
+          size={{ xs: 12, md: 4 }}
+          display={formData?.clientType === "group" ? "none" : "block"}
+        >
           <TextField
             onChange={(e) =>
               setFormData({ ...formData, anualIncome: e.target.value })
@@ -515,7 +770,10 @@ const Parsonal = () => {
             fullWidth
           />
         </Grid2>{" "}
-        <Grid2 size={{ xs: 12, md: 4 }}>
+        <Grid2
+          size={{ xs: 12, md: 4 }}
+          display={formData?.clientType === "group" ? "none" : "block"}
+        >
           <TextField
             onChange={(e) =>
               setFormData({ ...formData, occupation: e.target.value })
@@ -525,6 +783,31 @@ const Parsonal = () => {
             value={formData?.occupation}
             placeholder="Occupation"
             label="Occupation"
+            size="small"
+            fullWidth
+          />
+        </Grid2>
+        <Grid2
+          size={{ xs: 12, md: 4 }}
+          display={formData?.clientType === "group" ? "none" : "block"}
+        >
+          <TextField
+            disabled
+            onChange={(e) =>
+              setFormData({ ...formData, occupation: e.target.value })
+            }
+            type="file"
+            helperText="Cooming Soon"
+            name=""
+            // value={formData?.occupation}
+
+            placeholder="Occupation"
+            label="Profile Image"
+            slotProps={{
+              inputLabel: {
+                shrink: true,
+              },
+            }}
             size="small"
             fullWidth
           />

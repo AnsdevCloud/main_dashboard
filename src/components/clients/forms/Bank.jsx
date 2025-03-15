@@ -1,5 +1,6 @@
 import { ArrowBack, Save } from "@mui/icons-material";
 import {
+  Alert,
   Button,
   Container,
   FormControl,
@@ -59,9 +60,7 @@ const BankDetails = () => {
       formData?.bankName &&
       formData?.acNumber &&
       formData?.acCreationDate &&
-      formData?.relationshipDate &&
-      formData?.clientTag &&
-      formData?.custmerStatus
+      formData?.relationshipDate
     ) {
       fetch(
         `https://db.enivesh.com/firestore/single/crm_clients/${cid}`,
@@ -102,10 +101,25 @@ const BankDetails = () => {
           </Typography>
         </Grid2>
         <Grid2 size={{ xs: 12 }}>
+          {!cid && (
+            <Alert severity="error">
+              CID Not Set{" "}
+              <Link
+                to={"/crm/parsonal"}
+                style={{ color: "green", padding: "0 10px" }}
+              >
+                {" "}
+                Set here
+              </Link>
+            </Alert>
+          )}
+        </Grid2>
+        <Grid2 size={{ xs: 12 }}>
           <TextField
             type="text"
             name=""
             placeholder="Bank Name"
+            disabled={!cid}
             label="Bank Name"
             value={formData?.bankName}
             size="small"
@@ -118,6 +132,7 @@ const BankDetails = () => {
         <Grid2 size={{ xs: 12 }}>
           <TextField
             type="number"
+            disabled={!cid}
             name=""
             placeholder="Bank Account Number"
             label="Bank Account Number"
@@ -132,8 +147,12 @@ const BankDetails = () => {
         <Grid2 size={{ xs: 12 }}>
           <TextField
             type="date"
-            focused
-            color="#777"
+            slotProps={{
+              inputLabel: {
+                shrink: true,
+              },
+            }}
+            disabled={!cid}
             name=""
             placeholder="Account Creation Date"
             label="Account Creation Date"
@@ -148,8 +167,12 @@ const BankDetails = () => {
         <Grid2 size={{ xs: 12 }}>
           <TextField
             type="date"
-            focused
-            color="#777"
+            disabled={!cid}
+            slotProps={{
+              inputLabel: {
+                shrink: true,
+              },
+            }}
             name=""
             placeholder="Relationship Date"
             onChange={(e) =>
@@ -161,44 +184,7 @@ const BankDetails = () => {
             fullWidth
           />
         </Grid2>
-        <Grid2 size={{ xs: 12, md: 4 }}>
-          <FormControl fullWidth size="small">
-            <InputLabel id="demo-simple-select-label">Client Tag</InputLabel>
-            <Select
-              labelId="demo-simple-select-label"
-              id="demo-simple-select"
-              value={formData?.clientTag}
-              label="Client Tag"
-              onChange={(e) =>
-                setFormData({ ...formData, clientTag: e.target.value })
-              }
-            >
-              <MenuItem value={10}>Tag1</MenuItem>
-              <MenuItem value={20}>Tag2</MenuItem>
-              <MenuItem value={30}>Tag3</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid2>{" "}
-        <Grid2 size={{ xs: 12, md: 4 }}>
-          <FormControl fullWidth size="small">
-            <InputLabel id="demo-simple-select-label">
-              Customer Status
-            </InputLabel>
-            <Select
-              labelId="demo-simple-select-label"
-              id="demo-simple-select"
-              value={formData?.custmerStatus}
-              label=" Customer Status"
-              onChange={(e) =>
-                setFormData({ ...formData, custmerStatus: e.target.value })
-              }
-            >
-              <MenuItem value={10}>Status1</MenuItem>
-              <MenuItem value={20}>Status2</MenuItem>
-              <MenuItem value={30}>Status3</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid2>
+
         <Grid2 size={{ xs: 6, md: 9 }} my={{ xs: 2, md: 3 }}>
           <Button
             startIcon={<ArrowBack />}
@@ -219,6 +205,7 @@ const BankDetails = () => {
             onClick={() => handleSubmit()}
             color={edit ? "success" : "info"}
             variant="contained"
+            disabled={!cid}
             sx={{ maxWidth: 200 }}
           >
             {edit ? "Update" : "Save"}

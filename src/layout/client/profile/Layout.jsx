@@ -1,4 +1,4 @@
-import { Edit, HealthAndSafety } from "@mui/icons-material";
+import { ArrowBack, Edit, HealthAndSafety } from "@mui/icons-material";
 import {
   Avatar,
   Box,
@@ -23,11 +23,19 @@ import {
 import axios from "axios";
 
 import React, { useEffect, useState } from "react";
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  Firestore,
+} from "firebase/firestore";
 
 import { FaCar, FaDotCircle, FaEye, FaEyeSlash } from "react-icons/fa";
 import { GiLifeBar } from "react-icons/gi";
 import { HiDotsVertical } from "react-icons/hi";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { firestore } from "../../../firebase/config";
 
 const Layout = ({ sts = true }) => {
   const { state } = useLocation();
@@ -42,7 +50,8 @@ const Layout = ({ sts = true }) => {
     fd: [],
   });
   const navigate = useNavigate();
-
+  const [policyData, setPolicyData] = useState([]);
+  const [policyDocs, setPolicyDocs] = useState(null);
   const fetchData = async (id) => {
     try {
       const response = await axios.get(
@@ -59,6 +68,35 @@ const Layout = ({ sts = true }) => {
       console.error("Error fetching data:", error);
     }
   };
+  const handleFetchPolicy = async (id) => {
+    const q = query(
+      collection(firestore, "crm_relationship_values"),
+      where("cin", "==", id)
+    );
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const polices = [];
+      querySnapshot.forEach((doc) => {
+        polices.push({ id: doc.id, ...doc.data() });
+      });
+
+      setPolicyData(polices);
+      console.log("polices: ", polices);
+      handleDocsMining(polices);
+    });
+  };
+
+  const handleDocsMining = async (data) => {
+    const lifePCC = data?.filter((v) => v.PCC === "life-insurance");
+    const healthPCC = data?.filter((v) => v.PCC === "health-insurance");
+    const carPCC = data?.filter((v) => v.PCC === "car-insurance");
+
+    setPolicyDocs({ lifePCC, healthPCC, carPCC });
+    sessionStorage.setItem(
+      "x04_f4",
+      JSON.stringify({ lifePCC, healthPCC, carPCC })
+    );
+  };
+  console.log(policyDocs);
 
   useEffect(() => {
     if (state) {
@@ -66,6 +104,10 @@ const Layout = ({ sts = true }) => {
     } else {
       fetchData(profile);
     }
+    if (policyData?.length < 1) {
+      handleFetchPolicy(profile);
+    }
+    handleDocsMining(policyData);
   }, []);
 
   const arr = [
@@ -240,6 +282,17 @@ const Layout = ({ sts = true }) => {
                     onClick={() => handleEdit()}
                   >
                     Edit
+                  </Button>
+                  <Button
+                    size="small"
+                    sx={{
+                      fontSize: 10,
+                    }}
+                    color="inherit"
+                    startIcon={<ArrowBack fontSize={"8px"} />}
+                    onClick={() => navigate(-1)}
+                  >
+                    Back
                   </Button>
                 </Stack>
               </Typography>
@@ -520,7 +573,7 @@ const Layout = ({ sts = true }) => {
               </Stack>
 
               <Grid2 container spacing={2} p={1}>
-                <Grid2 size={{ xs: 12, md: 6 }}>
+                <Grid2 size={{ xs: 12, md: 2 }}>
                   <Stack
                     flexDirection={"row"}
                     alignItems={"center"}
@@ -530,21 +583,21 @@ const Layout = ({ sts = true }) => {
                     justifyContent={"space-around"}
                   >
                     <TransparentBox
-                      value={4}
+                      value={policyData?.length}
                       caption={"Total Policy"}
                       rgbColor="rgb(9, 153, 255)"
                       fullWidth
                     />
-                    <TransparentBox
+                    {/* <TransparentBox
                       fullWidth
                       value={4}
                       tooltipText={"(H,L,M)"}
                       caption={"Policy Type"}
-                    />
+                    /> */}
                     {/* <TransparentBox value={34} label={"Toatal Insurances"} /> */}
                   </Stack>
                 </Grid2>{" "}
-                <Grid2 size={{ xs: 12, md: 6 }}>
+                <Grid2 size={{ xs: 12, md: 10 }}>
                   <Stack
                     flexDirection={"row"}
                     alignItems={"center"}
@@ -554,7 +607,9 @@ const Layout = ({ sts = true }) => {
                     justifyContent={"space-around"}
                   >
                     <TransparentBox
-                      value={1.5 + " Cr"}
+                      value={policyData
+                        .reduce((sum, policy) => sum + policy.sumassured, 0)
+                        ?.toLocaleString()}
                       caption={"Sum Assured"}
                       labelText="Rs"
                       rgbColor="rgb(5, 173, 22)"
@@ -562,7 +617,9 @@ const Layout = ({ sts = true }) => {
                     />
                     <TransparentBox
                       fullWidth
-                      value={4324}
+                      value={policyData
+                        .reduce((sum, policy) => sum + policy.premium, 0)
+                        ?.toLocaleString()}
                       rgbColor="rgb(5, 138, 227)"
                       labelText="Rs"
                       caption={"Total Premium"}
@@ -684,6 +741,11 @@ const Layout = ({ sts = true }) => {
               </Grid2>
             </Box>
           </Paper>
+          {/* <Paper sx={{ p: 2, my: 2 }} elevation={0}>
+            {policyData?.map((el, i) => (
+              <Typography key={i}>{el?.cin}</Typography>
+            ))}
+          </Paper> */}
         </Grid2>
         <Grid2 size={{ xs: 12 }}>
           <Paper elevation={0}>
@@ -823,36 +885,42 @@ const Layout = ({ sts = true }) => {
                     gap={1}
                     flexWrap={"wrap"}
                   >
-                    <Box width={{ xs: "100%", sm: "48%" }}>
-                      <TransparentBox
-                        value={<HealthAndSafety fontSize="50px" />}
-                        onNavigate={"/docviews"}
-                        fontSize={"50px"}
-                        caption={"Health Insurance Documents"}
-                        rgbColor="rgb(8, 94, 121)"
-                        fullWidth
-                      />
-                    </Box>
-                    <Box width={{ xs: "100%", sm: "48%" }}>
-                      <TransparentBox
-                        value={<FaCar fontSize="50px" />}
-                        onNavigate={"/docviews"}
-                        fontSize={"50px"}
-                        caption={"Car Insurance Documents "}
-                        fullWidth
-                        rgbColor="rgb(0, 80, 199)"
-                      />
-                    </Box>
-                    <Box width={{ xs: "100%", sm: "48%" }}>
-                      <TransparentBox
-                        onNavigate={"/docviews"}
-                        value={<GiLifeBar fontSize="50px" />}
-                        fontSize={"50px"}
-                        caption={"Life Insurance Documents "}
-                        fullWidth
-                        rgbColor="rgb(99, 199, 0)"
-                      />
-                    </Box>
+                    {policyDocs?.healthPCC?.length > 0 && (
+                      <Box width={{ xs: "100%", sm: "48%" }}>
+                        <TransparentBox
+                          value={<HealthAndSafety fontSize="50px" />}
+                          onNavigate={"/docviews"}
+                          fontSize={"50px"}
+                          caption={"Health Insurance Documents"}
+                          rgbColor="rgb(8, 94, 121)"
+                          fullWidth
+                        />
+                      </Box>
+                    )}
+                    {policyDocs?.carPCC?.length > 0 && (
+                      <Box width={{ xs: "100%", sm: "48%" }}>
+                        <TransparentBox
+                          value={<FaCar fontSize="50px" />}
+                          onNavigate={"/docviews"}
+                          fontSize={"50px"}
+                          caption={"Car Insurance Documents "}
+                          fullWidth
+                          rgbColor="rgb(0, 80, 199)"
+                        />
+                      </Box>
+                    )}
+                    {policyDocs?.lifePCC?.length > 0 && (
+                      <Box width={{ xs: "100%", sm: "48%" }}>
+                        <TransparentBox
+                          onNavigate={"/docviews"}
+                          value={<GiLifeBar fontSize="50px" />}
+                          fontSize={"50px"}
+                          caption={"Life Insurance Documents "}
+                          fullWidth
+                          rgbColor="rgb(99, 199, 0)"
+                        />
+                      </Box>
+                    )}
                   </Stack>
                 </Grid2>
               </Grid2>

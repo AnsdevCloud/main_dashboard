@@ -23,6 +23,7 @@ import defineFeatures from "../../settings/definefeatures";
 import { MdControlCamera, MdDashboard } from "react-icons/md";
 // import { Home } from "@mui/icons-material";
 import { GrAction, GrActions } from "react-icons/gr";
+import { Close } from "@mui/icons-material";
 
 const SideBarNested = ({ isOpen, toggleDrawer }) => {
   const { siteSettings, role, swipeFuns, mySetting, setMySetting } =
@@ -237,11 +238,13 @@ const SideBarNested = ({ isOpen, toggleDrawer }) => {
             md: isOpen ? 250 : 60,
             lg: isOpen ? "100%" : 60,
           },
+
           transition: "width 0.3s ",
           overflowX: "hidden",
           whiteSpace: "nowrap",
           position: { xs: "fixed", md: "sticky" },
           height: { xs: "100vh", md: "91vh" },
+          pb: 3,
           backgroundColor: (theme) => theme.palette.background.paper,
         },
       }}
@@ -490,35 +493,32 @@ const SideBarNested = ({ isOpen, toggleDrawer }) => {
         </ListItemIcon>
         {isOpen && <ListItemText primary={"Portal"} />}
       </ListItem>
-      <Box
+      <ListItem
+        button
+        onClick={() => toggleDrawer()}
         sx={{
-          display: "flex",
-          justifyContent: isOpen ? "flex-end" : "center",
-          p: 1,
+          justifyContent: isOpen ? "flex-start" : "center",
+          px: 2,
+          position: "relative",
+
+          bgcolor: (theme) => theme.palette.warning.light,
+          display:
+            mySetting?.find(
+              (value, index, array) =>
+                value.name === "portal" && value?.status === "enabled"
+            ) === undefined && "none",
         }}
       >
-        {isOpen ? (
-          <Button
-            fullWidth
-            onClick={() => toggleDrawer()}
-            size="medium"
-            endIcon={<ChevronLeftIcon />}
-            color="inherit"
-            sx={{
-              textTransform: "uppercase",
-              fontWeight: 600,
-              color: "GrayText",
-            }}
-          >
-            Close Side Menu
-          </Button>
-        ) : (
-          <IconButton onClick={() => toggleDrawer()}>
-            {" "}
-            <MenuIcon />
-          </IconButton>
-        )}
-      </Box>
+        <ListItemIcon
+          sx={{
+            justifyContent: "center",
+            color: "inherit",
+          }}
+        >
+          {isOpen ? <Close /> : <MenuIcon />}
+        </ListItemIcon>
+        {isOpen && <ListItemText primary={"Sidebar Close"} />}
+      </ListItem>
     </Drawer>
   );
 };

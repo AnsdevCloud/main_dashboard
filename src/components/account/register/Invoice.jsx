@@ -17,6 +17,8 @@ import {
   Card,
   CardContent,
   CardActionArea,
+  Tooltip,
+  IconButton,
 } from "@mui/material";
 import TransparentBox from "../../options/TransparentBox";
 import InvoiceForm from "./uploads/InvoiceForm";
@@ -30,6 +32,9 @@ import {
   orderBy,
   query,
 } from "firebase/firestore";
+import InvoiceDocument from "./uploads/InvoiceDocument";
+import { QuestionMarkSharp } from "@mui/icons-material";
+import { green, red } from "@mui/material/colors";
 const states = [
   { key: 1, name: "Andhra Pradesh", code: "AP" },
   { key: 2, name: "Arunachal Pradesh", code: "AR" },
@@ -282,7 +287,7 @@ const Invoice = () => {
   const [uploading, setuploading] = useState(null);
   const [extractedData, setExtractedData] = useState([]);
 
-  const [isFormSelect, setIsFormSelect] = useState("");
+  const [isFormSelect, setIsFormSelect] = useState("invoicedocumentUpload");
 
   const handleGeneratePDF = async () => {
     const myHeaders = new Headers();
@@ -536,6 +541,13 @@ const Invoice = () => {
               ownCompany={ownCompany}
             />
           )}
+
+          {isFormSelect === "invoicedocumentUpload" && (
+            <InvoiceDocument
+              onFile={(e) => handleCompanyDataUpload(e)}
+              onFind={(e) => setOwnCompany(e)}
+            />
+          )}
         </Paper>
       </Grid2>
       <Grid2 size={{ xs: 12, md: 6 }}>
@@ -564,7 +576,13 @@ const Invoice = () => {
               gap={2}
               flexWrap={"wrap"}
             >
-              <Card variant="outlined" sx={{ width: "45%" }}>
+              <Card
+                variant="outlined"
+                sx={{
+                  width: "45%",
+                  bgcolor: isFormSelect === "singleInvoice" ? red[100] : "",
+                }}
+              >
                 <CardActionArea
                   onClick={() => setIsFormSelect("singleInvoice")}
                 >
@@ -586,12 +604,23 @@ const Invoice = () => {
                       color="error"
                       fontWeight={500}
                     >
-                      Single Invoice Upload
+                      Single Invoice Upload{" "}
+                      <Tooltip title=" Feature Under Development">
+                        <IconButton size="small">
+                          <QuestionMarkSharp fontSize="10px" />
+                        </IconButton>
+                      </Tooltip>
                     </Typography>
                   </CardContent>
                 </CardActionArea>
               </Card>
-              <Card variant="outlined" sx={{ width: "45%" }}>
+              <Card
+                variant="outlined"
+                sx={{
+                  width: "45%",
+                  bgcolor: isFormSelect === "excelinvoice" ? green[100] : "",
+                }}
+              >
                 <CardActionArea onClick={() => setIsFormSelect("excelinvoice")}>
                   <CardContent>
                     <Typography
@@ -617,7 +646,13 @@ const Invoice = () => {
                 </CardActionArea>
               </Card>
 
-              <Card variant="outlined" sx={{ width: "45%" }}>
+              <Card
+                variant="outlined"
+                sx={{
+                  width: "45%",
+                  bgcolor: isFormSelect === "companydata" ? green[100] : "",
+                }}
+              >
                 <CardActionArea onClick={() => setIsFormSelect("companydata")}>
                   <CardContent>
                     <Typography
@@ -628,7 +663,7 @@ const Invoice = () => {
                       fontWeight={600}
                       color="success"
                     >
-                      Company Data
+                      Selected Company
                     </Typography>
                     <Typography
                       variant="caption"
@@ -636,7 +671,51 @@ const Invoice = () => {
                       component={"h1"}
                       fontWeight={500}
                     >
-                      Invoice Upload by Company
+                      Invoice Upload{" "}
+                      <Tooltip title=" by Excel File">
+                        <IconButton size="small">
+                          <QuestionMarkSharp fontSize="10px" />
+                        </IconButton>
+                      </Tooltip>
+                    </Typography>
+                  </CardContent>
+                </CardActionArea>
+              </Card>
+
+              <Card
+                variant="outlined"
+                sx={{
+                  width: "45%",
+                  bgcolor:
+                    isFormSelect === "invoicedocumentUpload" ? green[100] : "",
+                }}
+              >
+                <CardActionArea
+                  onClick={() => setIsFormSelect("invoicedocumentUpload")}
+                >
+                  <CardContent>
+                    <Typography
+                      variant="subtitle2"
+                      textAlign={"center"}
+                      component={"h1"}
+                      textTransform={"uppercase"}
+                      fontWeight={600}
+                      color="success"
+                    >
+                      Invoice Document
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      textAlign={"center"}
+                      component={"h1"}
+                      fontWeight={500}
+                    >
+                      Document Upload{" "}
+                      <Tooltip title=" by Invoice Number">
+                        <IconButton size="small">
+                          <QuestionMarkSharp fontSize="10px" />
+                        </IconButton>
+                      </Tooltip>
                     </Typography>
                   </CardContent>
                 </CardActionArea>

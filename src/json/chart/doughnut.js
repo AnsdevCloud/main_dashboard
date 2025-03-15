@@ -5,7 +5,7 @@ const ToatalPolicyData = {
   datasets: [
     {
       label: "No ",
-      data: [30, 50, 100, 239, 123],
+      data: [1, 5, 10, 23, 12],
       backgroundColor: [
         "rgba(103, 179, 249, 0.6)",
         "rgba(248, 112, 121, 0.6)",

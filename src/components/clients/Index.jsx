@@ -186,6 +186,19 @@ const Index = () => {
             viewLink={"/crm/clients"}
           />
         </Grid2>
+        <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
+          <MyCard
+            title={"Lead Source"}
+            data={[
+              { name: "Social", details: "Facebook" },
+              { name: "Sourcing", details: "" },
+              { name: "Policy ", details: "" },
+              { name: "Officer", details: "" },
+            ]}
+            // addLink={"/crm/documents"}
+            // viewLink={"/crm/clients"}
+          />
+        </Grid2>
       </Grid2>
     </>
   );
