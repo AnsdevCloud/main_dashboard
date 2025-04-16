@@ -15,6 +15,7 @@ import { useSwipeable } from "react-swipeable";
 import { ThemeContext } from "../theme/ThemeContext";
 import SideBarNested from "../components/main/NestedList";
 import { motion } from "framer-motion";
+import TabsBar from "../components/main/TabsBar";
 // Layout Component
 const Layout = () => {
   const navigate = useNavigate();
@@ -63,13 +64,13 @@ const Layout = () => {
     <Grid2 container spacing={0}>
       <Grid2 size={{ xs: 12 }}>
         <NavBar />
+        <TabsBar />
       </Grid2>
       <Grid2 size={{ xs: 12 }} {...swipeHandlers}>
         <Grid2 container spacing={3}>
           <Grid2
             size={{ xs: 12, md: isSideBar ? 3 : 1, lg: isSideBar ? 3 : 0.5 }}
           >
-            {/* <Sidebar isSideBar={isSideBar} toggleDrawer={toggleDrawer} /> */}
             <SideBarNested
               isOpen={isSideBar}
               toggleDrawer={(e) => toggleDrawer(e)}
@@ -77,7 +78,7 @@ const Layout = () => {
           </Grid2>
           <Grid2
             size={{ xs: 12, md: isSideBar ? 9 : 11, lg: isSideBar ? 9 : 11.5 }}
-            height={"91vh"}
+            height={"87vh"}
             sx={{ overflowY: "auto" }}
             px={1}
           >

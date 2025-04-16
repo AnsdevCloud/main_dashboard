@@ -27,6 +27,15 @@ import OTPVerification from "../pages/auth/OTP";
 import ClintListIndex from "../layout/client/List/ClintListIndex";
 import ClientsOutlet from "../layout/client/List/Outlet";
 import CrmUpload from "../components/clients/crm/CrmUpload";
+import D3Tree from "../components/charts/mindmister/D3Tree";
+import InteractiveTree from "../components/charts/mindmister/D3Tree";
+import LeadsDeatils from "../components/clients/forms/Leads";
+import LIndex from "../components/clients/crm/lifeinsurance/LIndex";
+import LForm from "../components/clients/crm/lifeinsurance/LForm";
+import PolicyDetails from "../components/clients/crm/lifeinsurance/PolicyDetails";
+import PolicyList from "../components/clients/crm/lifeinsurance/policydtlcomponents/PolicyList";
+import CommissionCalculator from "../test/Epanse";
+import PolicyStatus from "../test/Epanse";
 
 // Lazy-loaded clients components
 const GlobelIndex = React.lazy(() =>
@@ -138,7 +147,7 @@ const router = createBrowserRouter([
           },
           {
             path: "family",
-            element: <Family />,
+            element: <InteractiveTree />,
           },
           {
             path: "bank",
@@ -173,12 +182,20 @@ const router = createBrowserRouter([
             element: <DoccumentUpload />,
           },
           {
+            path: "leads",
+            element: <LeadsDeatils />,
+          },
+          {
             path: "clients",
             element: <ClientsOutlet />,
             children: [
               {
                 path: "",
                 element: <ClintListIndex />,
+              },
+              {
+                path: "family-members",
+                element: <Family />,
               },
               {
                 path: ":profile",
@@ -188,7 +205,25 @@ const router = createBrowserRouter([
           },
           {
             path: "life-insurance",
-            element: <LifeInsurance />,
+            element: <LIndex />,
+            children: [
+              {
+                path: "",
+                element: <LifeInsurance />,
+              },
+              {
+                path: "policy-register",
+                element: <LForm />,
+              },
+              {
+                path: "policy",
+                element: <PolicyList />,
+              },
+              {
+                path: "policy/:policyID",
+                element: <PolicyDetails />,
+              },
+            ],
           },
           {
             path: "health-insurance",
@@ -345,6 +380,7 @@ const router = createBrowserRouter([
     ],
   },
   { path: "*", element: <NotFound /> },
+  { path: "test", element: <PolicyStatus /> },
   {
     path: "auth",
     element: <Auth />,

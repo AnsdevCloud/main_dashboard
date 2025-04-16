@@ -25,6 +25,7 @@ const FilesVeiw = () => {
   const [docs, setDocs] = useState(null);
   const [activeDocs, setActiveDocs] = useState(null);
   const [previesSource, setPreviewSource] = useState(null);
+  console.log("previesSource: ", previesSource);
   const [acitveSource, setAcitveSource] = useState(null);
 
   useEffect(() => {
@@ -64,28 +65,26 @@ const FilesVeiw = () => {
             <List>
               {activeDocs?.map((el, i) => {
                 return (
-                  <React.Fragment key={i}>
-                    {el?.docciments?.map((sel, i) => (
-                      <ListItem
-                        key={i}
-                        sx={{
-                          bgcolor:
-                            acitveSource === sel?.uid ? grey[400] : grey[200],
-                          borderRadius: 10,
-                        }}
-                      >
-                        <ListItemButton
-                          sx={{ p: 0, bgcolor: "transparent" }}
-                          onClick={() => handlePreviews(sel)}
-                        >
-                          <ListItemIcon>
-                            <DocumentScanner />
-                          </ListItemIcon>
-                          <ListItemText>{sel?.title}</ListItemText>
-                        </ListItemButton>
-                      </ListItem>
-                    ))}
-                  </React.Fragment>
+                  <ListItemButton
+                    key={i}
+                    sx={{
+                      bgcolor:
+                        acitveSource === el?.uid
+                          ? (theme) => theme.palette.background.default
+                          : "",
+                      borderRadius: 10,
+                      p: 0,
+                      my: 0.2,
+                    }}
+                    onClick={() => handlePreviews(el)}
+                  >
+                    <ListItem>
+                      <ListItemIcon>
+                        <DocumentScanner />
+                      </ListItemIcon>
+                      <ListItemText>{el?.title}</ListItemText>
+                    </ListItem>
+                  </ListItemButton>
                 );
               })}
             </List>
@@ -97,7 +96,7 @@ const FilesVeiw = () => {
           <PDFViewer
             url={
               previesSource ||
-              "https://enivesh.com/images/eniveshicon/Enivesh_Insurance_LOGO.png"
+              "https://placehold.co/600x600/EEE/31343C?font=poppins&text=Output"
             }
           />
         }

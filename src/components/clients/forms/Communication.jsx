@@ -10,11 +10,12 @@ import {
 import React, { useContext, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ThemeContext } from "../../../theme/ThemeContext";
+import useEncryptedSessionStorage from "../../../hooks/useEncryptedSessionStorage";
 
 const Communication = () => {
   const { regCrmClient, setRegCrmClient } = useContext(ThemeContext);
   const [ctData, setCTData] = useState(null);
-
+  const [editData, setEditData] = useEncryptedSessionStorage("edit-code");
   const [edit, setEdit] = useState(false);
   const navigate = useNavigate();
   let cid = JSON.parse(sessionStorage.getItem("cid"));
@@ -29,7 +30,6 @@ const Communication = () => {
     languagePreference: "",
   });
   useEffect(() => {
-    let editData = JSON.parse(sessionStorage.getItem("edit-data"));
     setCTData(ClintType);
     if (editData?.id) {
       setEdit(true);

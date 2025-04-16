@@ -1,3 +1,4 @@
+// Import necessary icons and components.
 import { BsBank } from "react-icons/bs";
 import { GiLifeBar, GiNotebook } from "react-icons/gi";
 import { BiSolidPurchaseTag } from "react-icons/bi";
@@ -26,22 +27,24 @@ import {
 import { AiFillProduct, AiOutlineStock } from "react-icons/ai";
 import { RxAvatar } from "react-icons/rx";
 import { Portal } from "@mui/material";
+
+// Define a list of features with their labels, icons, links, and nested children.
 const defineFeatures = [
   {
-    label: "CRM",
-    icon: <AdminPanelSettingsRounded />,
-    link: "",
-    name: "crm",
+    label: "CRM", // Main feature label.
+    icon: <AdminPanelSettingsRounded />, // Icon for the feature.
+    link: "", // Link for the feature (empty for parent features).
+    name: "crm", // Unique name identifier.
     children: [
       {
-        label: "Uploads ",
-        icon: <Upload />,
-        link: "/crm/uploads",
-        name: "register",
-        dev: false,
+        label: "Uploads ", // Sub-feature label.
+        icon: <Upload />, // Icon for the sub-feature.
+        link: "/crm/uploads", // Link for the sub-feature.
+        name: "register", // Unique name identifier for the sub-feature.
+        dev: false, // Indicates if the feature is in development.
       },
       {
-        label: "Register ",
+        label: "Client Add ",
         icon: <PersonAddAlt />,
         link: "/crm/register",
         name: "register",
@@ -52,14 +55,14 @@ const defineFeatures = [
         icon: <RxAvatar />,
         link: "/crm/clients",
         name: "clientProfile",
-        dev: true,
+        dev: false,
       },
       {
         label: "Life Insurance ",
         icon: <GiLifeBar />,
         link: "/crm/life-insurance",
         name: "lifeInsurance",
-        dev: true,
+        dev: false,
       },
       {
         label: "Health Insurance ",
@@ -99,13 +102,13 @@ const defineFeatures = [
     ],
   },
   {
-    label: "Accounts ",
+    label: "Accounts ", // Another main feature.
     icon: <AccountBalance />,
     link: "",
     name: "account",
     children: [
       {
-        label: "Register ",
+        label: "Ac Register ",
         icon: <HowToReg />,
         link: "/account/register",
         name: "accountRegister",
@@ -233,13 +236,6 @@ const defineFeatures = [
         link: "/crm/global/relationship",
         name: "relationship",
         dev: true,
-      },
-      {
-        label: "Sub Portols",
-        icon: <Portal />,
-        link: "/portal/global/sub-portal",
-        name: "subportal",
-        dev: false,
       },
     ],
   },

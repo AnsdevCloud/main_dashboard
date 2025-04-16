@@ -1,4 +1,4 @@
-import { Typography } from "@mui/material";
+import { Box, Stack, Typography } from "@mui/material";
 import React from "react";
 import { HiDotsVertical } from "react-icons/hi";
 
@@ -17,12 +17,15 @@ const HeadlineTag = ({
   children,
   position,
   size,
+  flexWrap,
+  iconHide = false,
 }) => {
   return (
     <Typography
       variant={variant || "subtitle1"}
       component={"h1"}
       fontSize={size || "auto"}
+      flexWrap={flexWrap}
       textTransform={textTransform || "capitalize"}
       sx={{
         pointerEvents: children ? "auto" : "none",
@@ -39,8 +42,16 @@ const HeadlineTag = ({
       p={p || 0}
       gap={gap || 1}
     >
-      <HiDotsVertical color={iconColor || "#ff5c00"} />
-      {title || children || ""}
+      <Stack
+        direction={"row"}
+        gap={1}
+        alignItems={"center"}
+        justifyContent={"flex-start"}
+      >
+        {iconHide ? "" : <HiDotsVertical color={iconColor || "#ff5c00"} />}
+        {title}
+      </Stack>
+      {children || ""}
     </Typography>
   );
 };

@@ -96,7 +96,7 @@ const Index = () => {
           color="primary"
           variant="outlined"
         >
-          Add Deatails
+          Add Details
         </Button>
         <Button
           to={viewLink || ""}
@@ -106,7 +106,7 @@ const Index = () => {
           color="secondary"
           variant="outlined"
         >
-          Veiw Deatials
+          Veiw Details
         </Button>
       </CardActions>
     </Card>
@@ -117,57 +117,64 @@ const Index = () => {
         <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
           <MyCard
             addLink={"/crm/parsonal"}
-            title={"Parsonal Details"}
+            title={"Personal Details"}
             viewLink={"/crm/clients"}
-            data={[
-              {
-                name: data?.fname,
-                details: data?.clientType?.split("-")?.join(" "),
-              },
-              { name: "Alice", details: "Product Manager" },
-              { name: "Bob", details: "Designer" },
-              { name: "Tom", details: "QA Engineer" },
-            ]}
+            data={
+              [
+                // {
+                //   name: data?.fname,
+                //   details: data?.clientType?.split("-")?.join(" "),
+                // },
+                // { name: "Alice", details: "Product Manager" },
+                // { name: "Bob", details: "Designer" },
+                // { name: "Tom", details: "QA Engineer" },
+              ]
+            }
           />
         </Grid2>
         <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
           <MyCard
             addLink={"/crm/communication"}
-            title={"Cominication Details"}
+            title={"Communication Details"}
             viewLink={"/crm/clients"}
-            data={[
-              { name: "John", details: "Software Developer" },
-              { name: "Alice", details: "Product Manager" },
-              { name: "Bob", details: "Designer" },
-              { name: "Tom", details: "QA Engineer" },
-            ]}
+            data={
+              [
+                // { name: "John", details: "Software Developer" },
+                // { name: "Alice", details: "Product Manager" },
+                // { name: "Bob", details: "Designer" },
+              ]
+            }
           />
         </Grid2>
         <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
           <MyCard
             addLink={"/crm/family"}
-            title={"Family Members"}
+            title={"Family/Group Members"}
             viewLink={"/crm/clients"}
-            data={[
-              {
-                name: data?.fname,
-                details: data?.clientType?.split("-").join(" "),
-              },
-              { name: "Alice", details: "Product Manager" },
-              { name: "Bob", details: "Designer" },
-              { name: "Tom", details: "QA Engineer" },
-            ]}
+            data={
+              [
+                // {
+                //   name: data?.fname,
+                //   details: data?.clientType?.split("-").join(" "),
+                // },
+                // { name: "Alice", details: "Product Manager" },
+                // { name: "Bob", details: "Designer" },
+                // { name: "Tom", details: "QA Engineer" },
+              ]
+            }
           />
         </Grid2>
         <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
           <MyCard
             title={"Bank Details"}
-            data={[
-              { name: "John", details: "Software Developer" },
-              { name: "Alice", details: "Product Manager" },
-              { name: "Bob", details: "Designer" },
-              { name: "Tom", details: "QA Engineer" },
-            ]}
+            data={
+              [
+                // { name: "John", details: "Software Developer" },
+                // { name: "Alice", details: "Product Manager" },
+                // { name: "Bob", details: "Designer" },
+                // { name: "Tom", details: "QA Engineer" },
+              ]
+            }
             addLink={"/crm/bank"}
             viewLink={"/crm/clients"}
           />
@@ -175,13 +182,15 @@ const Index = () => {
 
         <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
           <MyCard
-            title={"Doccumemts"}
-            data={[
-              { name: "John", details: "Software Developer" },
-              { name: "Alice", details: "Product Manager" },
-              { name: "Bob", details: "Designer" },
-              { name: "Tom", details: "QA Engineer" },
-            ]}
+            title={"Documents"}
+            data={
+              [
+                // { name: "John", details: "Software Developer" },
+                // { name: "Alice", details: "Product Manager" },
+                // { name: "Bob", details: "Designer" },
+                // { name: "Tom", details: "QA Engineer" },
+              ]
+            }
             addLink={"/crm/documents"}
             viewLink={"/crm/clients"}
           />
@@ -189,14 +198,16 @@ const Index = () => {
         <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
           <MyCard
             title={"Lead Source"}
-            data={[
-              { name: "Social", details: "Facebook" },
-              { name: "Sourcing", details: "" },
-              { name: "Policy ", details: "" },
-              { name: "Officer", details: "" },
-            ]}
-            // addLink={"/crm/documents"}
-            // viewLink={"/crm/clients"}
+            data={
+              [
+                // { name: "Social", details: "Facebook" },
+                // { name: "Sourcing", details: "" },
+                // { name: "Policy ", details: "" },
+                // { name: "Officer", details: "" },
+              ]
+            }
+            addLink={"/crm/leads"}
+            viewLink={"/crm/clients"}
           />
         </Grid2>
       </Grid2>

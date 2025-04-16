@@ -120,10 +120,6 @@ function EnhancedTable({ tableData, sheetName }) {
             },
           }}
         />
-
-        {/* <Typography width={{ xs: "100%", md: 300 }} component={"p"}>
-          HNI
-        </Typography> */}
       </Stack>
       <Paper elevation={0} sx={{ width: "100%", mb: 2 }}>
         <TableContainer sx={{ overflow: "auto" }}>

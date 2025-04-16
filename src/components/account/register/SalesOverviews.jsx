@@ -84,6 +84,8 @@ const SalesOverviews = () => {
   useEffect(() => {
     // Example Date Range
     const ftd = JSON.parse(localStorage.getItem("fiterDate"));
+    const own = JSON.parse(localStorage.getItem("own"));
+    setSelectOwnCompany(own);
     const StoredData = JSON.parse(sessionStorage.getItem("Chart-Store"));
     setFilterDate({
       startDate: ftd?.startDate || "",
@@ -146,7 +148,6 @@ const SalesOverviews = () => {
         );
       }
     };
-    localStorage.setItem("own", JSON.stringify(selsectOwnCompany));
 
     fetch();
   }, [isFilterAply]);
@@ -426,7 +427,6 @@ const aggregateSales = (data) => {
   data.forEach(
     ({ company, amount, invoicenumber, slug, description, date }) => {
       const lowerCaseCompany = company?.toLowerCase(); // Normalize company names to lowercase
-      console.log("lowerCaseCompany: ", lowerCaseCompany);
 
       if (!salesMap.has(lowerCaseCompany)) {
         salesMap.set(lowerCaseCompany, {
@@ -453,8 +453,8 @@ const aggregateSales = (data) => {
   return Array.from(salesMap.values()).map(
     ({ company, totalAmount, invoices, slug }) => ({
       company: company
-        .split(" ")
-        .map(
+        ?.split(" ")
+        ?.map(
           (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
         ) // Capitalize words
         .join(" "),

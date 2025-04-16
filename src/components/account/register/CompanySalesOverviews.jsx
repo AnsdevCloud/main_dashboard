@@ -163,7 +163,7 @@ const CompanySalesOverviews = () => {
     <div>
       <Paper sx={{ p: 2, my: 1 }} elevation={0}>
         <HeadlineTag textTransform={"uppercase"}>
-          {company?.toUpperCase()} Sales
+          {company?.split("-")?.join(" ")?.toUpperCase()} Sales
         </HeadlineTag>
 
         <TransparentBox

@@ -1,12 +1,23 @@
 import { Add, Analytics, Policy, Settings, Upload } from "@mui/icons-material";
-import { Button, Grid2, Paper, Stack, Typography } from "@mui/material";
+import {
+  Button,
+  Grid2,
+  Paper,
+  Stack,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import React from "react";
 import { BsActivity } from "react-icons/bs";
 import { RxAvatar } from "react-icons/rx";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useTabs } from "../../stores/TabsContex";
+import ButtonWithNewTab from "../../components/options/ButtonWithNewTab";
 
 const Sales = () => {
   const { pathname } = useLocation();
+  const { addTab } = useTabs();
+  const navigate = useNavigate();
   return (
     <div>
       <Grid2 container spacing={1} p={1}>
@@ -25,73 +36,32 @@ const Sales = () => {
               Actions Controls
             </Typography>
             <Stack gap={0.2} color={"grey"} my={1}>
-              <Button
-                sx={{ justifyContent: "flex-start" }}
-                color={
-                  pathname === "/account/register/upload-data"
-                    ? "success"
-                    : "inherit"
-                }
-                startIcon={<Upload />}
-                size="small"
-                fullWidth
-                component={Link}
-                to="/account/register/upload-data"
-              >
-                Uploads
-              </Button>
-              <Button
-                sx={{ justifyContent: "flex-start" }}
-                startIcon={<Add />}
-                color={
-                  pathname === "/account/register/company-list"
-                    ? "success"
-                    : "inherit"
-                }
-                size="small"
-                fullWidth
-                component={Link}
-                to="/account/register/company-list"
-              >
-                Add new Company
-              </Button>
+              <ButtonWithNewTab
+                icon={<Upload />}
+                name={"Uploads"}
+                label={"Uploads"}
+                link={"/account/register/upload-data"}
+                pathname={pathname}
+                navigation={true}
+              />
+              <ButtonWithNewTab
+                icon={<Add />}
+                name={"Add new Company"}
+                label={"Add new Company"}
+                link={"/account/register/company-list"}
+                pathname={pathname}
+                navigation={true}
+              />
 
-              <Button
-                sx={{ justifyContent: "flex-start", fontWeight: 400 }}
-                startIcon={<Policy />}
-                color={
-                  pathname === "/account/register/sale-overview" ||
-                  pathname === "/account/register"
-                    ? "success"
-                    : "inherit"
-                }
-                size="small"
-                component={Link}
-                to="/account/register/sale-overview"
-                fullWidth
-              >
-                Sales Overviews
-              </Button>
-              {/* <Button
-                sx={{ justifyContent: "flex-start" }}
-                startIcon={<BsActivity />}
-                color="inherit"
-                size="small"
-                fullWidth
-              >
-                All Activity
-              </Button>
-              <Button
-                sx={{ justifyContent: "flex-start" }}
-                startIcon={<Settings />}
-                color="inherit"
-                size="small"
-                fullWidth
-                component={Link}
-                to="/cpanel/policy-investment-overview"
-              >
-                System Settings
-              </Button> */}
+              <ButtonWithNewTab
+                icon={<Policy />}
+                name={"Sales Overviews"}
+                label={"Sales Overviews"}
+                link={"/account/register/sale-overview"}
+                link2={"/account/register"}
+                pathname={pathname}
+                navigation={true}
+              />
             </Stack>
           </Paper>
         </Grid2>

@@ -87,7 +87,7 @@ const PDFViewer = ({ url }) => {
           <img
             src={url}
             alt="Uploaded"
-            style={{ width: "100%", height: "auto" }}
+            style={{ width: "100%", height: "auto", maxHeight: "800px" }}
           />
         </Box>
       );

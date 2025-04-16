@@ -1,4 +1,10 @@
-import { ArrowBack, Edit, HealthAndSafety } from "@mui/icons-material";
+import {
+  ArrowBack,
+  Edit,
+  HealthAndSafety,
+  OpenInNew,
+  Refresh,
+} from "@mui/icons-material";
 import {
   Avatar,
   Box,
@@ -10,15 +16,8 @@ import {
   IconButton,
   Paper,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Tooltip,
   Typography,
-  useTheme,
 } from "@mui/material";
 import axios from "axios";
 
@@ -36,22 +35,27 @@ import { GiLifeBar } from "react-icons/gi";
 import { HiDotsVertical } from "react-icons/hi";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { firestore } from "../../../firebase/config";
+import useEncryptedSessionStorage from "../../../hooks/useEncryptedSessionStorage";
 
 const Layout = ({ sts = true }) => {
   const { state } = useLocation();
-
   const { profile } = useParams();
 
   const [hideDetails, setHideDetils] = useState(false);
   const [data, setData] = useState(null);
-  const [categories, setCategories] = useState({
-    pd: [],
-    cd: [],
-    fd: [],
+
+  const [storeData, setStoreData] = useEncryptedSessionStorage("pro-xe-od", {
+    data,
   });
+  const [editData, setEditData] = useEncryptedSessionStorage("edit-code", {
+    data,
+  });
+
   const navigate = useNavigate();
   const [policyData, setPolicyData] = useState([]);
+  const location = useLocation();
   const [policyDocs, setPolicyDocs] = useState(null);
+
   const fetchData = async (id) => {
     try {
       const response = await axios.get(
@@ -64,13 +68,14 @@ const Layout = ({ sts = true }) => {
         }
       );
       setData(response?.data);
+      setStoreData(response?.data);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
   };
   const handleFetchPolicy = async (id) => {
     const q = query(
-      collection(firestore, "crm_relationship_values"),
+      collection(firestore, "crm_relationship_value_documents"),
       where("cin", "==", id)
     );
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
@@ -80,7 +85,7 @@ const Layout = ({ sts = true }) => {
       });
 
       setPolicyData(polices);
-      console.log("polices: ", polices);
+
       handleDocsMining(polices);
     });
   };
@@ -96,11 +101,13 @@ const Layout = ({ sts = true }) => {
       JSON.stringify({ lifePCC, healthPCC, carPCC })
     );
   };
-  console.log(policyDocs);
 
   useEffect(() => {
-    if (state) {
+    if (storeData) {
+      setData(storeData);
+    } else if (state) {
       setData(state);
+      setStoreData(state);
     } else {
       fetchData(profile);
     }
@@ -108,12 +115,12 @@ const Layout = ({ sts = true }) => {
       handleFetchPolicy(profile);
     }
     handleDocsMining(policyData);
-  }, []);
+  }, [location?.pathname]);
 
   const arr = [
     {
-      label: "Material Status",
-      value: data?.meterialStatus,
+      label: "Marital Status",
+      value: data?.maritalStatus,
     },
     {
       label: "Email",
@@ -151,6 +158,21 @@ const Layout = ({ sts = true }) => {
       value: `${data?.panNumber}`,
     },
   ];
+  const arrG = [
+    {
+      label: "Email",
+      value: data?.email,
+    },
+    {
+      label: "Phone ",
+      value: `+91 ${data?.primaryNumber}`,
+    },
+
+    {
+      label: "PAN  ",
+      value: `${data?.panNumber}`,
+    },
+  ];
   const communication = [
     {
       label: "Residential Address",
@@ -173,81 +195,32 @@ const Layout = ({ sts = true }) => {
       value: data?.communication?.emergencyContactNumber,
     },
   ];
-  const arr3 = [
+  const communicationG = [
     {
-      label: "Spouse",
-      value: "Rina Goe",
+      label: "Office Address",
+      value: data?.communication?.officeAddress,
     },
-    {
-      label: "Father",
-      value: "Harish Goe",
-    },
-    {
-      label: "Mother",
-      value: "Rima Goe",
-    },
-    {
-      label: "Childs",
-      value: "4",
-    },
-    {
-      label: "Spouse Age",
-      value: "27 Y",
-    },
-    {
-      label: "Father Age",
-      value: "45 Y",
-    },
-    {
-      label: "Mother Age",
-      value: "38 Y",
-    },
-  ];
 
-  const transection = [
     {
-      date: "12/02/24",
-      name: "SBI",
-      amount: "2,345",
-      sts: false,
+      label: "SOS Name  ",
+      value: data?.communication?.emergencyContactName,
     },
     {
-      date: "14/02/24",
-      name: "ICICI",
-      amount: "2,545",
-      sts: true,
-    },
-    {
-      date: "03/02/24",
-      name: "HDFC",
-      amount: "2,645",
-      sts: true,
-    },
-    {
-      date: "03/02/24",
-      name: "HDFC",
-      amount: "2,645",
-      sts: false,
-    },
-    {
-      date: "03/02/24",
-      name: "HDFC",
-      amount: "2,645",
-      sts: true,
-    },
-    {
-      date: "03/02/24",
-      name: "HDFC",
-      amount: "2,645",
-      sts: true,
+      label: "SOS Number ",
+      value: data?.communication?.emergencyContactNumber,
     },
   ];
 
   const handleEdit = () => {
     sessionStorage.setItem("cid", JSON.stringify(data?.cin));
     sessionStorage.setItem("cid-lock", JSON.stringify(true));
-    sessionStorage.setItem("edit-data", JSON.stringify(data));
+
+    setEditData(data);
+
     navigate("/crm/parsonal/");
+  };
+  const handleRefres = () => {
+    fetchData(profile);
   };
   return (
     <>
@@ -289,6 +262,17 @@ const Layout = ({ sts = true }) => {
                       fontSize: 10,
                     }}
                     color="inherit"
+                    startIcon={<Refresh fontSize={"8px"} />}
+                    onClick={() => handleRefres()}
+                  >
+                    Refresh
+                  </Button>
+                  <Button
+                    size="small"
+                    sx={{
+                      fontSize: 10,
+                    }}
+                    color="inherit"
                     startIcon={<ArrowBack fontSize={"8px"} />}
                     onClick={() => navigate(-1)}
                   >
@@ -315,15 +299,18 @@ const Layout = ({ sts = true }) => {
                             color="grey"
                             fontWeight={500}
                           >
-                            Full Name
+                            {data?.firmName ? "Firm Name" : " Full Name"}
                           </Typography>
                           <Typography
                             component={"h1"}
                             variant="subtitle1"
                             color="textSecondary"
+                            textTransform={"capitalize"}
                             fontWeight={600}
                           >
-                            {`${data?.fname} ${data?.lname}`}
+                            {data?.firmName
+                              ? data?.firmName
+                              : `${data?.fname} ${data?.lname}`}
                           </Typography>
                         </Box>
                       </Stack>
@@ -338,24 +325,26 @@ const Layout = ({ sts = true }) => {
                     height={"100%"}
                     justifyContent={"space-around"}
                   >
-                    <Box>
-                      <Typography
-                        component={"span"}
-                        variant="caption"
-                        color="grey"
-                        fontWeight={500}
-                      >
-                        Birthday
-                      </Typography>
-                      <Typography
-                        component={"h1"}
-                        variant="body2"
-                        color="textSecondary"
-                        fontWeight={500}
-                      >
-                        {data?.dob}
-                      </Typography>
-                    </Box>
+                    {data?.dob && (
+                      <Box>
+                        <Typography
+                          component={"span"}
+                          variant="caption"
+                          color="grey"
+                          fontWeight={500}
+                        >
+                          Birthday
+                        </Typography>
+                        <Typography
+                          component={"h1"}
+                          variant="body2"
+                          color="textSecondary"
+                          fontWeight={500}
+                        >
+                          {data?.dob}
+                        </Typography>
+                      </Box>
+                    )}
                     <Box>
                       <Typography
                         component={"span"}
@@ -406,80 +395,72 @@ const Layout = ({ sts = true }) => {
                         {data?.clientType?.split("-").join(" ")}
                       </Typography>
                     </Box>
-                    <Box>
-                      <Typography
-                        component={"span"}
-                        variant="caption"
-                        color="grey"
-                        fontWeight={500}
-                      >
-                        Customer Type
-                      </Typography>
-                      <Typography
-                        component={"h1"}
-                        variant="body2"
-                        color="textSecondary"
-                        textTransform={"capitalize"}
-                        fontWeight={500}
-                      >
-                        {data?.customerType}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography
-                        component={"span"}
-                        variant="caption"
-                        color="grey"
-                        fontWeight={500}
-                      >
-                        Gender
-                      </Typography>
-                      <Typography
-                        component={"h1"}
-                        variant="body2"
-                        color="textSecondary"
-                        textTransform={"uppercase"}
-                        fontWeight={500}
-                      >
-                        {data?.gender}
-                      </Typography>
-                    </Box>
-                    <Box display={{ xs: "block", md: "none" }}>
-                      <Typography
-                        component={"span"}
-                        variant="caption"
-                        color="grey"
-                        fontWeight={500}
-                      >
-                        LP
-                      </Typography>
-                      <Typography
-                        component={"h1"}
-                        variant="body2"
-                        color="textSecondary"
-                        fontWeight={500}
-                      >
-                        {data?.communication?.languagePreference}
-                      </Typography>
-                    </Box>
-                    <Box display={{ xs: "none", md: "block" }}>
-                      <Typography
-                        component={"span"}
-                        variant="caption"
-                        color="grey"
-                        fontWeight={500}
-                      >
-                        Language Preference
-                      </Typography>
-                      <Typography
-                        component={"h1"}
-                        variant="body2"
-                        color="textSecondary"
-                        fontWeight={500}
-                      >
-                        {data?.communication?.languagePreference}
-                      </Typography>
-                    </Box>
+
+                    {data?.gender && (
+                      <Box>
+                        <Typography
+                          component={"span"}
+                          variant="caption"
+                          color="grey"
+                          fontWeight={500}
+                        >
+                          Gender
+                        </Typography>
+                        <Typography
+                          component={"h1"}
+                          variant="body2"
+                          color="textSecondary"
+                          textTransform={"capitalize"}
+                          fontWeight={500}
+                        >
+                          {data?.gender}
+                        </Typography>
+                      </Box>
+                    )}
+                    {data?.groupName && (
+                      <Box>
+                        <Typography
+                          component={"span"}
+                          variant="caption"
+                          color="grey"
+                          fontWeight={500}
+                        >
+                          Group Name
+                        </Typography>
+                        <Typography
+                          component={"h1"}
+                          variant="body2"
+                          color="textSecondary"
+                          textTransform={"capitalize"}
+                          fontWeight={500}
+                        >
+                          {data?.groupName}
+                        </Typography>
+                      </Box>
+                    )}
+                    {data?.communication?.languagePreference && (
+                      <Box>
+                        <Tooltip title="Language Preference">
+                          <Typography
+                            component={"span"}
+                            variant="caption"
+                            color="grey"
+                            fontWeight={500}
+                          >
+                            LP
+                          </Typography>
+                        </Tooltip>
+                        <Typography
+                          component={"h1"}
+                          variant="body2"
+                          color="textSecondary"
+                          fontWeight={500}
+                          textTransform={"capitalize"}
+                        >
+                          {data?.communication?.languagePreference}
+                        </Typography>
+                      </Box>
+                    )}
                   </Stack>
                 </Grid2>
                 <Grid2 size={{ xs: 12 }} display={{ md: "none" }}>
@@ -502,20 +483,41 @@ const Layout = ({ sts = true }) => {
                 </Grid2>
                 {!hideDetails && (
                   <Grid2 size={{ xs: 12 }}>
-                    <GridRow data={arr} title={"Parsonal Details"} />
+                    <GridRow
+                      data={data?.clientType === "group" ? arrG : arr}
+                      title={"Parsonal Details"}
+                    />
                     <Divider sx={{ my: 1 }} />
                     <GridRow
                       title={"Comunication Details"}
-                      data={communication}
+                      data={
+                        data?.clientType === "group"
+                          ? communicationG
+                          : communication
+                      }
                     />
                     <Divider sx={{ my: 1 }} />
-                    <GridRow title={"Family Members"} data={arr3} />
+                    <Button
+                      variant="contained"
+                      color="info"
+                      onClick={() =>
+                        navigate("/crm/clients/family-members", {
+                          state: { ...data?.members },
+                        })
+                      }
+                      endIcon={<OpenInNew />}
+                    >
+                      {data?.clientType === "group" ? "Group" : "Family"}{" "}
+                      Members
+                    </Button>
                   </Grid2>
                 )}
               </Grid2>
             </Box>
           </Paper>
         </Grid2>
+
+        {/* right side //////////////////////////////////////////////////////////////////////////////*/}
         <Grid2 size={{ xs: 12, md: 6 }}>
           <Paper elevation={0}>
             <Box p={1}>
@@ -747,10 +749,15 @@ const Layout = ({ sts = true }) => {
             ))}
           </Paper> */}
         </Grid2>
+
+        {/* Bottom side //////////////////////////////////////////////////////////////////////////////*/}
+
         <Grid2 size={{ xs: 12 }}>
           <Paper elevation={0}>
             <Box p={1}>
               <Grid2 container spacing={2} py={1}>
+                {/* Bottom  left side //////////////////////////////////////////////////////////////////////////////*/}
+
                 <Grid2 size={{ xs: 12, md: 6 }}>
                   <Stack
                     flexDirection={"row"}
@@ -768,7 +775,7 @@ const Layout = ({ sts = true }) => {
                       alignItems={"center"}
                       gap={1}
                     >
-                      <HiDotsVertical color="#ff5c00" /> Other Details
+                      <HiDotsVertical color="#ff5c00" /> Lead Details
                     </Typography>
                     <Box
                       display={"flex"}
@@ -776,7 +783,7 @@ const Layout = ({ sts = true }) => {
                       justifyContent={"flex-start"}
                       gap={2}
                     >
-                      <Box
+                      {/* <Box
                         bgcolor={(theme) => theme?.palette.background.default}
                         padding={0.5}
                         fontSize={12}
@@ -788,7 +795,7 @@ const Layout = ({ sts = true }) => {
                         gap={1}
                       >
                         <FaDotCircle /> PDF
-                      </Box>
+                      </Box> */}
                       <Box
                         bgcolor={(theme) => theme?.palette.background.default}
                         padding={0.5}
@@ -813,7 +820,9 @@ const Layout = ({ sts = true }) => {
                   >
                     <Box width={{ xs: "100%", sm: "48%" }}>
                       <TransparentBox
-                        value={"Social Media"}
+                        value={
+                          data?.leads?.leadSource?.split("_")?.join(" ") || ""
+                        }
                         fontSize={20}
                         caption={"Lead Source"}
                         rgbColor="rgb(8, 94, 121)"
@@ -824,7 +833,9 @@ const Layout = ({ sts = true }) => {
                       <TransparentBox
                         fontSize={20}
                         caption={"Sourcing "}
-                        value={"Enivesh"}
+                        value={
+                          data?.leads?.sourcing?.split("_")?.join(" ") || ""
+                        }
                         fullWidth
                         rgbColor="rgb(0, 80, 199)"
                       />
@@ -832,17 +843,12 @@ const Layout = ({ sts = true }) => {
                     <Box width={{ xs: "100%", sm: "48%" }}>
                       <TransparentBox
                         fontSize={20}
-                        caption={"Policy at Start "}
-                        value={"New"}
-                        fullWidth
-                        rgbColor="rgb(99, 199, 0)"
-                      />
-                    </Box>
-                    <Box width={{ xs: "100%", sm: "48%" }}>
-                      <TransparentBox
-                        fontSize={20}
-                        caption={"S. ENIVESH RM "}
-                        value={""}
+                        caption={"Servicing Manager"}
+                        value={
+                          data?.leads?.servicingManager
+                            ?.split("_")
+                            ?.join(" ") || ""
+                        }
                         fullWidth
                         rgbColor="rgb(0, 186, 199)"
                       />
@@ -850,14 +856,20 @@ const Layout = ({ sts = true }) => {
                     <Box width={{ xs: "100%", sm: "48%" }}>
                       <TransparentBox
                         fontSize={20}
-                        caption={"S. ENIVESH Officer "}
-                        value={""}
+                        caption={"Financial Goal Organiser "}
+                        value={
+                          data?.leads?.financialGoalOrganiser
+                            ?.split("_")
+                            ?.join(" ") || ""
+                        }
                         fullWidth
                         rgbColor="rgb(0, 33, 199)"
                       />
                     </Box>
                   </Stack>
                 </Grid2>
+                {/* Bottom right side //////////////////////////////////////////////////////////////////////////////*/}
+
                 <Grid2 size={{ xs: 12, md: 6 }}>
                   <Stack
                     flexDirection={"row"}
@@ -875,7 +887,7 @@ const Layout = ({ sts = true }) => {
                       alignItems={"center"}
                       gap={1}
                     >
-                      <HiDotsVertical color="#ff5c00" /> Policy Documents
+                      <HiDotsVertical color="#ff5c00" /> Documents
                     </Typography>
                   </Stack>
                   <Stack
@@ -954,6 +966,7 @@ const GridRow = ({ data = [], p, title, viewLimit }) => {
             component={"h1"}
             fontWeight={500}
             color="primary"
+            textTransform={"capitalize"}
           >
             {title}
           </Typography>
@@ -976,13 +989,14 @@ const GridRow = ({ data = [], p, title, viewLimit }) => {
       </Stack>
       <Grid2 container spacing={2}>
         {data.slice(0, limit)?.map((item, index) => (
-          <Grid2 key={index} size={{ xs: 12, sm: 6, md: 3 }}>
+          <Grid2 key={index} size={{ xs: 12, sm: 6, md: 6 }}>
             <Box>
               <Typography
                 component={"span"}
                 variant="caption"
                 color="grey"
                 fontWeight={500}
+                textTransform={"capitalize"}
               >
                 {item?.label}
               </Typography>
@@ -991,6 +1005,7 @@ const GridRow = ({ data = [], p, title, viewLimit }) => {
                 variant="body2"
                 color="textSecondary"
                 fontWeight={400}
+                textTransform={"capitalize"}
               >
                 {item?.code} {item?.value}
               </Typography>
@@ -1060,8 +1075,9 @@ const TransparentBox = ({
               variant="body2"
               color={rgbColor}
               fontSize={fontSize}
-              fontWeight={500}
+              fontWeight={600}
               textAlign={"center"}
+              textTransform={"capitalize"}
             >
               {value}
             </Typography>

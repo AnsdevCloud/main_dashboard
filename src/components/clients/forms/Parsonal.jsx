@@ -18,7 +18,8 @@ import React, { useContext, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ThemeContext } from "../../../theme/ThemeContext";
 import { RiAiGenerate } from "react-icons/ri";
-import ProfileImageCropper from "./ProfileUpload";
+
+import useEncryptedSessionStorage from "../../../hooks/useEncryptedSessionStorage";
 
 const Parsonal = () => {
   const { regCrmClient, setRegCrmClient } = useContext(ThemeContext);
@@ -33,13 +34,14 @@ const Parsonal = () => {
   const [idStatus, setIdStatus] = useState(null);
   const [cinLock, setCinLock] = useState(null);
   let old = JSON.parse(sessionStorage.getItem("cid"));
-  let editData = JSON.parse(sessionStorage.getItem("edit-data"));
+
+  const [editData, setEditData] = useEncryptedSessionStorage("edit-code");
+
   let ct = JSON.parse(sessionStorage.getItem("ct"));
   const [effectRun, setEffectRun] = useState(false);
 
   useEffect(() => {
     let cinLockstore = JSON.parse(sessionStorage.getItem("cid-lock"));
-    let editData = JSON.parse(sessionStorage.getItem("edit-data"));
 
     setCinLock(cinLockstore);
     if (regCrmClient?.clientID === null) {
@@ -67,13 +69,14 @@ const Parsonal = () => {
   const [formData, setFormData] = useState({
     cin: "",
     clientType: "",
+    branch: "",
     customerType: "",
     fname: "",
     lname: "",
     gender: "",
     dob: "",
     coste: "",
-    meterialStatus: "",
+    maritalStatus: "",
     email: "",
     panNumber: "",
     primaryNumber: "",
@@ -131,7 +134,7 @@ const Parsonal = () => {
             gender: "",
             dob: "",
             coste: "",
-            meterialStatus: "",
+            maritalStatus: "",
             email: "",
             panNumber: "",
             adharNumber: "",
@@ -239,7 +242,7 @@ const Parsonal = () => {
       if (window.confirm("Your form data lost ? ")) {
         sessionStorage.setItem("cid-lock", JSON.stringify(false));
         sessionStorage.setItem("cid", JSON.stringify(null));
-        sessionStorage.setItem("edit-data", JSON.stringify(null));
+        setEditData(null);
         window.location.reload();
       } else {
         return;
@@ -267,18 +270,15 @@ const Parsonal = () => {
   }, [effectRun]);
 
   useEffect(() => {
-    // if (ct) {
-    //   setFormData({
-    //     ...formData,
-    //     clientType: ct || "",
-    //     cin: old,
-    //   });
-    // }
     if (formData.clientType) {
       sessionStorage.setItem("ct", JSON.stringify(formData.clientType));
       sessionStorage.setItem(
         "ctn",
-        JSON.stringify({ name: formData.fname, gender: formData.gender })
+        JSON.stringify({
+          name: formData.fname,
+          gender: formData.gender,
+          dob: formData.dob,
+        })
       );
     }
     if (
@@ -314,7 +314,7 @@ const Parsonal = () => {
               color="grey"
               fontWeight={600}
             >
-              Parsonal Details
+              Personal Details
             </Typography>
             <Tooltip title="New Form ">
               <Button
@@ -346,7 +346,7 @@ const Parsonal = () => {
           borderRadius={1}
         >
           <Grid2 container spacing={2}>
-            <Grid2 size={{ xs: 12, md: 4 }}>
+            <Grid2 size={{ xs: 12, md: 3 }}>
               <Stack
                 flexDirection={"row"}
                 alignItems={"center"}
@@ -412,7 +412,25 @@ const Parsonal = () => {
                 </Tooltip>
               </Stack>
             </Grid2>
-            <Grid2 size={{ xs: 12, md: 4 }}>
+            <Grid2 size={{ xs: 12, md: 3 }}>
+              <FormControl color="info" fullWidth size="small">
+                <InputLabel id="demo-simple-select-label">Branch</InputLabel>
+                <Select
+                  labelId="demo-simple-select-label"
+                  id="demo-simple-select"
+                  color="info"
+                  value={formData?.branch}
+                  label="Branch"
+                  onChange={(e) =>
+                    setFormData({ ...formData, branch: e.target.value })
+                  }
+                >
+                  <MenuItem value={"hq"}>Borivali (HQ)</MenuItem>
+                  <MenuItem value={"andheri-adh"}>Andheri</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid2>
+            <Grid2 size={{ xs: 12, md: 3 }}>
               <FormControl color="info" fullWidth size="small">
                 <InputLabel id="demo-simple-select-label">
                   Client Type
@@ -434,12 +452,15 @@ const Parsonal = () => {
               </FormControl>
             </Grid2>
             <Grid2
-              size={{ xs: 12, md: 4 }}
+              size={{ xs: 12, md: 3 }}
               display={formData?.clientType === "group" ? "block" : "none"}
             >
               <TextField
                 onChange={(e) =>
-                  setFormData({ ...formData, groupName: e.target.value })
+                  setFormData({
+                    ...formData,
+                    groupName: e.target.value?.toLocaleLowerCase(),
+                  })
                 }
                 color="info"
                 type="text"
@@ -460,7 +481,10 @@ const Parsonal = () => {
         >
           <TextField
             onChange={(e) =>
-              setFormData({ ...formData, firmName: e.target.value })
+              setFormData({
+                ...formData,
+                firmName: e.target.value.toLocaleLowerCase(),
+              })
             }
             type="text"
             value={formData?.firmName}
@@ -565,7 +589,10 @@ const Parsonal = () => {
         >
           <TextField
             onChange={(e) =>
-              setFormData({ ...formData, fname: e.target.value })
+              setFormData({
+                ...formData,
+                fname: e.target.value?.toLocaleLowerCase(),
+              })
             }
             type="text"
             aria-readonly={true}
@@ -583,7 +610,10 @@ const Parsonal = () => {
         >
           <TextField
             onChange={(e) =>
-              setFormData({ ...formData, lname: e.target.value })
+              setFormData({
+                ...formData,
+                lname: e.target.value?.toLocaleLowerCase(),
+              })
             }
             type="text"
             value={formData?.lname}
@@ -611,7 +641,6 @@ const Parsonal = () => {
             >
               <MenuItem value={"male"}>Male</MenuItem>
               <MenuItem value={"female"}>Female</MenuItem>
-              <MenuItem value={"general"}>General</MenuItem>
             </Select>
           </FormControl>
         </Grid2>
@@ -674,20 +703,20 @@ const Parsonal = () => {
         >
           <FormControl fullWidth size="small">
             <InputLabel id="demo-simple-select-label">
-              Material Status
+              Marital Status
             </InputLabel>
             <Select
               labelId="demo-simple-select-label"
               id="demo-simple-select"
-              value={formData?.meterialStatus}
-              label="Material Status"
+              value={formData?.maritalStatus}
+              label="Marital  Status"
               onChange={(e) =>
-                setFormData({ ...formData, meterialStatus: e.target.value })
+                setFormData({ ...formData, maritalStatus: e.target.value })
               }
             >
               <MenuItem value={"married"}>Married</MenuItem>
               <MenuItem value={"Unmarried"}>Unmarried</MenuItem>
-              <MenuItem value={"window"}>Windo</MenuItem>
+              <MenuItem value={"widowed"}>Widowed</MenuItem>
             </Select>
           </FormControl>
         </Grid2>
@@ -715,8 +744,12 @@ const Parsonal = () => {
             type="email"
             value={formData?.email}
             name=""
-            placeholder="Parsonal Enail"
-            label="Parsonal Email"
+            placeholder={
+              formData?.clientType === "group" ? "Email" : "Personal Email"
+            }
+            label={
+              formData?.clientType === "group" ? "Email" : "Personal Email"
+            }
             size="small"
             fullWidth
           />

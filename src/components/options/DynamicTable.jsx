@@ -14,7 +14,6 @@ const DynamicTable = ({ data = [] }) => {
 
   // Extract keys from the first object dynamically
   const columns = Object.keys(data[0]);
-  console.log("columns: ", columns);
 
   return (
     <TableContainer>

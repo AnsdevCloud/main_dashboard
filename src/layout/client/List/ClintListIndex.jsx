@@ -12,10 +12,14 @@ import {
   FormControl,
   Typography,
   Paper,
+  Card,
+  CardContent,
 } from "@mui/material";
 import ClientDetailsCard from "./Card";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useTabs } from "../../../stores/TabsContex";
+import useEncryptedSessionStorage from "../../../hooks/useEncryptedSessionStorage";
 
 const clientsData = [
   {
@@ -56,23 +60,32 @@ const ClientsLandingPage = () => {
   const [premiumFilter, setPremiumFilter] = useState(false);
   const [labelFilter, setLabelFilter] = useState("");
   const [data, setData] = useState([]);
+  const navigate = useNavigate();
+  const { addTab } = useTabs();
+  const [isData, setDataList] = useEncryptedSessionStorage("clientData", null);
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        const response = await axios.get(
-          "https://db.enivesh.com/firestore/all/crm_clients?limit=10",
-          {
-            headers: {
-              "x-api-key": "5cf783e5-51a5-4dcc-9bc5-0b9a414c88a3",
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        setData(response.data?.documents);
-        console.log("response.data?.documents: ", response.data?.documents);
-      } catch (error) {
-        console.error("Error fetching data:", error);
+      if (isData) {
+        setData(isData);
+        setDataList(isData);
+      } else {
+        try {
+          const response = await axios.get(
+            "https://db.enivesh.com/firestore/all/crm_clients?limit=10",
+            {
+              headers: {
+                "x-api-key": "5cf783e5-51a5-4dcc-9bc5-0b9a414c88a3",
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          setData(response.data?.documents);
+          console.log("response.data?.documents: ", response.data?.documents);
+          setDataList(response.data?.documents);
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
       }
     };
 
@@ -127,66 +140,53 @@ const ClientsLandingPage = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             sx={{ flex: 2 }}
           />
-          {/* 
-          <FormControl
-            size="small"
-            variant="outlined"
-            sx={{ minWidth: 120, flex: 1 }}
-          >
-            <InputLabel id="label-filter-label">Label</InputLabel>
-            <Select
-              labelId="label-filter-label"
-              label="Label"
-              value={labelFilter}
-              onChange={(e) => setLabelFilter(e.target.value)}
-            >
-              <MenuItem value="">
-                <em>All</em>
-              </MenuItem>
-              {labels.map((label, index) => (
-                <MenuItem key={index} value={label}>
-                  {label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={premiumFilter}
-                onChange={(e) => setPremiumFilter(e.target.checked)}
-                sx={{
-                  color: "#ff5c00",
-                  "&.Mui-checked": { color: "#ff5c00" },
-                }}
-              />
-            }
-            label="Premium Only"
-            sx={{ flex: 1, whiteSpace: "nowrap" }}
-          /> */}
         </Box>
       </Paper>
 
       {/* Display Client Cards */}
-      <Grid2 container spacing={4} justifyContent="center">
-        {filteredClients.map((client) => (
-          <Grid2 size={{ xs: 12, md: 4 }} key={client.id}>
+      <Grid2 container spacing={2} justifyContent="center">
+        {filteredClients?.map((client) => (
+          <Grid2 size={{ xs: 12, md: 8 }} key={client.id}>
             <Link
               style={{ textDecoration: "none" }}
-              to={`/crm/clients/${client.id}`}
-              state={client}
+              onClick={(e) => {
+                e.preventDefault();
+                if (e.ctrlKey || e.altKey) {
+                  addTab({
+                    label: client.fname || client.firmName,
+                    name: client.id,
+                    link: `/crm/clients/${client.id}`,
+                  });
+                  navigate(`/crm/clients/${client.id}`, {
+                    state: { ...client },
+                  });
+                } else {
+                  navigate(`/crm/clients/${client.id}`, {
+                    state: { ...client },
+                  });
+                }
+              }}
             >
               <ClientDetailsCard client={client} />
             </Link>
           </Grid2>
         ))}
         {filteredClients.length === 0 && (
-          <Typography
-            variant="h6"
-            sx={{ mt: 4, textAlign: "center", width: "100%" }}
-          >
-            No clients found.
-          </Typography>
+          <Grid2 size={{ xs: 12, md: 8 }}>
+            <Card variant="outlined">
+              <CardContent>
+                <Typography
+                  component={"h2"}
+                  variant="subtitle1"
+                  textAlign={"center"}
+                  color="grey"
+                  sx={{ cursor: "default" }}
+                >
+                  No Clients Found
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid2>
         )}
       </Grid2>
     </Box>

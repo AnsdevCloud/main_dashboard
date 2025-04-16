@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import MenuIcon from "@mui/icons-material/Menu";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 
@@ -24,8 +24,12 @@ import { MdControlCamera, MdDashboard } from "react-icons/md";
 // import { Home } from "@mui/icons-material";
 import { GrAction, GrActions } from "react-icons/gr";
 import { Close } from "@mui/icons-material";
+import { link } from "d3";
+import { useTabs } from "../../stores/TabsContex";
 
 const SideBarNested = ({ isOpen, toggleDrawer }) => {
+  const { addTab } = useTabs();
+
   const { siteSettings, role, swipeFuns, mySetting, setMySetting } =
     useContext(ThemeContext);
   // console.log("mySetting: ", mySetting, role);
@@ -68,6 +72,11 @@ const SideBarNested = ({ isOpen, toggleDrawer }) => {
   const haodleSubDrower = (item) => {
     handleSubMenuToggle(item.name);
     navigate(item.link);
+    addTab({
+      ...item,
+      name: item?.name,
+      link: item?.link,
+    });
   };
 
   const MyListDefine = ({ menuItems = [] }) => {
@@ -185,7 +194,14 @@ const SideBarNested = ({ isOpen, toggleDrawer }) => {
                                   value?.status === "enabled")
                             ) === undefined && "none",
                         }}
-                        onClick={() => navigate(subItem?.link)}
+                        onClick={() => {
+                          navigate(subItem?.link);
+                          addTab({
+                            label: subItem?.label || "",
+                            name: subItem?.name || "",
+                            link: subItem?.link || "",
+                          });
+                        }}
                       >
                         <ListItemIcon
                           sx={{
@@ -243,7 +259,7 @@ const SideBarNested = ({ isOpen, toggleDrawer }) => {
           overflowX: "hidden",
           whiteSpace: "nowrap",
           position: { xs: "fixed", md: "sticky" },
-          height: { xs: "100vh", md: "91vh" },
+          height: { xs: "100vh", md: "87vh" },
           pb: 3,
           backgroundColor: (theme) => theme.palette.background.paper,
         },
@@ -290,7 +306,9 @@ const SideBarNested = ({ isOpen, toggleDrawer }) => {
                   value.name === "admin" && value?.status === "enabled"
               ) === undefined && "none",
           }}
-          onClick={() => navigate("/cpanel")}
+          onClick={() => {
+            navigate("/cpanel");
+          }}
         >
           <ListItemIcon
             sx={{
@@ -332,7 +350,9 @@ const SideBarNested = ({ isOpen, toggleDrawer }) => {
                   value.name === "dashboard" && value?.status === "enabled"
               ) === undefined && "none",
           }}
-          onClick={() => navigate("/dashboard")}
+          onClick={() => {
+            navigate("/dashboard");
+          }}
         >
           <ListItemIcon
             sx={{

@@ -67,7 +67,6 @@ const InvoiceDocument = ({}) => {
           });
           setTimeout(() => {
             handleFileUpload({ id: docSnap.id, ...docSnap.data() });
-            console.log("docSnap.data(): ", docSnap.data());
           }, 1000);
         } else {
           setIsAlert({
@@ -215,7 +214,7 @@ const InvoiceDocument = ({}) => {
         <TextField
           type="file"
           size="small"
-          label="Invoice Number"
+          label="Document File"
           onChange={(e) => handleChange(e)}
           slotProps={{
             inputLabel: {

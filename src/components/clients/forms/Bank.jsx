@@ -14,13 +14,14 @@ import {
 import React, { useContext, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ThemeContext } from "../../../theme/ThemeContext";
+import useEncryptedSessionStorage from "../../../hooks/useEncryptedSessionStorage";
 
 const BankDetails = () => {
   const { regCrmClient, setRegCrmClient } = useContext(ThemeContext);
   let cid = JSON.parse(sessionStorage.getItem("cid"));
+  const [editData, setEditData] = useEncryptedSessionStorage("edit-code");
   const [edit, setEdit] = useState(false);
   useEffect(() => {
-    let editData = JSON.parse(sessionStorage.getItem("edit-data"));
     if (editData?.id) {
       setEdit(true);
       if (editData?.bank) {
@@ -34,10 +35,8 @@ const BankDetails = () => {
     cid: "",
     acNumber: "",
     bankName: "",
-    acCreationDate: "",
-    relationshipDate: "",
-    clientTag: "",
-    custmerStatus: "",
+    relationshipDate: new Date().getTime(),
+    ifscCode: "",
   });
 
   const handleSubmit = () => {
@@ -55,13 +54,7 @@ const BankDetails = () => {
       body: raw,
       redirect: "follow",
     };
-    if (
-      cid &&
-      formData?.bankName &&
-      formData?.acNumber &&
-      formData?.acCreationDate &&
-      formData?.relationshipDate
-    ) {
+    if (cid && formData?.bankName && formData?.acNumber && formData?.ifscCode) {
       fetch(
         `https://db.enivesh.com/firestore/single/crm_clients/${cid}`,
         requestOptions
@@ -114,7 +107,7 @@ const BankDetails = () => {
             </Alert>
           )}
         </Grid2>
-        <Grid2 size={{ xs: 12 }}>
+        <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
           <TextField
             type="text"
             name=""
@@ -129,7 +122,7 @@ const BankDetails = () => {
             }
           />
         </Grid2>
-        <Grid2 size={{ xs: 12 }}>
+        <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
           <TextField
             type="number"
             disabled={!cid}
@@ -144,44 +137,19 @@ const BankDetails = () => {
             }
           />
         </Grid2>
-        <Grid2 size={{ xs: 12 }}>
+        <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
           <TextField
-            type="date"
-            slotProps={{
-              inputLabel: {
-                shrink: true,
-              },
-            }}
+            type="text"
             disabled={!cid}
             name=""
-            placeholder="Account Creation Date"
-            label="Account Creation Date"
-            value={formData?.acCreationDate}
-            onChange={(e) =>
-              setFormData({ ...formData, acCreationDate: e.target.value })
-            }
+            placeholder="IFSC Code"
+            label="IFSC Code"
             size="small"
+            value={formData.ifscCode}
             fullWidth
-          />
-        </Grid2>
-        <Grid2 size={{ xs: 12 }}>
-          <TextField
-            type="date"
-            disabled={!cid}
-            slotProps={{
-              inputLabel: {
-                shrink: true,
-              },
-            }}
-            name=""
-            placeholder="Relationship Date"
             onChange={(e) =>
-              setFormData({ ...formData, relationshipDate: e.target.value })
+              setFormData({ ...formData, ifscCode: e.target.value })
             }
-            label="Relationship Date"
-            value={formData?.relationshipDate}
-            size="small"
-            fullWidth
           />
         </Grid2>
 
