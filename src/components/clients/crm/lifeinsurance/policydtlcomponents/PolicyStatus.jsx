@@ -70,10 +70,16 @@ const PolicyStatusCalculator = ({ data }) => {
         if (!isAfter(payment, renewal)) {
           status = "Active";
         } else {
-          status = "Pending Renewal";
+          if (daysUntilRenewal <= 20) {
+            status = "Pending Renewal";
+          }
+          status = "Active - Exapiry";
         }
       } else {
-        status = "Pending Renewal";
+        if (daysUntilRenewal <= 20) {
+          status = "Pending Renewal";
+        }
+        status = "Active";
       }
       daysMessage = `Renewal due in ${daysUntilRenewal} day(s)`;
     }
@@ -83,20 +89,46 @@ const PolicyStatusCalculator = ({ data }) => {
       if (daysPastRenewal <= 29) {
         if (lastPaymentDate) {
           const payment = parseISO(lastPaymentDate);
-          // Agar payment renewal date ke baad aur renewal+29 ke andar hui ho
-          if (
-            !isBefore(payment, renewal) &&
-            !isAfter(payment, addDays(renewal, 29))
-          ) {
-            status = "Active";
+
+          if (paymentFrequency === "monthly") {
+            if (
+              !isBefore(payment, renewal) &&
+              !isAfter(payment, addDays(renewal, 14))
+            ) {
+              status = "Active";
+            } else {
+              status = "Grace Period: Not Renewed";
+            }
           } else {
-            status = "Grace Period: Not Renewed";
+            // Agar payment renewal date ke baad aur renewal+29 ke andar hui ho
+            if (
+              !isBefore(payment, renewal) &&
+              !isAfter(payment, addDays(renewal, 29))
+            ) {
+              status = "Active";
+            } else {
+              status = "Grace Period: Not Renewed";
+            }
           }
         } else {
-          status = "Grace Period: Not Renewed";
+          if (paymentFrequency === "monthly" && daysPastRenewal <= 14) {
+            status = "Grace Period: Not Renewed";
+          } else {
+            if (paymentFrequency === "monthly") {
+              status = "Lapsed";
+            } else {
+              status = "Grace Period: Not Renewed";
+            }
+          }
         }
-        const daysLeftGrace = 29 - daysPastRenewal;
-        daysMessage = `Grace period expires in ${daysLeftGrace} day(s)`;
+
+        if (paymentFrequency === "monthly" && daysPastRenewal <= 14) {
+          const daysLeftGrace = 14 - daysPastRenewal;
+          daysMessage = `Grace period expires in ${daysLeftGrace} day(s)`;
+        } else {
+          const daysLeftGrace = 29 - daysPastRenewal;
+          daysMessage = `Grace period expires in ${daysLeftGrace} day(s)`;
+        }
       }
       // Case 3: After Grace Period (i.e., 30 or more days past renewal)
       else {
@@ -406,7 +438,7 @@ const PolicyStatusCalculator = ({ data }) => {
                   fontSize={"large"}
                   fullWidth
                   tooltip={"Edit"}
-                  value={format(renewalDate, "dd MMMM yyyy")}
+                  value={format(renewalDate || null, "dd MMMM yyyy")}
                   caption={"Next Renewal Date"}
                   rupeeLabal={false}
                   onClick={() => setEdit({ ...edit, renewalDate: true })}
@@ -457,7 +489,7 @@ const PolicyStatusCalculator = ({ data }) => {
                   fontSize={"large"}
                   fullWidth
                   tooltip={"Edit"}
-                  value={format(lastPaymentDate, "dd MMMM yyyy")}
+                  value={format(lastPaymentDate || null, "dd MMMM yyyy")}
                   caption={"Last Payment Date"}
                   rupeeLabal={false}
                   onClick={() => setEdit({ ...edit, lastPayDate: true })}

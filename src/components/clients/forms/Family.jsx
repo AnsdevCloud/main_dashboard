@@ -9,7 +9,13 @@ import {
   Tooltip,
   Alert,
 } from "@mui/material";
-import { ArrowBack, PictureAsPdf, Save, Update } from "@mui/icons-material";
+import {
+  ArrowBack,
+  PictureAsPdf,
+  Refresh,
+  Save,
+  Update,
+} from "@mui/icons-material";
 import { useLocation, useNavigate } from "react-router-dom";
 import html2pdf from "html2pdf.js"; // Import the library
 import useEncryptedSessionStorage from "../../../hooks/useEncryptedSessionStorage";
@@ -66,8 +72,8 @@ const CustomNode = ({ nodeDatum, onDoubleClick, toggleNode }) => {
     }
   };
 
-  const boxWidth = 200;
-  const boxHeight = 55;
+  const boxWidth = 400;
+  const boxHeight = 150;
   const backgroundColor = nodeDatum?.bgColor || "#ffffff";
   const displayName =
     nodeDatum?.name?.length > 20
@@ -111,19 +117,35 @@ const CustomNode = ({ nodeDatum, onDoubleClick, toggleNode }) => {
               textAlign: "left",
               lineHeight: 1.2,
               marginBottom: "0.5em",
+              textTransform: "capitalize",
             }}
           >
             {displayName}
           </div>
           <div
             style={{
-              fontSize: "12px",
+              fontSize: "14px",
+              lineHeight: 1.2,
+              letterSpacing: 1,
+              textTransform: "capitalize",
+              marginBottom: 5,
+              fontWeight: 600,
+            }}
+          >
+            {nodeDatum.attributes?.relationshipType}{" "}
+          </div>
+          <div
+            style={{
+              fontSize: "14px",
               lineHeight: 1.2,
               letterSpacing: 1,
               textTransform: "capitalize",
             }}
           >
-            {nodeDatum.attributes?.relationshipType}{" "}
+            {nodeDatum.attributes?.dob}{" "}
+            {`(${calculateAge(nodeDatum.attributes?.dob)?.years}Y ${
+              calculateAge(nodeDatum.attributes?.dob)?.months
+            }M ${calculateAge(nodeDatum.attributes?.dob)?.days}D)`}
           </div>
         </div>
       </foreignObject>
@@ -133,37 +155,15 @@ const CustomNode = ({ nodeDatum, onDoubleClick, toggleNode }) => {
 
 // --- Main Component ---
 const InteractiveTree = () => {
-  const [treeData, setTreeData] = useState(initialTreeData);
-  const [editData, setEditData] = useEncryptedSessionStorage("edit-code");
-
   const { state } = useLocation();
-  const navigate = useNavigate();
-  const [isMessage, setIsMessage] = useState({
-    msg: "",
-    type: "",
-    status: false,
-  });
+  const [treeData, setTreeData] = useState(initialTreeData);
 
+  const navigate = useNavigate();
+
+  const [refresh, setRefresh] = useState(false);
   useEffect(() => {
-    const storedTree = sessionStorage.getItem("tre");
-    if (editData?.members) {
-      setTreeData(editData?.members);
-    }
-    if (storedTree) {
-      try {
-        const parsedTree = JSON.parse(storedTree);
-        if (parsedTree?.children?.length > 0) {
-          setTreeData(parsedTree);
-        }
-      } catch (err) {
-        console.error("Error parsing stored tree data", err);
-      }
-    }
-    if (state?.children?.length > 0) {
-      sessionStorage.setItem("tre", JSON.stringify(treeData));
-      setTreeData(state);
-    }
-  }, []);
+    setTreeData({ ...initialTreeData, ...state });
+  }, [refresh]);
 
   const toggleCollapse = useCallback(
     (e, nodeDatum) => {
@@ -198,13 +198,6 @@ const InteractiveTree = () => {
       toggleNode={() => toggleCollapse(null, rd3tProps.nodeDatum)}
     />
   );
-
-  useEffect(() => {
-    const editData = JSON.parse(sessionStorage.getItem("edit-data"));
-    if (editData?.id && editData?.members) {
-      setTreeData(editData.members);
-    }
-  }, []);
 
   // Function to download tree as PDF in A4 size
   const downloadPdf = () => {
@@ -242,6 +235,11 @@ const InteractiveTree = () => {
         <Tooltip title="Back">
           <IconButton onClick={() => navigate(-1)} size="small">
             <ArrowBack fontSize="10px" />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Back">
+          <IconButton onClick={() => setRefresh(!refresh)} size="small">
+            <Refresh fontSize="10px" />
           </IconButton>
         </Tooltip>
         <Button

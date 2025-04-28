@@ -106,7 +106,7 @@ const Index = () => {
           color="secondary"
           variant="outlined"
         >
-          Veiw Details
+          View Details
         </Button>
       </CardActions>
     </Card>

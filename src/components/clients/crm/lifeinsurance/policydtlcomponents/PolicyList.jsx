@@ -184,7 +184,9 @@ const PolicyList = () => {
                     <TableCell sx={{ minWidth: 100 }}>
                       {t?.policyNumber}
                     </TableCell>
-                    <TableCell sx={{ minWidth: 100 }}>
+                    <TableCell
+                      sx={{ minWidth: 100, textTransform: "capitalize" }}
+                    >
                       {t?.proposerName}
                     </TableCell>
                     <TableCell sx={{ minWidth: 100 }}>

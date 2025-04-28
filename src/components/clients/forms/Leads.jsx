@@ -117,7 +117,7 @@ const LeadsDeatils = () => {
   const [edit, setEdit] = useState(false);
   useEffect(() => {
     if (editData?.id) {
-      setEdit(true);
+      setEdit(editData?.edit);
       if (editData?.leads) {
         setFormData({ ...editData?.leads });
       }

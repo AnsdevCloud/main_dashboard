@@ -1,5 +1,5 @@
 // InteractiveTree.js
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, { useState, useCallback, useRef, useEffect, memo } from "react";
 import Tree from "react-d3-tree";
 import {
   Box,
@@ -18,6 +18,7 @@ import {
 } from "@mui/material";
 import { ArrowBack, Save, Update } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import useEncryptedSessionStorage from "../../../hooks/useEncryptedSessionStorage";
 
 // --- Constants and Helpers ---
 
@@ -219,8 +220,8 @@ const CustomNode = ({ nodeDatum, onDoubleClick, toggleNode }) => {
     }
   };
 
-  const boxWidth = 200;
-  const boxHeight = 55;
+  const boxWidth = 400;
+  const boxHeight = 100;
   const backgroundColor = nodeDatum?.bgColor || "#ffffff";
   const displayName =
     nodeDatum?.name?.length > 20
@@ -262,6 +263,7 @@ const CustomNode = ({ nodeDatum, onDoubleClick, toggleNode }) => {
               textAlign: "left",
               lineHeight: 1.2,
               marginBottom: "0.5em",
+              textTransform: "capitalize",
             }}
           >
             {displayName}
@@ -288,7 +290,11 @@ const CustomNode = ({ nodeDatum, onDoubleClick, toggleNode }) => {
 // --- Main Component ---
 
 const InteractiveTree = () => {
-  const [treeData, setTreeData] = useState(initialTreeData);
+  const [editData, setEditData] = useEncryptedSessionStorage("edit-code");
+
+  const [treeData, setTreeData] = useState(
+    editData?.members || initialTreeData
+  );
   const clintType = JSON.parse(sessionStorage.getItem("ct"));
   const MainClient = JSON.parse(sessionStorage.getItem("ctn"));
 
@@ -317,20 +323,30 @@ const InteractiveTree = () => {
 
   // Load tree from sessionStorage once on mount.
   useEffect(() => {
-    const storedTree = sessionStorage.getItem("tre");
-
-    if (storedTree) {
+    if (editData) {
       try {
-        const parsedTree = JSON.parse(storedTree);
+        let parsedTree = editData?.members || initialTreeData;
+
         if (parsedTree?.children?.length > 0) {
           setTreeData({
             ...parsedTree,
-            name: MainClient?.name,
+            name: editData?.firmName || editData?.fname,
             attributes: {
               ...parsedTree.attributes,
               relationshipType: "Self",
-              dob: MainClient?.dob,
-              gender: MainClient?.gender,
+              dob: editData?.dob,
+              gender: editData?.gender,
+            },
+          });
+        } else {
+          setTreeData({
+            ...parsedTree,
+            name: editData?.firmName || editData?.fname,
+            attributes: {
+              ...parsedTree.attributes,
+              relationshipType: "Self",
+              dob: editData?.dob,
+              gender: editData?.gender,
             },
           });
         }
@@ -343,7 +359,7 @@ const InteractiveTree = () => {
   // Save treeData to sessionStorage when it changes.
   useEffect(() => {
     if (treeData?.children?.length > 0) {
-      sessionStorage.setItem("tre", JSON.stringify(treeData));
+      setEditData({ ...editData, members: treeData });
     }
   }, [treeData]);
 
@@ -551,7 +567,7 @@ const InteractiveTree = () => {
           width: "100%",
           height: "100%",
           bgcolor: "#6e6e6e91",
-          zIndex: 20,
+          zIndex: 9999,
           display: cid ? "none" : "flex",
           alignItems: "center",
           justifyContent: "center",

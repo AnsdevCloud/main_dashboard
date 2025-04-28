@@ -20,6 +20,7 @@ import { ThemeContext } from "../../../theme/ThemeContext";
 import { RiAiGenerate } from "react-icons/ri";
 
 import useEncryptedSessionStorage from "../../../hooks/useEncryptedSessionStorage";
+import { f } from "html2pdf.js";
 
 const Parsonal = () => {
   const { regCrmClient, setRegCrmClient } = useContext(ThemeContext);
@@ -84,6 +85,7 @@ const Parsonal = () => {
     anualIncome: "",
     occupation: "",
     nationality: "",
+    edit: false,
   });
 
   const handleSubmit = () => {
@@ -292,6 +294,9 @@ const Parsonal = () => {
     } else {
       setEffectRun(false);
     }
+    if (formData?.cin) {
+      setEditData({ ...formData });
+    }
   }, [formData]);
 
   return (
@@ -318,7 +323,7 @@ const Parsonal = () => {
             </Typography>
             <Tooltip title="New Form ">
               <Button
-                disabled={editData?.id ? false : cinLock}
+                disabled={cinLock && !editData?.edit}
                 onClick={() => handleNewReg()}
                 size="small"
                 sx={{ ml: 2 }}
@@ -859,7 +864,7 @@ const Parsonal = () => {
           </Button>
         </Grid2>
         <Grid2 size={{ xs: 6, md: 3 }} my={{ xs: 2, md: 3 }}>
-          {editData ? (
+          {editData?.edit ? (
             <Button
               onClick={() => handleUpdate()}
               startIcon={<Save />}

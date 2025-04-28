@@ -8,14 +8,14 @@ import { Paper } from "@mui/material";
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const DoughnutChart = ({ data, options }) => {
+const DoughnutChart = ({ data, options, title }) => {
   if (!data) {
     return <p>No Data </p>;
   }
   // Options for the chart
   const options1 = {
     responsive: true,
-    maintainAspectRatio: false,
+    maintainAspectRatio: true,
     plugins: {
       legend: {
         position: "bottom", // Position the legend at the bottom
@@ -38,7 +38,7 @@ const DoughnutChart = ({ data, options }) => {
       },
       title: {
         display: true,
-        text: "Sourcing Monthly",
+        text: title || "",
         color: "grey",
         font: {
           size: 12, // Font size for the main title

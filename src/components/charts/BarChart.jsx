@@ -34,6 +34,9 @@ const BarChart = ({
   responsive = true,
   minHeight = 300,
   height = "100%",
+  title,
+  xtitle,
+  ytitle,
 }) => {
   // Default Options
   const defaultOptions = {
@@ -59,8 +62,8 @@ const BarChart = ({
         },
       },
       title: {
-        display: false,
-        text: "Bar Chart",
+        display: title ? true : false,
+        text: title || "Bar Chart",
         color: "grey",
         font: {
           size: 12,
@@ -85,8 +88,8 @@ const BarChart = ({
     scales: {
       x: {
         title: {
-          display: false,
-          text: "Categories",
+          display: xtitle ? true : false,
+          text: xtitle || "Categories",
         },
         ticks: {},
         grid: {
@@ -96,8 +99,8 @@ const BarChart = ({
       y: {
         beginAtZero: true,
         title: {
-          display: true,
-          text: "Sales",
+          display: ytitle ? true : false,
+          text: ytitle || "Sales",
         },
         grid: {
           display: true,

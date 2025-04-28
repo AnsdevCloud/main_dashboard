@@ -32,7 +32,7 @@ const Communication = () => {
   useEffect(() => {
     setCTData(ClintType);
     if (editData?.id) {
-      setEdit(true);
+      setEdit(editData?.edit);
       setFormData({ ...editData?.communication });
     }
   }, []);

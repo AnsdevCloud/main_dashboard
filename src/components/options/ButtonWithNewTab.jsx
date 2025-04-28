@@ -40,7 +40,7 @@ const ButtonWithNewTab = ({
         }}
         fullWidth
       >
-        {label}
+        {name || label}
       </Button>
     </Tooltip>
   );

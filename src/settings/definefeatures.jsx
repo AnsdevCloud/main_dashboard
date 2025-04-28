@@ -69,7 +69,7 @@ const defineFeatures = [
         icon: <HealthAndSafety />,
         link: "/crm/health-insurance",
         name: "healthInsurance",
-        dev: true,
+        dev: false,
       },
       {
         label: "General Insurance ",

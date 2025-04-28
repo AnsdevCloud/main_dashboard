@@ -28,6 +28,7 @@ import {
 } from "firebase/firestore";
 import useEncryptedSessionStorage from "../../../../hooks/useEncryptedSessionStorage";
 import { useNavigate } from "react-router-dom";
+import { set } from "date-fns";
 
 const fetchData = async (id) => {
   try {
@@ -79,6 +80,7 @@ const formKey = {
   leadSource: "",
   srm: "",
   insurancePlanner: "",
+  lastPaymentDate: null,
 };
 const LForm = () => {
   const navigate = useNavigate();
@@ -91,7 +93,8 @@ const LForm = () => {
     riderName: "",
     riderPayTerm: "",
     riderPolicyTerm: "",
-    riderPremium: "",
+    riderPremium: 0,
+    sumAssured: 0,
   });
   const [totalRiderPremium, setTotalRiderPremium] = useState({
     trPremium: 0,
@@ -111,7 +114,7 @@ const LForm = () => {
       setIsSuggested(false);
     }
     if (field === "proposerName") {
-      if (field.length >= 4) {
+      if (value.length >= 4) {
         searchByName();
       }
     }
@@ -123,9 +126,25 @@ const LForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
     if (Object.values(errors).some((error) => error)) {
-      alert("Please fix validation errors before submitting.");
+      alert("Please fill Required field before submitting.");
       return;
+    }
+    if (
+      rider?.riderName &&
+      rider?.riderPremium &&
+      rider?.riderPayTerm &&
+      rider?.riderPolicyTerm &&
+      rider?.sumAssured
+    ) {
+      const isConfirmed = window.confirm(
+        "Are you sure you want to save this rider?"
+      );
+
+      if (isConfirmed) {
+        setRiders((prevRiders) => [...prevRiders, { ...rider }]);
+      }
     }
 
     const myHeaders = new Headers();
@@ -155,7 +174,17 @@ const LForm = () => {
       redirect: "follow",
     };
 
-    if (formData?.cin && formData?.proposerName && formData?.policyNumber) {
+    if (
+      formData?.cin &&
+      formData?.proposerName &&
+      formData?.policyNumber &&
+      formData?.startDate &&
+      formData?.policyType &&
+      formData?.basePremium &&
+      formData?.sumAssured &&
+      formData?.company &&
+      formData?.frequencyPayment
+    ) {
       fetch(`https://db.enivesh.com/firestore/set`, requestOptions)
         .then((response) => response.text())
         .then((result) => {
@@ -165,10 +194,17 @@ const LForm = () => {
           setIsFetchedUser(null);
           setLFM({ ...formKey });
           setFetchedLFM(null);
+          setRider({
+            riderGst: 18,
+            riderName: "",
+            riderPayTerm: "",
+            riderPolicyTerm: "",
+            riderPremium: 0,
+          });
         })
         .catch((error) => console.error(error));
     } else {
-      alert("Please fill all fields before submitting.");
+      alert("Please Enter Required Data before Submitting.");
     }
   };
   const hndleRider = (field, value) => {
@@ -332,18 +368,28 @@ const LForm = () => {
         startAt(formData?.proposerName),
         endAt(formData?.proposerName + "\uf8ff")
       );
+      const q2 = query(
+        usersRef,
+        orderBy("firmName"),
+        startAt(formData?.proposerName),
+        endAt(formData?.proposerName + "\uf8ff")
+      );
 
       const snapshot = await getDocs(q);
       const searchResults = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
-      setResults(searchResults);
+      const snapshot2 = await getDocs(q2);
+      const searchResults2 = snapshot2.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setResults([...searchResults, ...searchResults2]);
     } catch (error) {
       console.error("Error fetching documents: ", error);
     }
   };
-
   // auto save chache
   const [isFormClear, serIsFormClear] = useState(false);
   useEffect(() => {
@@ -462,7 +508,9 @@ const LForm = () => {
                     >
                       <ListItemText
                         primaryTypographyProps={{ fontSize: 12 }}
-                        primary={`${value?.cin} - ${value?.fname} ${value?.lname}`}
+                        primary={`${value?.cin} - ${
+                          value?.firmName || value?.fname
+                        } ${!value?.firmName ? "" : value?.lname}`}
                         secondary={`${value?.clientType
                           ?.split("-")
                           ?.join(" ")} `}
@@ -597,6 +645,7 @@ const LForm = () => {
             <InputWithValidation
               label="Policy Number"
               value={formData.policyNumber}
+              required
               onChange={(value) => handleChange("policyNumber", value)}
               onValidate={(error) => handleValidation("policyNumber", error)}
             />
@@ -606,6 +655,7 @@ const LForm = () => {
             <InputWithValidation
               label="Start Date"
               value={formData.startDate}
+              required
               onChange={(value) => handleChange("startDate", value)}
               onValidate={(error) => handleValidation("startDate", error)}
               type="date"
@@ -641,6 +691,7 @@ const LForm = () => {
           <Grid2 size={{ xs: 12, md: 3 }}>
             <InputWithValidation
               label="Base Premium"
+              required
               value={formData.basePremium}
               onChange={(value) => handleChange("basePremium", value)}
               onValidate={(error) => handleValidation("basePremium", error)}
@@ -700,6 +751,7 @@ const LForm = () => {
             <InputWithValidation
               label="Sum Assured"
               value={formData.sumAssured}
+              required
               onChange={(value) => handleChange("sumAssured", value)}
               onValidate={(error) => handleValidation("sumAssured", error)}
               type="number"
@@ -708,6 +760,7 @@ const LForm = () => {
           <Grid2 size={{ xs: 12, md: 3 }}>
             <InputWithValidation
               label="Company"
+              required
               value={formData.company}
               onChange={(value) => handleChange("company", value)}
               onValidate={(error) => handleValidation("company", error)}
@@ -763,6 +816,7 @@ const LForm = () => {
           <Grid2 size={{ xs: 12, md: 3 }}>
             <InputWithValidation
               label="Frequency Payment"
+              required
               value={formData.frequencyPayment}
               onChange={(value) => handleChange("frequencyPayment", value)}
               onValidate={(error) =>
@@ -815,6 +869,7 @@ const LForm = () => {
             <InputWithValidation
               label="Policy Type"
               value={formData.policyType}
+              required
               onChange={(value) => handleChange("policyType", value)}
               onValidate={(error) => handleValidation("policyType", error)}
               type="select"
@@ -984,7 +1039,7 @@ const LForm = () => {
                   type="text"
                 />
               </Grid2>
-              <Grid2 size={{ xs: 6, sm: 3, md: 3 }}>
+              <Grid2 size={{ xs: 6, sm: 3, md: 2 }}>
                 <InputWithValidation
                   label="Rider Pay Term"
                   readOnly={true}
@@ -996,7 +1051,7 @@ const LForm = () => {
                   type="text"
                 />
               </Grid2>
-              <Grid2 size={{ xs: 6, sm: 3, md: 3 }}>
+              <Grid2 size={{ xs: 6, sm: 3, md: 2 }}>
                 <InputWithValidation
                   label="Rider Policy Term"
                   readOnly={true}
@@ -1008,8 +1063,18 @@ const LForm = () => {
                   type="text"
                 />
               </Grid2>
+              <Grid2 size={{ xs: 6, sm: 3, md: 2 }}>
+                <InputWithValidation
+                  label="Rider Sum Assured"
+                  readOnly={true}
+                  value={rider?.sumAssured}
+                  onChange={(value) => hndleRider("sumAssured", value)}
+                  onValidate={(error) => handleValidation("sumAssured", error)}
+                  type="text"
+                />
+              </Grid2>
 
-              <Grid2 size={{ xs: 6, sm: 3, md: 3 }}>
+              <Grid2 size={{ xs: 6, sm: 3, md: 2 }}>
                 <InputWithValidation
                   label="Rider Premium"
                   readOnly={true}
@@ -1057,7 +1122,7 @@ const LForm = () => {
                 type="text"
               />
             </Grid2>
-            <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+            <Grid2 size={{ xs: 12, sm: 6, md: 2 }}>
               <InputWithValidation
                 label="Rider Pay Term"
                 value={rider?.riderPayTerm}
@@ -1066,7 +1131,7 @@ const LForm = () => {
                 type="number"
               />
             </Grid2>
-            <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+            <Grid2 size={{ xs: 12, sm: 6, md: 2 }}>
               <InputWithValidation
                 label="Rider Policy Term"
                 value={rider?.riderPolicyTerm}
@@ -1077,8 +1142,16 @@ const LForm = () => {
                 type="number"
               />
             </Grid2>
-
-            <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+            <Grid2 size={{ xs: 12, sm: 6, md: 2 }}>
+              <InputWithValidation
+                label="Rider Sum Assured"
+                value={rider?.sumAssured}
+                onChange={(value) => hndleRider("sumAssured", value)}
+                onValidate={(error) => handleValidation("sumAssured", error)}
+                type="number"
+              />
+            </Grid2>
+            <Grid2 size={{ xs: 12, sm: 6, md: 2 }}>
               <InputWithValidation
                 label="Rider Premium"
                 value={rider?.riderPremium}

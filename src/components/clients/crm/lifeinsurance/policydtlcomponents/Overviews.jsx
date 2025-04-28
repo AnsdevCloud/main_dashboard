@@ -96,21 +96,6 @@ const Overviews = ({ data }) => {
               {data?.min}
             </Typography>
           </Grid2>
-          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
-            <Typography
-              variant="body2"
-              component={"p"}
-              sx={{ cursor: "default" }}
-              color="text.secondary"
-              fontWeight={400}
-              gutterBottom
-            >
-              Policy Number
-            </Typography>
-            <Typography variant="body1" color="text.primary">
-              123456789
-            </Typography>
-          </Grid2>
         </Grid2>
       </Grid2>
       {/* ///======================Policy Details=======================/// */}
@@ -125,21 +110,6 @@ const Overviews = ({ data }) => {
             borderRadius: 1,
           }}
         >
-          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
-            <Typography
-              variant="body2"
-              component={"p"}
-              sx={{ cursor: "default" }}
-              color="text.secondary"
-              fontWeight={400}
-              gutterBottom
-            >
-              Policy Number
-            </Typography>
-            <Typography variant="body1" color="text.primary">
-              {data?.id}
-            </Typography>
-          </Grid2>
           <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
             <Typography
               variant="body2"
@@ -241,7 +211,212 @@ const Overviews = ({ data }) => {
           </Grid2>
         </Grid2>
       </Grid2>
+      {/* // ///======================Sum Assured Details=======================/// */}
+      <Grid2 size={{ xs: 12 }}>
+        {/* <HeadlineTag
+          title={"Second Year onward Premium"}
+          iconColor={"#108314"}
+          titleColor={"success"}
+          my={1}
+          size={"small"}
+        /> */}
+        <Grid2
+          container
+          spacing={1}
+          sx={{
+            bgcolor: (theme) => theme.palette.background.default,
+            p: 2,
+            borderRadius: 1,
+          }}
+        >
+          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
+            <Typography
+              variant="body2"
+              component={"p"}
+              sx={{ cursor: "default" }}
+              color="text.secondary"
+              fontWeight={400}
+              gutterBottom
+            >
+              Sum Assured
+            </Typography>
+            <Typography variant="body1" color="text.primary" fontWeight={500}>
+              &#x20B9; {data?.sumAssured}
+            </Typography>
+          </Grid2>
+          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
+            <Typography
+              variant="body2"
+              component={"p"}
+              sx={{ cursor: "default" }}
+              color="text.secondary"
+              fontWeight={400}
+              gutterBottom
+            >
+              Company
+            </Typography>
+            <Typography
+              variant="body1"
+              textTransform={"capitalize"}
+              color="text.primary"
+            >
+              {data?.company}
+            </Typography>
+          </Grid2>
+          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
+            <Typography
+              variant="body2"
+              component={"p"}
+              sx={{ cursor: "default" }}
+              color="text.secondary"
+              fontWeight={400}
+              gutterBottom
+              textTransform={"capitalize"}
+            >
+              Payment Mode
+            </Typography>
+            <Typography
+              variant="body1"
+              textTransform={"capitalize"}
+              color="text.primary"
+            >
+              {data?.paymentMode}
+            </Typography>
+          </Grid2>
+          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
+            <Typography
+              variant="body2"
+              component={"p"}
+              sx={{ cursor: "default" }}
+              color="text.secondary"
+              fontWeight={400}
+              textTransform={"capitalize"}
+              gutterBottom
+            >
+              Frequency Payment
+            </Typography>
+            <Typography
+              variant="body1"
+              textTransform={"capitalize"}
+              color="text.primary"
+            >
+              {data?.frequencyPayment}
+            </Typography>
+          </Grid2>
 
+          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
+            <Typography
+              variant="body2"
+              component={"p"}
+              sx={{ cursor: "default" }}
+              color="text.secondary"
+              fontWeight={400}
+              textTransform={"capitalize"}
+              gutterBottom
+            >
+              Paid Up Value
+            </Typography>
+            <Typography
+              variant="body1"
+              textTransform={"capitalize"}
+              color="text.primary"
+            >
+              {data?.paidUpValue}
+            </Typography>
+          </Grid2>
+          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
+            <Typography
+              variant="body2"
+              component={"p"}
+              sx={{ cursor: "default" }}
+              color="text.secondary"
+              fontWeight={400}
+              textTransform={"capitalize"}
+              gutterBottom
+            >
+              Surrender Value
+            </Typography>
+            <Typography
+              variant="body1"
+              textTransform={"capitalize"}
+              color="text.primary"
+            >
+              {data?.surrenderValue}
+            </Typography>
+          </Grid2>
+        </Grid2>
+        <Grid2
+          container
+          spacing={1}
+          sx={{
+            bgcolor: (theme) => theme.palette.background.default,
+            p: 2,
+            borderRadius: 1,
+          }}
+        >
+          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
+            <Typography
+              variant="body2"
+              component={"p"}
+              sx={{ cursor: "default" }}
+              color="text.secondary"
+              fontWeight={400}
+              textTransform={"capitalize"}
+              gutterBottom
+            >
+              Maturity Date
+            </Typography>
+            <Typography
+              variant="body1"
+              textTransform={"capitalize"}
+              color="text.primary"
+            >
+              {data?.maturityDate}
+            </Typography>
+          </Grid2>
+
+          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
+            <Typography
+              variant="body2"
+              component={"p"}
+              sx={{ cursor: "default" }}
+              color="text.secondary"
+              fontWeight={400}
+              textTransform={"capitalize"}
+              gutterBottom
+            >
+              Maturity Value
+            </Typography>
+            <Typography
+              variant="body1"
+              textTransform={"capitalize"}
+              color="text.primary"
+            >
+              {data?.maturityValue}
+            </Typography>
+          </Grid2>
+          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
+            <Typography
+              variant="body2"
+              component={"p"}
+              sx={{ cursor: "default" }}
+              color="text.secondary"
+              fontWeight={400}
+              textTransform={"capitalize"}
+              gutterBottom
+            >
+              Expected Return
+            </Typography>
+            <Typography
+              variant="body1"
+              textTransform={"capitalize"}
+              color="text.primary"
+            >
+              {data?.expectedReturn}
+            </Typography>
+          </Grid2>
+        </Grid2>
+      </Grid2>
       <Grid2 size={{ xs: 12 }}>
         <HeadlineTag
           title={"First Year Premium"}
@@ -467,213 +642,6 @@ const Overviews = ({ data }) => {
                   data?.gst2ndyearonward || 0
                 )?.gstAmount
               )}
-            </Typography>
-          </Grid2>
-        </Grid2>
-      </Grid2>
-
-      {/* // ///======================Sum Assured Details=======================/// */}
-      <Grid2 size={{ xs: 12 }}>
-        {/* <HeadlineTag
-          title={"Second Year onward Premium"}
-          iconColor={"#108314"}
-          titleColor={"success"}
-          my={1}
-          size={"small"}
-        /> */}
-        <Grid2
-          container
-          spacing={1}
-          sx={{
-            bgcolor: (theme) => theme.palette.background.default,
-            p: 2,
-            borderRadius: 1,
-          }}
-        >
-          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
-            <Typography
-              variant="body2"
-              component={"p"}
-              sx={{ cursor: "default" }}
-              color="text.secondary"
-              fontWeight={400}
-              gutterBottom
-            >
-              Sum Assured
-            </Typography>
-            <Typography variant="body1" color="text.primary" fontWeight={500}>
-              &#x20B9; {data?.sumAssured}
-            </Typography>
-          </Grid2>
-          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
-            <Typography
-              variant="body2"
-              component={"p"}
-              sx={{ cursor: "default" }}
-              color="text.secondary"
-              fontWeight={400}
-              gutterBottom
-            >
-              Company
-            </Typography>
-            <Typography
-              variant="body1"
-              textTransform={"capitalize"}
-              color="text.primary"
-            >
-              {data?.company}
-            </Typography>
-          </Grid2>
-          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
-            <Typography
-              variant="body2"
-              component={"p"}
-              sx={{ cursor: "default" }}
-              color="text.secondary"
-              fontWeight={400}
-              gutterBottom
-              textTransform={"capitalize"}
-            >
-              Payment Mode
-            </Typography>
-            <Typography
-              variant="body1"
-              textTransform={"capitalize"}
-              color="text.primary"
-            >
-              {data?.paymentMode}
-            </Typography>
-          </Grid2>
-          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
-            <Typography
-              variant="body2"
-              component={"p"}
-              sx={{ cursor: "default" }}
-              color="text.secondary"
-              fontWeight={400}
-              textTransform={"capitalize"}
-              gutterBottom
-            >
-              Frequency Payment
-            </Typography>
-            <Typography
-              variant="body1"
-              textTransform={"capitalize"}
-              color="text.primary"
-            >
-              {data?.frequencyPayment}
-            </Typography>
-          </Grid2>
-
-          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
-            <Typography
-              variant="body2"
-              component={"p"}
-              sx={{ cursor: "default" }}
-              color="text.secondary"
-              fontWeight={400}
-              textTransform={"capitalize"}
-              gutterBottom
-            >
-              Paid Up Value
-            </Typography>
-            <Typography
-              variant="body1"
-              textTransform={"capitalize"}
-              color="text.primary"
-            >
-              {data?.paidUpValue}
-            </Typography>
-          </Grid2>
-          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
-            <Typography
-              variant="body2"
-              component={"p"}
-              sx={{ cursor: "default" }}
-              color="text.secondary"
-              fontWeight={400}
-              textTransform={"capitalize"}
-              gutterBottom
-            >
-              Surrender Value
-            </Typography>
-            <Typography
-              variant="body1"
-              textTransform={"capitalize"}
-              color="text.primary"
-            >
-              {data?.surrenderValue}
-            </Typography>
-          </Grid2>
-        </Grid2>
-        <Grid2
-          container
-          spacing={1}
-          sx={{
-            bgcolor: (theme) => theme.palette.background.default,
-            p: 2,
-            borderRadius: 1,
-          }}
-        >
-          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
-            <Typography
-              variant="body2"
-              component={"p"}
-              sx={{ cursor: "default" }}
-              color="text.secondary"
-              fontWeight={400}
-              textTransform={"capitalize"}
-              gutterBottom
-            >
-              Maturity Date
-            </Typography>
-            <Typography
-              variant="body1"
-              textTransform={"capitalize"}
-              color="text.primary"
-            >
-              {data?.maturityDate}
-            </Typography>
-          </Grid2>
-
-          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
-            <Typography
-              variant="body2"
-              component={"p"}
-              sx={{ cursor: "default" }}
-              color="text.secondary"
-              fontWeight={400}
-              textTransform={"capitalize"}
-              gutterBottom
-            >
-              Maturity Value
-            </Typography>
-            <Typography
-              variant="body1"
-              textTransform={"capitalize"}
-              color="text.primary"
-            >
-              {data?.maturityValue}
-            </Typography>
-          </Grid2>
-          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
-            <Typography
-              variant="body2"
-              component={"p"}
-              sx={{ cursor: "default" }}
-              color="text.secondary"
-              fontWeight={400}
-              textTransform={"capitalize"}
-              gutterBottom
-            >
-              Expected Return
-            </Typography>
-            <Typography
-              variant="body1"
-              textTransform={"capitalize"}
-              color="text.primary"
-            >
-              {data?.expectedReturn}
             </Typography>
           </Grid2>
         </Grid2>

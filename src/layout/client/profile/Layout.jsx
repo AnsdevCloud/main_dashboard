@@ -39,6 +39,7 @@ import useEncryptedSessionStorage from "../../../hooks/useEncryptedSessionStorag
 
 const Layout = ({ sts = true }) => {
   const { state } = useLocation();
+
   const { profile } = useParams();
 
   const [hideDetails, setHideDetils] = useState(false);
@@ -103,10 +104,11 @@ const Layout = ({ sts = true }) => {
   };
 
   useEffect(() => {
-    if (storeData) {
+    if (storeData?.data) {
       setData(storeData);
     } else if (state) {
       setData(state);
+
       setStoreData(state);
     } else {
       fetchData(profile);
@@ -214,9 +216,7 @@ const Layout = ({ sts = true }) => {
   const handleEdit = () => {
     sessionStorage.setItem("cid", JSON.stringify(data?.cin));
     sessionStorage.setItem("cid-lock", JSON.stringify(true));
-
-    setEditData(data);
-
+    setEditData({ ...data, edit: true });
     navigate("/crm/parsonal/");
   };
   const handleRefres = () => {
@@ -502,7 +502,13 @@ const Layout = ({ sts = true }) => {
                       color="info"
                       onClick={() =>
                         navigate("/crm/clients/family-members", {
-                          state: { ...data?.members },
+                          state: {
+                            ...data?.members,
+                            name:
+                              data?.clientType === "group"
+                                ? data?.firmName
+                                : `${data?.fname} ${data?.lname}`,
+                          },
                         })
                       }
                       endIcon={<OpenInNew />}

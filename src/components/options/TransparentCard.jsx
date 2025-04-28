@@ -1,12 +1,12 @@
-import { Box, capitalize, Tooltip, Typography } from "@mui/material";
+import { Box, Tooltip, Typography } from "@mui/material";
+import { grey } from "@mui/material/colors";
 import { Link } from "react-router-dom";
 
-const TransparentBox = ({
+const TransparentCard = ({
   value,
   caption,
-  captionSize,
   fontSize = 30,
-  rgbColor = "rgb(255, 77, 0)",
+  rgbColor = "rgb(0, 115, 255)",
   bgTransparency = 0.2,
   width,
   height,
@@ -23,7 +23,6 @@ const TransparentBox = ({
   fontWeight,
   rupeeLabal = true,
   textTransform,
-  captionVariant,
   onClick,
   tooltip,
 }) => {
@@ -76,9 +75,8 @@ const TransparentBox = ({
                 </Typography>
                 <Typography
                   component={"p"}
-                  variant={captionVariant ? captionVariant : "caption"}
+                  variant="body2"
                   color="grey"
-                  fontSize={captionSize ? captionSize : 12}
                   bgcolor={"transparent"}
                   textAlign={"center"}
                   fontWeight={500}
@@ -128,7 +126,22 @@ const TransparentBox = ({
           {children ? (
             children
           ) : (
-            <>
+            <div
+              style={{ width: "100%", height: "100%", position: "relative" }}
+            >
+              <Typography
+                component={"p"}
+                variant="Body2"
+                color={grey[800]}
+                bgcolor={"transparent"}
+                textAlign={"center"}
+                position={"absolute"}
+                top={0}
+                left={0}
+                fontWeight={600}
+              >
+                {caption}
+              </Typography>
               <Typography
                 component={"h1"}
                 variant="body2"
@@ -140,18 +153,7 @@ const TransparentBox = ({
               >
                 {rupeeLabal ? <>&#8377; {value?.toLocaleString()}</> : value}
               </Typography>
-              <Typography
-                component={"p"}
-                variant={captionVariant ? captionVariant : "caption"}
-                color="grey"
-                fontSize={captionSize ? captionSize : 12}
-                bgcolor={"transparent"}
-                textAlign={"center"}
-                fontWeight={500}
-              >
-                {caption}
-              </Typography>
-            </>
+            </div>
           )}
           {labelText && (
             <Box
@@ -173,4 +175,4 @@ const TransparentBox = ({
   );
 };
 
-export default TransparentBox;
+export default TransparentCard;

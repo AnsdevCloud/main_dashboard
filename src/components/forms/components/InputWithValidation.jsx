@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from "react";
-import TextField from "@mui/material/TextField";
-import MenuItem from "@mui/material/MenuItem";
-import { Typography } from "@mui/material";
+import {
+  TextField,
+  MenuItem,
+  Typography,
+  Select,
+  Checkbox,
+  ListItemText,
+  InputLabel,
+  FormControl,
+} from "@mui/material";
 
 const InputWithValidation = ({
   type = "text",
@@ -16,8 +23,10 @@ const InputWithValidation = ({
   maxRows,
   maxChars,
   readOnly,
+  fullWidth = true,
   suggested = false,
   title,
+  multiple = false, // <-- New prop to control multiple selection
 }) => {
   const [value, setValue] = useState(externalValue);
   const [error, setError] = useState(false);
@@ -35,11 +44,19 @@ const InputWithValidation = ({
     let validationError = false;
     let validationMessage = "";
 
-    if (maxChars && inputValue.length > maxChars) {
+    if (
+      type === "select" &&
+      multiple &&
+      required &&
+      (!inputValue || inputValue.length === 0)
+    ) {
+      validationError = true;
+      validationMessage = "At least one option must be selected";
+    } else if (maxChars && inputValue?.length > maxChars) {
       validationError = true;
       validationMessage = `Maximum ${maxChars} ${
-        type === "number" ? "Digits " : "characters"
-      }  allowed`;
+        type === "number" ? "digits" : "characters"
+      } allowed`;
     } else if (required && !inputValue) {
       validationError = true;
       validationMessage = "This field is required";
@@ -60,6 +77,53 @@ const InputWithValidation = ({
     if (onValidate) onValidate(validationError);
   };
 
+  if (type === "select" && multiple) {
+    return (
+      <FormControl fullWidth size="small" variant="standard" error={error}>
+        <InputLabel shrink>{label + (required ? "*" : "")}</InputLabel>
+        <Select
+          multiple
+          fullWidth={fullWidth}
+          value={value || []}
+          onChange={handleChange}
+          renderValue={(selected) =>
+            selected
+              .map((val) => {
+                const found = options.find(
+                  (opt) => opt?.value === val || opt?.name === val
+                );
+                return found?.label || found?.name || val;
+              })
+              .join(", ")
+          }
+          title={title}
+          sx={{ fontSize: 12 }}
+          readOnly={readOnly}
+        >
+          {options.map((option, index) => {
+            const val = option?.value || option?.name;
+            const label = option?.label || option?.name;
+            return (
+              <MenuItem key={index} value={val}>
+                <Checkbox size="small" checked={value?.includes(val)} />
+                <ListItemText
+                  primaryTypographyProps={{
+                    textTransform: "capitalize",
+                    fontSize: 12,
+                  }}
+                  primary={label}
+                />
+              </MenuItem>
+            );
+          })}
+        </Select>
+        <Typography variant="caption" color="error">
+          {helperText}
+        </Typography>
+      </FormControl>
+    );
+  }
+
   return (
     <TextField
       label={
@@ -67,6 +131,7 @@ const InputWithValidation = ({
         (required ? (suggested ? "Suggested" : "*") : "") +
         (maxChars ? ` (${maxChars - value?.length})` : "")
       }
+      fullWidth={fullWidth}
       type={type === "select" ? undefined : type}
       value={maxChars ? value?.slice(0, maxChars) : value}
       onChange={handleChange}
@@ -74,14 +139,13 @@ const InputWithValidation = ({
       error={error}
       helperText={helperText}
       select={type === "select"}
-      fullWidth
       focused={suggested}
       color={suggested ? "success" : "info"}
       title={
         title
           ? title
           : maxChars !== undefined
-          ? `Max. ${maxChars} Charactors Allowed `
+          ? `Max. ${maxChars} characters allowed`
           : ""
       }
       variant="standard"

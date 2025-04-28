@@ -35,6 +35,7 @@ const LineChart = ({
   yTitle,
   responsive,
   zoom,
+  mainTitle,
 }) => {
   // Data for the chart
   if (!data) {
@@ -70,7 +71,7 @@ const LineChart = ({
       },
       title: {
         display: true,
-        text: "Sourcing Monthly",
+        text: mainTitle || "Sourcing Monthly",
         color: "grey",
         font: {
           size: 12, // Font size for the main title
