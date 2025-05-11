@@ -5,11 +5,9 @@ import {
   Stack,
   List,
   Typography,
-  Select,
   Box,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-
 import HeadlineTag from "../../options/HeadlineTag";
 import DoughnutChart from "../../charts/Doughnut";
 
@@ -23,12 +21,33 @@ import LineChart from "../../charts/LineChart";
 
 import TransparentCard from "../../options/TransparentCard";
 import PolicySummaryAccordion from "../../options/PolicySummaryAccordion";
-import dayjs from "dayjs";
 import InputWithValidation from "../../forms/components/InputWithValidation";
-
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import updateLocale from "dayjs/plugin/updateLocale";
+dayjs.extend(relativeTime);
+dayjs.extend(updateLocale);
+// Override default English locale
+dayjs.updateLocale("en", {
+  relativeTime: {
+    future: "in %s",
+    past: "%s ago",
+    s: "%d seconds",
+    m: "1 minute",
+    mm: "%d minutes",
+    h: "1 hour", // ✅ override "an hour"
+    hh: "%d hours",
+    d: "1 day",
+    dd: "%d days",
+    M: "1 month",
+    MM: "%d months",
+    y: "1 year",
+    yy: "%d years",
+  },
+});
 const LifeInsurance = () => {
   const { pathname } = useLocation();
-  const [lastUpdate, setLastUpdate] = useState(null);
+
   const [collectionName, setCollectionName] = useState("LTD");
 
   const [policyData, setPolicyData] = useState(null);
@@ -39,12 +58,6 @@ const LifeInsurance = () => {
   const [policyCountByStatus, setPolicyCountByStatus] = useState(null);
   const [policyCountByClientType, setPolicyCountByClientType] = useState(null);
   useEffect(() => {
-    // Convert Firestore Timestamp to JS Date
-    const jsDate = policyData?.updatedAt.toDate();
-
-    // Format to include both date and time
-    const formattedDateTime = dayjs(jsDate).format("DD MMM YYYY , HH:mm");
-    setLastUpdate(formattedDateTime);
     const unsubscribeDeatis = listenToChart(
       (data) => {
         setPolicyData(data);
@@ -89,6 +102,7 @@ const LifeInsurance = () => {
       collectionName,
       "policy-count-byclient-type-doughnut-chart-5"
     );
+
     return () => {
       unsubscribeDeatis();
       unsubscribe();
@@ -138,15 +152,19 @@ const LifeInsurance = () => {
                     type="select"
                     label={"Filter"}
                     options={[
-                      { name: "LTD", value: "LTD" },
+                      { name: "WTD", value: "WTD" },
                       { name: "MTD", value: "MTD" },
                       { name: "YTD", value: "YTD" },
-                      { name: "WTD", value: "WTD" },
+                      { name: "LTD", value: "LTD" },
                     ]}
                   />
                 </Box>
                 <Typography variant="caption" fontWeight={600} color="grey">
-                  {`Updated: ${lastUpdate}`}
+                  {`Last updated: ${
+                    policyData?.updatedAt
+                      ? dayjs(policyData?.updatedAt?.toDate()).fromNow()
+                      : "N/A"
+                  }`}
                 </Typography>
               </Stack>
             </Grid2>
@@ -173,7 +191,6 @@ const LifeInsurance = () => {
                     rgbColor="rgb(5, 187, 190)"
                     captionColor={"grey"}
                     onClick={() => setViewDetails(!ViewDetails)}
-                    tooltipText={ViewDetails ? "Hide Details" : "View Details"}
                     rupeeLabal={false}
                   />
                 </Grid2>
@@ -256,45 +273,10 @@ const LifeInsurance = () => {
                     xtitle={"Financial Year"}
                     ytitle={"Plan Sales"}
                     data={barChart}
+                    height={350}
+                    financial={true}
                   />
                 </Grid2>
-                {/* <Grid2 size={{ xs: 12, sm: 4, md: 6 }}>
-                  <TransparentBox
-                    value={4}
-                    height={100}
-                    labelText={"New Comment "}
-                    rgbColor="rgb(60, 200, 0)"
-                    labelPadding={2}
-                    labelColor={"grey"}
-                    caption={"Client"}
-                  />
-                  <TransparentBox
-                    value={12}
-                    rgbColor="rgb(0, 117, 252)"
-                    caption={"Total Comments"}
-                    height={100}
-                  />
-                </Grid2>
-                <Grid2 size={{ xs: 12, sm: 4, md: 6 }}>
-                  <TransparentBox
-                    value={18}
-                    height={100}
-                    labelText={"Plans"}
-                    // rgbColor="rgb(60, 200, 0)"
-                    labelPadding={2}
-                    labelColor={"grey"}
-                    caption={"Total"}
-                  />
-                  <TransparentBox
-                    value={23}
-                    labelText={"Client "}
-                    labelColor={"grey"}
-                    labelPadding={2}
-                    rgbColor="rgb(0, 117, 252)"
-                    caption={"Total"}
-                    height={100}
-                  />
-                </Grid2> */}
               </Grid2>
             </Grid2>
           </Grid2>

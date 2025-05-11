@@ -1,60 +1,43 @@
 import React, { useEffect, useState } from "react";
 import {
   Box,
-  Card,
-  CardContent,
-  Typography,
   TextField,
   Button,
-  Grid,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableRow,
   Paper,
-  Divider,
-  IconButton,
   Grid2,
 } from "@mui/material";
-import { AddCircleOutline, RemoveCircleOutline } from "@mui/icons-material";
+
 import HeadlineTag from "../../../../options/HeadlineTag";
 import TransparentBox from "../../../../options/TransparentBox";
+import { useLocation } from "react-router-dom";
 
 export default function Expanse({ data }) {
+  const location = useLocation();
   const [basePremium, setBasePremium] = useState();
   const [policyTerm, setPolicyTerm] = useState();
-
-  const [baseRate, setBaseRate] = useState();
-  const [rewardRate, setRewardRate] = useState();
+  const [isEdit, setIsEdit] = useState(false);
+  const [baseRate, setBaseRate] = useState(0);
+  const [rewardRate, setRewardRate] = useState(0);
   const [renewalRates, setRenewalRates] = useState();
 
   const [salesFirstYearRate, setSalesFirstYearRate] = useState();
   const [salesRenewalRate, setSalesRenewalRate] = useState();
 
   const [riders, setRiders] = useState([]);
+
   const [commissionDetails, setCommissionDetails] = useState([]);
   const [result, setResult] = useState(null);
 
   const parseRates = (rateStr) =>
     rateStr
-      .split(",")
+      ?.split(",")
       .map((r) => parseFloat(r.trim()))
       .filter((r) => !isNaN(r));
-
-  const handleAddRider = () => {
-    setRiders([
-      ...riders,
-      {
-        name: "",
-        premium: null,
-        term: null,
-        baseRate: baseRate,
-        rewardRate: rewardRate,
-        renewalRates: renewalRates,
-      },
-    ]);
-  };
 
   const handleRiderChange = (index, field, value) => {
     const updated = [...riders];
@@ -63,31 +46,36 @@ export default function Expanse({ data }) {
     setRiders(updated);
   };
 
-  const handleRemoveRider = (index) => {
-    const updated = [...riders];
-    updated.splice(index, 1);
-    setRiders(updated);
-  };
-
   const calculateCommission = () => {
     const policyRenewals = parseRates(renewalRates).slice(0, policyTerm - 1);
+    const policySaleRenewals = parseRates(salesRenewalRate).slice(
+      0,
+      policyTerm - 1
+    );
     const commissionYearly = [];
+
+    // totalRiderBasePremium = 0;-------------------------------------------
+    // totalRiderPre = 0;
+    let totalRiderBasePremium = 0;
+    let totalRiderPre = riders.reduce((sum, y) => sum + parseInt(y.premium), 0);
+    totalRiderBasePremium = totalRiderPre + parseFloat(basePremium);
 
     const firstYearCommission = (basePremium * (baseRate + rewardRate)) / 100;
     commissionYearly.push({
       year: 1,
-      policy: (basePremium * (baseRate + rewardRate)) / 100,
-      sales:
-        (((basePremium * (baseRate + rewardRate)) / 100) * salesFirstYearRate) /
-        100,
+      policy: (basePremium * (baseRate + rewardRate || 0)) / 100,
+      sales: (totalRiderBasePremium * salesFirstYearRate) / 100,
     });
 
     let totalRenewalCommission = 0;
+    // totalriderPremium + basePremium for sales payout
 
     for (let i = 0; i < policyRenewals.length; i++) {
       const rate = policyRenewals[i];
+      const salesRate = policySaleRenewals[i];
       const commission = (basePremium * rate) / 100;
-      const sales = (commission * salesRenewalRate) / 100;
+      const sales = (totalRiderBasePremium * salesRate) / 100;
+
       totalRenewalCommission += commission;
       commissionYearly.push({ year: i + 2, policy: commission, sales });
     }
@@ -97,7 +85,7 @@ export default function Expanse({ data }) {
 
     riders.forEach((rider) => {
       const riderFirst =
-        (rider.premium * (rider.baseRate + rider.rewardRate)) / 100;
+        (rider.premium * (rider.baseRate + rider.rewardRate || 0)) / 100;
       riderFirstYear += riderFirst;
 
       const riderRenewals = parseRates(rider.renewalRates).slice(
@@ -115,27 +103,30 @@ export default function Expanse({ data }) {
         }
       }
 
-      for (let i = 0; i < riderRenewals.length; i++) {
+      for (let i = 0; i < riderRenewals?.length; i++) {
         const rate = riderRenewals[i];
+
         const riderCommission = (rider.premium * rate) / 100;
-        const riderSales = (riderCommission * salesRenewalRate) / 100;
         riderRenewal += riderCommission;
         commissionYearly[i + 1].policy += riderCommission;
-        commissionYearly[i + 1].sales += riderSales;
+        // commissionYearly[i + 1].sales += 0;
       }
     });
 
     const totalFirstYear = firstYearCommission + riderFirstYear;
+
     const totalCommission =
       totalFirstYear + totalRenewalCommission + riderRenewal;
 
-    const salesFirst = (totalFirstYear * salesFirstYearRate) / 100;
+    const salesFirst = (parseInt(basePremium) * salesFirstYearRate) / 100;
+
     const salesTotal =
       salesFirst +
-      commissionYearly.slice(1).reduce((sum, y) => sum + y.sales, 0);
-    const companyEarning = totalCommission - salesTotal;
+      commissionYearly.slice(1).reduce((sum, y) => sum + parseInt(y.sales), 0);
+    const companyEarning = totalCommission;
 
     setCommissionDetails(commissionYearly);
+
     setResult({
       firstYearCommission: totalFirstYear,
       totalRenewalCommission: totalRenewalCommission + riderRenewal,
@@ -148,16 +139,24 @@ export default function Expanse({ data }) {
   useEffect(() => {
     if (data) {
       setBasePremium(data?.basePremium);
-      setPolicyTerm(data?.policyTerm);
+      setPolicyTerm(data?.payTerm);
+      setBaseRate(data?.baseRate || 0);
+      setRenewalRates(data?.renewalRates || null);
+      setSalesFirstYearRate(data?.salesFirstYearRate || 0);
+      setSalesRenewalRate(data?.salesRenewalRate || null);
+      setRewardRate(data?.rewardRate || 0);
+
       let newRiders = data?.riders?.map((value) => ({
+        ...value,
         name: value?.riderName,
         premium: value?.riderPremium,
         term: value?.riderPayTerm,
-        baseRate: null,
-        rewardRate: null,
-        renewalRates: null,
+        baseRate: value?.baseRate || null,
+        rewardRate: value?.rewardRate || null,
+        renewalRates: value?.renewalRates || "",
       }));
       setRiders(newRiders);
+
       if (!result) {
         setResult({
           firstYearCommission: 0,
@@ -170,10 +169,85 @@ export default function Expanse({ data }) {
     }
   }, [data]);
 
+  const handleSubmit = () => {
+    const myHeaders = new Headers();
+    myHeaders.append("x-api-key", "5cf783e5-51a5-4dcc-9bc5-0b9a414c88a3");
+    myHeaders.append("Content-Type", "application/json");
+
+    const raw = JSON.stringify({
+      renewalRates: renewalRates || null,
+      rewardRate: rewardRate || 0,
+      salesFirstYearRate: salesFirstYearRate || 0,
+      salesRenewalRate: salesRenewalRate || null,
+      baseRate: baseRate || 0,
+      riders: riders || [],
+    });
+
+    const requestOptions = {
+      method: "PUT",
+      headers: myHeaders,
+      body: raw,
+      redirect: "follow",
+    };
+    if (data?.id) {
+      fetch(
+        `https://db.enivesh.com/firestore/single/life_insurance_policies/${data?.id}`,
+        requestOptions
+      )
+        .then((response) => response.text())
+        .then((result) => {
+          setIsEdit(false);
+        })
+        .catch((error) => console.error(error));
+    } else {
+      alert("All Field Required");
+    }
+  };
+  useEffect(() => {
+    if (baseRate && salesFirstYearRate) {
+      setTimeout(() => {
+        calculateCommission();
+      }, 2000);
+    }
+  }, [location?.search]);
+
   return (
     <Grid2 container spacing={1}>
       <Grid2 size={{ xs: 12 }}>
-        <HeadlineTag title={"Commission Expanses"} />
+        <HeadlineTag title={"Commission Expanses"}>
+          {isEdit ? (
+            <Button
+              variant="outlined"
+              size="small"
+              sx={{ fontSize: 10 }}
+              color="info"
+              onClick={() => handleSubmit()}
+            >
+              Update{" "}
+            </Button>
+          ) : (
+            <Button
+              variant="outlined"
+              size="small"
+              sx={{ fontSize: 10 }}
+              color="inherit"
+              onClick={() => setIsEdit(true)}
+            >
+              Edit{" "}
+            </Button>
+          )}
+          {isEdit && (
+            <Button
+              variant="outlined"
+              size="small"
+              sx={{ fontSize: 10 }}
+              color="error"
+              onClick={() => setIsEdit(false)}
+            >
+              Cancel{" "}
+            </Button>
+          )}
+        </HeadlineTag>
       </Grid2>
       <Grid2 size={{ xs: 12 }}>
         <Paper sx={{ p: 1 }} variant="outlined">
@@ -203,7 +277,7 @@ export default function Expanse({ data }) {
             <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
               <TextField
                 fullWidth
-                label="Policy Term (Years) (Not Changed)"
+                label="Pay Term (Years) (Not Changed)"
                 type="number"
                 focused
                 value={policyTerm}
@@ -224,10 +298,13 @@ export default function Expanse({ data }) {
             <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
               <TextField
                 fullWidth
-                label={`Renewal Rates % `}
+                label={`Company - Renewal Rates % `}
                 slotProps={{
                   inputLabel: {
                     shrink: true,
+                  },
+                  input: {
+                    readOnly: !isEdit,
                   },
                 }}
                 placeholder="Ex. 0,0,0,0..."
@@ -240,12 +317,15 @@ export default function Expanse({ data }) {
             <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
               <TextField
                 fullWidth
-                label="Base Commission Rate (%)"
+                label="Company - 1st Year (%)"
                 type="number"
                 value={baseRate}
                 slotProps={{
                   inputLabel: {
                     shrink: true,
+                  },
+                  input: {
+                    readOnly: !isEdit,
                   },
                 }}
                 placeholder="Ex. 0"
@@ -261,6 +341,9 @@ export default function Expanse({ data }) {
                 slotProps={{
                   inputLabel: {
                     shrink: true,
+                  },
+                  input: {
+                    readOnly: !isEdit,
                   },
                 }}
                 placeholder="Ex. 0"
@@ -279,6 +362,9 @@ export default function Expanse({ data }) {
                   inputLabel: {
                     shrink: true,
                   },
+                  input: {
+                    readOnly: !isEdit,
+                  },
                 }}
                 placeholder="Ex. 0"
                 onChange={(e) =>
@@ -292,17 +378,17 @@ export default function Expanse({ data }) {
               <TextField
                 fullWidth
                 label="Sales - Renewal (%)"
-                type="number"
-                value={salesRenewalRate}
+                value={salesRenewalRate?.split(",").slice(0, policyTerm - 1)}
                 slotProps={{
                   inputLabel: {
                     shrink: true,
                   },
+                  input: {
+                    readOnly: !isEdit,
+                  },
                 }}
-                placeholder="Ex. 0"
-                onChange={(e) =>
-                  setSalesRenewalRate(parseFloat(e.target.value))
-                }
+                placeholder="Ex. 0,0,0,0..."
+                onChange={(e) => setSalesRenewalRate(e.target.value)}
                 variant="standard"
               />
             </Grid2>
@@ -408,6 +494,9 @@ export default function Expanse({ data }) {
                     inputLabel: {
                       shrink: true,
                     },
+                    input: {
+                      readOnly: !isEdit,
+                    },
                   }}
                   placeholder="Ex. 0"
                   value={rider.baseRate}
@@ -426,6 +515,9 @@ export default function Expanse({ data }) {
                     inputLabel: {
                       shrink: true,
                     },
+                    input: {
+                      readOnly: !isEdit,
+                    },
                   }}
                   placeholder="Ex. 0"
                   type="number"
@@ -443,6 +535,9 @@ export default function Expanse({ data }) {
                     inputLabel: {
                       shrink: true,
                     },
+                    input: {
+                      readOnly: !isEdit,
+                    },
                   }}
                   placeholder="Ex. 0,0,0,..."
                   size="small"
@@ -457,14 +552,6 @@ export default function Expanse({ data }) {
                   variant="standard"
                 />
               </Grid2>
-              {/* <Grid2>
-              <IconButton
-                color="error"
-                onClick={() => handleRemoveRider(index)}
-              >
-                <RemoveCircleOutline />
-              </IconButton>
-            </Grid2> */}
             </Grid2>
           ))}
         </Paper>
@@ -475,7 +562,7 @@ export default function Expanse({ data }) {
           <Button
             variant="outlined"
             color="primary"
-            onClick={calculateCommission}
+            onClick={() => calculateCommission()}
             size="large"
           >
             🚀 Calculate Commission
@@ -514,7 +601,7 @@ export default function Expanse({ data }) {
               <TransparentBox
                 fontSize={14}
                 fontWeight={600}
-                value={result?.salesTotal.toFixed(2)}
+                value={result?.salesTotal?.toFixed(2)}
                 caption={" 👤 Sales Payout"}
               />
             </Grid2>
@@ -536,19 +623,47 @@ export default function Expanse({ data }) {
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell>Year</TableCell>
-                <TableCell>Total Commission (₹)</TableCell>
-                <TableCell>Sales Payout (₹)</TableCell>
-                <TableCell>Company (₹)</TableCell>
+                <TableCell sx={{ color: "primary.dark", fontWeight: 600 }}>
+                  Year
+                </TableCell>
+                <TableCell sx={{ color: "primary.dark", fontWeight: 600 }}>
+                  Company + Riders(₹)
+                </TableCell>
+                <TableCell sx={{ color: "primary.dark", fontWeight: 600 }}>
+                  Sales Payout (₹)
+                </TableCell>
+                <TableCell sx={{ color: "primary.dark", fontWeight: 600 }}>
+                  Total Commission (₹)
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {commissionDetails.map((row) => (
                 <TableRow key={row.year}>
-                  <TableCell>{row.year}</TableCell>
-                  <TableCell>{row.policy.toFixed(2)}</TableCell>
-                  <TableCell>{row.sales.toFixed(2)}</TableCell>
-                  <TableCell>{(row.policy - row.sales).toFixed(2)}</TableCell>
+                  <TableCell sx={{ color: "error.dark", fontWeight: 600 }}>
+                    {row.year}
+                  </TableCell>
+                  <TableCell>
+                    {new Intl.NumberFormat("en-IN", {
+                      style: "currency",
+                      currency: "INR",
+                      maximumFractionDigits: 0,
+                    }).format(row.policy || 0)}
+                  </TableCell>
+                  <TableCell>
+                    {new Intl.NumberFormat("en-IN", {
+                      style: "currency",
+                      currency: "INR",
+                      maximumFractionDigits: 0,
+                    }).format(row.sales || 0)}
+                  </TableCell>
+                  <TableCell>
+                    {new Intl.NumberFormat("en-IN", {
+                      style: "currency",
+                      currency: "INR",
+                      maximumFractionDigits: 0,
+                    }).format(row.policy + row.sales || 0)}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

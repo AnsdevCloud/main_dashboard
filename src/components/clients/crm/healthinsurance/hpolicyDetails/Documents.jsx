@@ -22,7 +22,7 @@ import HeadlineTag from "../../../../options/HeadlineTag";
 import { Add, Close } from "@mui/icons-material";
 import { Link, useNavigate } from "react-router-dom";
 
-const Document = ({ data }) => {
+const HDocument = ({ data }) => {
   const [documents, setDocuments] = useState(data?.documents || []);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -49,7 +49,7 @@ const Document = ({ data }) => {
     const formdata = new FormData();
     formdata.append("file", formData?.file);
     formdata.append("fileName", formData?.fileName);
-    formdata.append("fileFolder", "li-policy-doccuments");
+    formdata.append("fileFolder", "health-policy-doccuments");
 
     const requestOptions = {
       method: "POST",
@@ -99,7 +99,7 @@ const Document = ({ data }) => {
 
     if (data?.id) {
       fetch(
-        `https://db.enivesh.com/firestore/single/life_insurance_policies/${data?.id}`,
+        `https://db.enivesh.com/firestore/single/health_insurance_policies/${data?.id}`,
         requestOptions
       )
         .then((response) => response.json())
@@ -112,7 +112,6 @@ const Document = ({ data }) => {
           });
 
           setAddDoc(false);
-          navigate("/crm/leads");
         })
         .catch((error) => console.error(error));
     } else {
@@ -329,4 +328,4 @@ const Document = ({ data }) => {
   );
 };
 
-export default Document;
+export default HDocument;

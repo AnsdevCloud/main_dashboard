@@ -4,18 +4,29 @@ import {
   Button,
   Divider,
   Grid2,
+  IconButton,
+  Input,
+  LinearProgress,
   List,
   ListItem,
   ListItemButton,
   ListItemText,
   Paper,
+  Stack,
   Typography,
 } from "@mui/material";
 
 import InputWithValidation from "../../../forms/components/InputWithValidation"; // Ensure this path is correct
 import HeadlineTag from "../../../options/HeadlineTag";
 
-import { Add, ArrowBack, Close } from "@mui/icons-material";
+import {
+  Add,
+  ArrowBack,
+  ArrowForward,
+  Close,
+  Save,
+  Upload,
+} from "@mui/icons-material";
 import axios from "axios";
 import { firestore } from "../../../../firebase/config";
 import {
@@ -29,6 +40,7 @@ import {
 import useEncryptedSessionStorage from "../../../../hooks/useEncryptedSessionStorage";
 import { useNavigate } from "react-router-dom";
 import { set } from "date-fns";
+import { itIT } from "@mui/material/locale";
 
 const fetchData = async (id) => {
   try {
@@ -84,9 +96,15 @@ const formKey = {
 };
 const LForm = () => {
   const navigate = useNavigate();
+
+  const [file, setFile] = useState(null);
+  const [extractedExcel, setExtractedExcel] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
   const [riders, setRiders] = useState([]);
   const [lfm, setLFM] = useEncryptedSessionStorage("lfm", { ...formKey });
   const [fetchedLFM, setFetchedLFM] = useEncryptedSessionStorage("fe-lfm", {});
+  const [excelExtr, setExcelExtr] = useEncryptedSessionStorage("fe-exlEtr", []);
   const [isSuggested, setIsSuggested] = useState(false);
   const [rider, setRider] = useState({
     riderGst: 18,
@@ -98,6 +116,7 @@ const LForm = () => {
   });
   const [totalRiderPremium, setTotalRiderPremium] = useState({
     trPremium: 0,
+    trSumAssured: 0,
     trPremiumWithGST: 0,
     tgst: 0,
   });
@@ -105,7 +124,10 @@ const LForm = () => {
 
   const [isFetchedUser, setIsFetchedUser] = useState(null);
   const [members, setMembers] = useState(null);
-
+  const [alertMsg, setAlertMsg] = useState({
+    msg: "",
+    type: "success",
+  });
   const [errors, setErrors] = useState({});
 
   const handleChange = (field, value) => {
@@ -243,8 +265,13 @@ const LForm = () => {
             accumulator + parseInt(item?.riderPremium || 0),
           0
         );
+        const sumAssred = riders.reduce(
+          (accumulator, item) => accumulator + parseInt(item?.sumAssured || 0),
+          0
+        );
         setTotalRiderPremium({
           trPremium: sum,
+          trSumAssured: sumAssred,
           trPremiumWithGST: parseFloat(sum * 1.18).toFixed(2),
           tgst: parseFloat(sum * 0.18).toFixed(2),
         });
@@ -252,6 +279,7 @@ const LForm = () => {
         setTotalRiderPremium({
           trPremium: 0,
           trPremiumWithGST: 0,
+          trSumAssured: 0,
           tgst: 0,
         });
       }
@@ -277,7 +305,10 @@ const LForm = () => {
             {
               name: user?.fname
                 ? `${user?.fname} ${user?.lname}`
-                : `${isFetchedUser?.fname} ${isFetchedUser?.lname}` || "",
+                : `${isFetchedUser?.fname} ${isFetchedUser?.lname}` ||
+                  user?.firmName
+                ? `${user?.firmName} `
+                : `${isFetchedUser?.firmName}`,
               id: 0,
               self: true,
               attributes: {
@@ -303,10 +334,9 @@ const LForm = () => {
           );
           setMembers([
             {
-              name:
-                isFetchedUser?.fname ||
-                `${isFetchedUser?.fname} ${isFetchedUser?.lname}` ||
-                "",
+              name: isFetchedUser?.fname
+                ? `${isFetchedUser?.fname} ${isFetchedUser?.lname}`
+                : isFetchedUser?.firmName || "",
               id: 0,
               self: true,
               attributes: {
@@ -348,15 +378,6 @@ const LForm = () => {
     }
   }, [formData?.startDate]);
 
-  const calculateFinalPremium = (
-    basePremiumWithGST = 0,
-    totalRiderPremiumWithGST = 0
-  ) => {
-    return parseFloat(
-      parseFloat(basePremiumWithGST) + parseFloat(totalRiderPremiumWithGST)
-    ).toFixed(2);
-  };
-
   const [results, setResults] = useState([]);
 
   const searchByName = async (e) => {
@@ -393,26 +414,174 @@ const LForm = () => {
   // auto save chache
   const [isFormClear, serIsFormClear] = useState(false);
   useEffect(() => {
-    if (formData?.cin && isFetchedUser) {
+    if (formData?.cin && isFetchedUser && !extractedExcel > 0) {
       setLFM({ ...formData });
       setFetchedLFM({ ...isFetchedUser });
     }
-    if (!formData?.cin) {
+    if (!formData?.cin && !extractedExcel > 0) {
       if (lfm?.cin) {
         setFormData(lfm);
         setIsFetchedUser(fetchedLFM);
         setRiders(lfm?.riders || []);
       }
     }
-  }, [isFormClear, formData]);
+  }, [isFormClear, formData, currentIndex]);
 
   const handeleFormClear = () => {
-    setLFM({ ...formKey });
-    setFetchedLFM(null);
-    setFormData({ ...formKey });
+    const isConfirmed = window.confirm(
+      "Are you sure you want to clean all Data from Excel file & form ?"
+    );
+
+    if (isConfirmed) {
+      setLFM({ ...formKey });
+      setFetchedLFM(null);
+      setFormData({ ...formKey });
+      setRiders([]);
+      setIsFetchedUser(null);
+      setMembers([]);
+      setExcelExtr([]);
+      setExtractedExcel([]);
+    }
+  };
+
+  const handleExcel = (e) => {
+    let fi = e.target.files[0];
+    setFile(fi);
+
+    const myHeaders = new Headers();
+
+    myHeaders.append("authorization", "pro-api-key");
+
+    const xlfile = new FormData();
+    xlfile.append(
+      "file",
+      fi,
+      "postman-cloud:///1f029189-e23b-46e0-ac49-ff10f0614fd6"
+    );
+
+    const requestOptions = {
+      method: "POST",
+      headers: myHeaders,
+      body: xlfile,
+      redirect: "follow",
+    };
+
+    fetch(
+      "https://restfileconvert.ansdev.cloud/api/excel-to-json",
+      requestOptions
+    )
+      .then((response) => response.json())
+      .then((result) => {
+        let newResult = result[0]?.data?.map((value, index, array) => ({
+          cin: value?.cin,
+          riders: [],
+          proposerName: value?.proposername,
+          lifeAssured: value?.lifeassured,
+          min: value?.min,
+          policyNumber: value?.policynumber,
+          startDate: value?.startdate,
+          plan: value?.plan,
+          payTerm: value?.payterm,
+          policyTerm: value?.policyterm,
+          basePremium: value?.basepremium,
+          discount: value?.discount,
+          withGstPremium: value?.withgstpremium,
+          gst2ndyearonward: value?.gst2ndyearonward,
+          paymentMode: value?.paymentmode,
+          sumAssured: value?.sumassured,
+          company: value?.company,
+          counterOffer: value?.counteroffer,
+          frequencyPayment: value?.frequencypayment,
+          renewalDate: value?.renewaldate,
+          maturityDate: value?.maturitydate,
+          policyType: value?.policytype,
+          surrenderValue: value?.surrendervalue,
+          maturityValue: value?.maturityvalue,
+          paidUpValue: value?.paidupvalue,
+          expectedReturn: value?.expectedreturn,
+          commentFromClient: value?.commentfromclient,
+          commentFromRm: value?.commentfromrm,
+          action: value?.action,
+          sourcing: value?.sourcing?.toLowerCase()?.split("")?.join("-") | "",
+          leadSource:
+            value?.leadsource?.toLowerCase()?.split("")?.join("-") | "",
+          srm: value?.srm,
+          insurancePlanner: value?.insuranceplanner,
+          lastPaymentDate: value?.lastpaymentdate || null,
+        }));
+
+        setFormData({
+          ...formKey,
+          ...newResult[0],
+        });
+        setRiders(newResult[0]?.riders || []);
+
+        setExcelExtr(newResult);
+        setExtractedExcel(newResult);
+      })
+      .catch((error) => console.error(error));
+  };
+
+  const checkNext = () => {
+    setCurrentIndex((prevIndex) =>
+      prevIndex < extractedExcel?.length - 1 ? prevIndex + 1 : prevIndex
+    );
     setRiders([]);
     setIsFetchedUser(null);
+    setAlertMsg({ msg: "", type: "" });
   };
+
+  const checkPrev = () => {
+    setCurrentIndex((prevIndex) => (prevIndex > 0 ? prevIndex - 1 : prevIndex));
+    setRiders([]);
+    setIsFetchedUser(null);
+    setAlertMsg({ msg: "", type: "" });
+  };
+
+  const handleModifiyChanged = (id, obj) => {
+    if (id) {
+      const updatedData = extractedExcel?.map((item) =>
+        item.cin === id
+          ? {
+              ...obj,
+              branch: isFetchedUser?.branch,
+              clientType: isFetchedUser?.clientType,
+              panNumber: isFetchedUser?.panNumber,
+              primaryNumber: isFetchedUser?.primaryNumber,
+              gender: isFetchedUser?.gender,
+              dob: isFetchedUser?.dob,
+              email: isFetchedUser?.email,
+            }
+          : item
+      );
+      setExcelExtr(updatedData);
+      setExtractedExcel(updatedData);
+      setAlertMsg({ msg: "Saving...", type: "info" });
+      setTimeout(() => {
+        setAlertMsg({ msg: "", type: "" });
+      }, 2000);
+    } else {
+      setAlertMsg({ msg: "Saving...", type: "info" });
+      setTimeout(() => {
+        setAlertMsg({ msg: "Failed...!", type: "error" });
+      }, 2000);
+    }
+  };
+
+  useEffect(() => {
+    if (excelExtr?.length > 0) {
+      setExtractedExcel(excelExtr);
+      if (extractedExcel?.length > 0) {
+        setFormData({
+          ...formKey,
+          ...extractedExcel[currentIndex],
+        });
+        setRiders(extractedExcel[currentIndex]?.riders || []);
+      }
+    } else {
+      return;
+    }
+  }, [currentIndex]);
 
   return (
     <Box
@@ -424,8 +593,71 @@ const LForm = () => {
         position={"space-between"}
         textAlign={"center"}
         title={" Life Insurance Form"}
+        flexWrap={"wrap"}
         my={1}
       >
+        {extractedExcel?.length === 0 && (
+          <Button
+            color="info"
+            startIcon={<Upload fontSize="10px" />}
+            disabled={false}
+            sx={{ fontSize: 10 }}
+          >
+            Upload by Excel
+            <Input
+              sx={{
+                position: "absolute",
+                opacity: 0,
+                height: "100%",
+                width: "100%",
+                cursor: "pointer",
+              }}
+              type="file"
+              onChange={(e) => handleExcel(e)}
+            />
+          </Button>
+        )}
+        {extractedExcel?.length > 0 && (
+          <Box width={{ xs: "100%", md: "30%" }}>
+            <Typography variant="caption" fontSize={8} fontWeight={600}>
+              {file?.name} | Policies {extractedExcel?.length} | Curent Policy{" "}
+              {currentIndex + 1}
+            </Typography>
+            {/* <LinearProgress sx={{ height: "2px" }} /> */}
+            <Stack
+              flexDirection={"row"}
+              width={"100%"}
+              justifyContent={"flex-start"}
+              alignItems={"center"}
+              gap={2}
+            >
+              <IconButton
+                color="info"
+                sx={{ fontSize: 16 }}
+                onClick={() => checkPrev()}
+                disabled={0 == currentIndex}
+              >
+                <ArrowBack fontSize="10px" />
+              </IconButton>
+              <IconButton
+                color="info"
+                sx={{ fontSize: 16 }}
+                disabled={extractedExcel?.length - 1 === currentIndex}
+                onClick={() => checkNext()}
+              >
+                <ArrowForward fontSize="10px" />
+              </IconButton>{" "}
+              <Button
+                color={alertMsg?.type || "success"}
+                startIcon={<Save fontSize="10px" />}
+                sx={{ fontSize: 10 }}
+                onClick={() => handleModifiyChanged(formData?.cin, formData)}
+              >
+                {alertMsg?.msg || "Save Changes"}
+              </Button>{" "}
+            </Stack>
+          </Box>
+        )}
         <Button
           color="inherit"
           startIcon={<ArrowBack fontSize="10px" />}
@@ -470,6 +702,8 @@ const LForm = () => {
               onChange={(value) => handleChange("proposerName", value)}
               onValidate={(error) => handleValidation("proposerName", error)}
               required
+              type={members?.length > 0 ? "select" : "text"}
+              options={members || []}
             />
 
             <Box
@@ -498,7 +732,12 @@ const LForm = () => {
                       onClick={() => {
                         setFormData({
                           ...formData,
-                          proposerName: `${value?.fname} ${value?.lname}`,
+                          proposerName:
+                            value?.firmName ||
+                            `${value?.fname} ${value?.lname}`,
+                          clientName:
+                            value?.firmName ||
+                            `${value?.fname} ${value?.lname}`,
                           cin: value?.cin,
                         });
                         setIsFetchedUser(value);
@@ -624,7 +863,7 @@ const LForm = () => {
                 variant="caption"
                 component={"p"}
               >
-                {`${isFetchedUser?.email} `}
+                {`${isFetchedUser?.email?.slice(0, 20) + "..."} `}
               </Typography>
             </Grid2>
           </Grid2>
@@ -939,18 +1178,6 @@ const LForm = () => {
         >
           <Grid2 container spacing={1} width={"100%"} wrap="wrap-reverse">
             <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
-              <Button
-                variant="outlined"
-                sx={{ fontSize: 12 }}
-                color="info"
-                size="small"
-                startIcon={<Add fontSize="10px" />}
-                onClick={() => handleAddRider()}
-              >
-                Add Rider
-              </Button>
-            </Grid2>
-            <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
               {" "}
               <Typography variant="caption" title="Rider GST">
                 Rider GST :{" "}
@@ -968,8 +1195,10 @@ const LForm = () => {
               >
                 T.R.Premium + GST :{" "}
                 <Typography variant="caption" fontWeight={600} color="success">
-                  {" "}
-                  &#x20B9; {totalRiderPremium?.trPremiumWithGST}
+                  {new Intl.NumberFormat("en-IN", {
+                    style: "currency",
+                    currency: "INR",
+                  }).format(totalRiderPremium?.trPremiumWithGST)}
                 </Typography>
               </Typography>
             </Grid2>
@@ -978,8 +1207,22 @@ const LForm = () => {
               <Typography variant="caption" title="Total Rider Premium">
                 T.R.Premium :{" "}
                 <Typography variant="caption" fontWeight={600} color="success">
-                  {" "}
-                  &#x20B9; {totalRiderPremium?.trPremium}
+                  {new Intl.NumberFormat("en-IN", {
+                    style: "currency",
+                    currency: "INR",
+                  }).format(totalRiderPremium?.trPremium)}
+                </Typography>
+              </Typography>
+            </Grid2>
+            <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
+              {" "}
+              <Typography variant="caption" title="Total Rider Premium">
+                T.R.Sum Assured :{" "}
+                <Typography variant="caption" fontWeight={600} color="success">
+                  {new Intl.NumberFormat("en-IN", {
+                    style: "currency",
+                    currency: "INR",
+                  }).format(totalRiderPremium?.trSumAssured)}
                 </Typography>
               </Typography>
             </Grid2>
@@ -989,7 +1232,10 @@ const LForm = () => {
                 Total GST Amount :{" "}
                 <Typography variant="caption" fontWeight={600} color="success">
                   {" "}
-                  &#x20B9; {totalRiderPremium?.tgst}
+                  {new Intl.NumberFormat("en-IN", {
+                    style: "currency",
+                    currency: "INR",
+                  }).format(totalRiderPremium?.tgst)}
                 </Typography>
               </Typography>
             </Grid2>
@@ -1110,9 +1356,9 @@ const LForm = () => {
             color="error"
             fontWeight={600}
           >
-            Not add in Rider List
+            Note: Add Rider details then click on add rider button
           </Typography>
-          <Grid2 container spacing={2} mt={2} width={"100%"}>
+          <Grid2 container spacing={3} mt={2} width={"100%"}>
             <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
               <InputWithValidation
                 label="Rider Name"
@@ -1131,7 +1377,7 @@ const LForm = () => {
                 type="number"
               />
             </Grid2>
-            <Grid2 size={{ xs: 12, sm: 6, md: 2 }}>
+            <Grid2 size={{ xs: 12, sm: 6, md: 1 }}>
               <InputWithValidation
                 label="Rider Policy Term"
                 value={rider?.riderPolicyTerm}
@@ -1160,6 +1406,18 @@ const LForm = () => {
                 type="number"
               />
             </Grid2>
+            <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
+              <Button
+                variant="outlined"
+                sx={{ fontSize: 12 }}
+                color="info"
+                size="small"
+                startIcon={<Add fontSize="10px" />}
+                onClick={() => handleAddRider()}
+              >
+                Add Rider
+              </Button>
+            </Grid2>
           </Grid2>
         </Box>
       </Paper>
@@ -1169,383 +1427,7 @@ const LForm = () => {
         sx={{ p: 2, mt: 2, bgcolor: (theme) => theme.palette.background.paper }}
       >
         <HeadlineTag title={"Final Amount"} iconColor={"#00aaff"} />
-        <Grid2 container spacing={2} mt={1}>
-          <Grid2
-            size={{ xs: 12, sm: 6, md: 2.4 }}
-            bgcolor={(theme) => theme?.palette.background.default}
-            p={1}
-            borderRadius={1}
-          >
-            <HeadlineTag
-              size={"small"}
-              titleColor={"#4cbc07"}
-              iconColor={"#4cbc07"}
-              title={"Base + Discount"}
-            />
-            <Typography
-              variant="caption"
-              component={"p"}
-              title="Base Premium"
-              color="grey"
-            >
-              Base Premium :{" "}
-              <Typography
-                variant="caption"
-                component={"p"}
-                fontWeight={600}
-                color="success"
-              >
-                {" "}
-                &#x20B9; {parseFloat(formData?.basePremium || 0).toFixed(2)}
-              </Typography>
-            </Typography>
-            {/* step2 */}
-            <Typography
-              variant="caption"
-              color="info"
-              component={"p"}
-              mt={2}
-              title="Discount"
-            >
-              Discount Amount ({formData?.discount}%) :{" "}
-              <Typography
-                variant="caption"
-                component={"p"}
-                fontWeight={600}
-                color="success"
-              >
-                {" "}
-                &#x20B9;{" "}
-                {parseFloat(
-                  parseFloat(formData?.basePremium) *
-                    (formData?.discount / 100) || 0
-                ).toFixed(2)}
-              </Typography>
-            </Typography>
-            {/* stap -3 =============== */}
-            <Typography mt={2} variant="caption" component={"p"}>
-              Discounted Base Premium :{" "}
-              <Typography
-                variant="caption"
-                component={"p"}
-                fontWeight={600}
-                color="success"
-              >
-                {" "}
-                &#x20B9;{" "}
-                {parseFloat(
-                  formData?.basePremium -
-                    (formData?.basePremium * formData?.discount) / 100 ||
-                    formData?.basePremium ||
-                    0
-                ).toFixed(2)}
-              </Typography>
-            </Typography>
-          </Grid2>
-          <Grid2
-            size={{ xs: 12, sm: 6, md: 2.4 }}
-            bgcolor={(theme) => theme?.palette.background.default}
-            p={1}
-            borderRadius={1}
-          >
-            <HeadlineTag
-              size={"small"}
-              titleColor={"#cc0ef7"}
-              iconColor={"#cc0ef7"}
-              title={"Base + Discount + GST"}
-            />
-            <Typography
-              variant="caption"
-              component={"p"}
-              title="Discounted Premium"
-            >
-              Base Premium + Discount ({formData?.discount}%) :{" "}
-              <Typography
-                variant="caption"
-                component={"p"}
-                fontWeight={600}
-                color="success"
-              >
-                {" "}
-                &#x20B9;{" "}
-                {parseFloat(
-                  formData?.basePremium -
-                    (formData?.basePremium * formData?.discount) / 100 ||
-                    formData?.basePremium ||
-                    0
-                ).toFixed(2)}
-              </Typography>
-            </Typography>
-
-            <Typography
-              variant="caption"
-              mt={2}
-              component={"p"}
-              title="GST Amount"
-            >
-              GST Amount ({formData?.withGstPremium}%) :{" "}
-              <Typography
-                variant="caption"
-                component={"p"}
-                fontWeight={600}
-                color="success"
-              >
-                {" "}
-                &#x20B9;{" "}
-                {parseFloat(
-                  formData?.basePremium * (formData?.withGstPremium / 100) || 0
-                ).toFixed(2)}
-              </Typography>
-            </Typography>
-
-            <Typography variant="caption" component={"p"} mt={2}>
-              Base Premium + GST ({formData?.withGstPremium}%):{" "}
-              <Typography
-                variant="caption"
-                component={"p"}
-                fontWeight={600}
-                color="success"
-              >
-                {" "}
-                &#x20B9;{" "}
-                {parseFloat(
-                  formData?.basePremium -
-                    (formData?.basePremium * formData?.discount) / 100 +
-                    formData?.basePremium * (formData?.withGstPremium / 100) ||
-                    formData?.basePremium -
-                      (formData?.basePremium * formData?.discount) / 100 ||
-                    formData?.basePremium ||
-                    0
-                ).toFixed(2)}
-              </Typography>
-            </Typography>
-          </Grid2>
-          <Grid2
-            size={{ xs: 12, sm: 6, md: 2.4 }}
-            bgcolor={(theme) => theme?.palette.background.default}
-            p={1}
-            borderRadius={1}
-          >
-            <HeadlineTag
-              size={"small"}
-              titleColor={"#03c6d4"}
-              iconColor={"#03c6d4"}
-              title={"Base + Discount + GST + Riders"}
-            />
-            <Typography
-              variant="caption"
-              component={"p"}
-              title="Total Rider Premium"
-            >
-              Tatal Rider :{" "}
-              <Typography
-                variant="caption"
-                component={"p"}
-                fontWeight={600}
-                color="success"
-              >
-                {" "}
-                &#x20B9; {totalRiderPremium?.trPremium}
-              </Typography>
-            </Typography>
-
-            <Typography
-              variant="caption"
-              component={"p"}
-              mt={2}
-              title="Total GST Amount"
-            >
-              GST Amount (18%):{" "}
-              <Typography
-                variant="caption"
-                component={"p"}
-                fontWeight={600}
-                color="success"
-              >
-                {" "}
-                &#x20B9; {totalRiderPremium?.tgst}
-              </Typography>
-            </Typography>
-            <Typography
-              variant="caption"
-              component={"p"}
-              mt={2}
-              title="Total Rider Premium + GST Amount"
-            >
-              Total Rider Premium + GST(18%):{" "}
-              <Typography
-                variant="caption"
-                component={"p"}
-                fontWeight={600}
-                color="success"
-              >
-                {" "}
-                &#x20B9; {totalRiderPremium?.trPremiumWithGST}
-              </Typography>
-            </Typography>
-          </Grid2>
-          <Grid2
-            size={{ xs: 12, sm: 6, md: 2.4 }}
-            bgcolor={(theme) => theme?.palette.background.default}
-            p={1}
-            borderRadius={1}
-          >
-            <HeadlineTag
-              size={"small"}
-              titleColor={"#ff5c00"}
-              title={"First Year"}
-            />
-            <Typography
-              variant="caption"
-              component={"p"}
-              title={`  Base Premium + GST(${formData?.withGstPremium || 0}%) `}
-            >
-              Base Premium + GST({formData?.withGstPremium}%) :{" "}
-              <Typography
-                variant="caption"
-                component={"p"}
-                fontWeight={600}
-                color="success"
-              >
-                {" "}
-                &#x20B9;{" "}
-                {parseFloat(
-                  formData?.basePremium -
-                    (formData?.basePremium * formData?.discount) / 100 +
-                    formData?.basePremium * (formData?.withGstPremium / 100) ||
-                    formData?.basePremium -
-                      (formData?.basePremium * formData?.discount) / 100 ||
-                    formData?.basePremium ||
-                    0
-                ).toFixed(2)}
-              </Typography>
-            </Typography>
-
-            <Typography
-              variant="caption"
-              component={"p"}
-              mt={2}
-              title="  Total Rider Premium + GST(18%)"
-            >
-              Total Rider Premium + GST(18%) :{" "}
-              <Typography
-                variant="caption"
-                component={"p"}
-                fontWeight={600}
-                color="success"
-              >
-                {" "}
-                &#x20B9; {totalRiderPremium?.trPremiumWithGST}
-              </Typography>
-            </Typography>
-
-            <Typography
-              variant="caption"
-              component={"p"}
-              mt={2}
-              title="Final Premium"
-            >
-              Final Premium :{" "}
-              <Typography
-                variant="caption"
-                component={"p"}
-                fontWeight={600}
-                color="success"
-              >
-                {" "}
-                &#x20B9;{" "}
-                {calculateFinalPremium(
-                  formData?.basePremium -
-                    (formData?.basePremium * formData?.discount) / 100 +
-                    formData?.basePremium * (formData?.withGstPremium / 100) ||
-                    formData?.basePremium ||
-                    0,
-                  totalRiderPremium?.trPremiumWithGST
-                )}
-              </Typography>
-            </Typography>
-          </Grid2>
-          <Grid2
-            size={{ xs: 12, sm: 6, md: 2.4 }}
-            bgcolor={(theme) => theme?.palette.background.default}
-            p={1}
-            borderRadius={1}
-          >
-            <HeadlineTag
-              size={"small"}
-              titleColor={"#006eff"}
-              iconColor={"#006eff"}
-              title={"2nd Year Onwards"}
-            />
-            <Typography
-              variant="caption"
-              component={"p"}
-              title=" Base Premium + GST 2nd years onwards"
-            >
-              Base Premium + GST ({formData?.gst2ndyearonward}%) 2nd :{" "}
-              <Typography
-                variant="caption"
-                component={"p"}
-                fontWeight={600}
-                color="success"
-              >
-                {" "}
-                &#x20B9;{" "}
-                {parseFloat(
-                  parseFloat(formData?.basePremium) +
-                    formData?.basePremium *
-                      (formData?.gst2ndyearonward / 100) ||
-                    formData?.basePremium ||
-                    0
-                ).toFixed(2)}
-              </Typography>
-            </Typography>
-
-            <Typography
-              variant="caption"
-              component={"p"}
-              mt={2}
-              title="Total Rider Premium + GST(18%)"
-            >
-              Total Rider Premium + GST(18%) :{" "}
-              <Typography
-                variant="caption"
-                component={"p"}
-                fontWeight={600}
-                color="success"
-              >
-                {" "}
-                &#x20B9; {totalRiderPremium?.trPremiumWithGST}
-              </Typography>
-            </Typography>
-
-            <Typography
-              variant="caption"
-              component={"p"}
-              mt={2}
-              title=" 2nd Year onwards Final Premium"
-            >
-              2nd Final Premium :{" "}
-              <Typography
-                variant="caption"
-                component={"p"}
-                fontWeight={600}
-                color="success"
-              >
-                {" "}
-                &#x20B9;{" "}
-                {calculateFinalPremium(
-                  parseFloat(formData?.basePremium) +
-                    formData?.basePremium *
-                      (formData?.gst2ndyearonward / 100) ||
-                    parseFloat(formData?.basePremium) ||
-                    0,
-                  totalRiderPremium?.trPremiumWithGST || 0
-                )}
-              </Typography>
-            </Typography>
-          </Grid2>
-        </Grid2>
+        <RealTimeCalculation data={{ ...formData, ...totalRiderPremium }} />
       </Paper>
       {/* //comunication */}
       <Paper elevation={0} sx={{ p: 2, mt: 2 }}>
@@ -1686,7 +1568,7 @@ const LForm = () => {
               onValidate={(error) =>
                 handleValidation("insurancePlanner", error)
               }
-              type="number"
+              type="text"
             />
           </Grid2>
         </Grid2>
@@ -1715,4 +1597,441 @@ const flattenData = (items) => {
     }
   });
   return flatArray;
+};
+
+const RealTimeCalculation = ({ data }) => {
+  // console.log("data: ", data);
+  const {
+    basePremium,
+    discount,
+    gst2ndyearonward,
+    withGstPremium,
+    trPremiumWithGST,
+    trPremium,
+    tgst,
+    riders,
+  } = data;
+  const HandleAddition = (a, b) => {
+    let a1 = parseFloat(a);
+    let b1 = parseFloat(b);
+    if (a1 === undefined || a1 === null) return b1;
+    if (b1 === undefined || b1 === null) return a1;
+    if (isNaN(a1)) return b1;
+    if (isNaN(b1)) return a1;
+    return a1 + b1;
+  };
+
+  return (
+    <Grid2 container spacing={2} mt={1}>
+      <Grid2
+        size={{ xs: 12, sm: 6, md: 2.4 }}
+        bgcolor={(theme) => theme?.palette.background.default}
+        p={1}
+        borderRadius={1}
+      >
+        <HeadlineTag
+          size={"small"}
+          titleColor={"#4cbc07"}
+          iconColor={"#4cbc07"}
+          title={"Base + Discount"}
+        />
+        <Typography
+          variant="caption"
+          component={"p"}
+          title="Base Premium"
+          color="grey"
+        >
+          Base Premium :{" "}
+          <Typography
+            variant="caption"
+            component={"p"}
+            fontWeight={600}
+            color="success"
+          >
+            {new Intl.NumberFormat("en-IN", {
+              style: "currency",
+              currency: "INR",
+              minimumFractionDigits: 2,
+            }).format(basePremium)}
+          </Typography>
+        </Typography>
+        {/* step2 */}
+        <Typography
+          variant="caption"
+          color="info"
+          component={"p"}
+          mt={2}
+          title="Discount"
+        >
+          Discount Amount ({discount}%) :{" "}
+          <Typography
+            variant="caption"
+            component={"p"}
+            fontWeight={600}
+            color="success"
+          >
+            {new Intl.NumberFormat("en-IN", {
+              style: "currency",
+              currency: "INR",
+              minimumFractionDigits: 2,
+            }).format(CalculateDiscount(basePremium, discount)?.discountAmount)}
+          </Typography>
+        </Typography>
+        {/* stap -3 =============== */}
+        <Typography mt={2} variant="caption" component={"p"}>
+          Discounted Base Premium :{" "}
+          <Typography
+            variant="caption"
+            component={"p"}
+            fontWeight={600}
+            color="success"
+          >
+            {new Intl.NumberFormat("en-IN", {
+              style: "currency",
+              currency: "INR",
+              minimumFractionDigits: 2,
+            }).format(
+              CalculateDiscount(basePremium, discount)?.discountedBasePremium
+            )}
+          </Typography>
+        </Typography>
+      </Grid2>
+      <Grid2
+        size={{ xs: 12, sm: 6, md: 2.4 }}
+        bgcolor={(theme) => theme?.palette.background.default}
+        p={1}
+        borderRadius={1}
+      >
+        <HeadlineTag
+          size={"small"}
+          titleColor={"#cc0ef7"}
+          iconColor={"#cc0ef7"}
+          title={"Base + Discount + GST"}
+        />
+        <Typography
+          variant="caption"
+          component={"p"}
+          title="Discounted Premium"
+        >
+          Base Premium + Discount ({discount}%) :{" "}
+          <Typography
+            variant="caption"
+            component={"p"}
+            fontWeight={600}
+            color="success"
+          >
+            {new Intl.NumberFormat("en-IN", {
+              style: "currency",
+              currency: "INR",
+              minimumFractionDigits: 2,
+            }).format(
+              CalculateDiscount(basePremium, discount)?.discountedBasePremium
+            )}
+          </Typography>
+        </Typography>
+
+        <Typography variant="caption" mt={2} component={"p"} title="GST Amount">
+          GST Amount ({0}%) :{" "}
+          <Typography
+            variant="caption"
+            component={"p"}
+            fontWeight={600}
+            color="success"
+          >
+            {new Intl.NumberFormat("en-IN", {
+              style: "currency",
+              currency: "INR",
+              minimumFractionDigits: 2,
+            }).format(
+              CalculateGST(
+                CalculateDiscount(basePremium, discount)?.discountedBasePremium,
+                withGstPremium
+              )?.gstAmount
+            )}
+          </Typography>
+        </Typography>
+
+        <Typography variant="caption" component={"p"} mt={2}>
+          Base Premium + GST ({0}%):{" "}
+          <Typography
+            variant="caption"
+            component={"p"}
+            fontWeight={600}
+            color="success"
+          >
+            {new Intl.NumberFormat("en-IN", {
+              style: "currency",
+              currency: "INR",
+              minimumFractionDigits: 2,
+            }).format(
+              CalculateGST(
+                CalculateDiscount(basePremium, discount)?.discountedBasePremium,
+                withGstPremium
+              )?.totalPremiumWithGST
+            )}
+          </Typography>
+        </Typography>
+      </Grid2>
+      <Grid2
+        size={{ xs: 12, sm: 6, md: 2.4 }}
+        bgcolor={(theme) => theme?.palette.background.default}
+        p={1}
+        borderRadius={1}
+      >
+        <HeadlineTag
+          size={"small"}
+          titleColor={"#03c6d4"}
+          iconColor={"#03c6d4"}
+          title={"Riders + GST"}
+        />
+        <Typography
+          variant="caption"
+          component={"p"}
+          title="Total Rider Premium"
+        >
+          Total Rider ({riders?.length}) :{" "}
+          <Typography
+            variant="caption"
+            component={"p"}
+            fontWeight={600}
+            color="success"
+          >
+            {new Intl.NumberFormat("en-IN", {
+              style: "currency",
+              currency: "INR",
+              minimumFractionDigits: 2,
+            }).format(trPremium)}
+          </Typography>
+        </Typography>
+
+        <Typography
+          variant="caption"
+          component={"p"}
+          mt={2}
+          title="Total GST Amount"
+        >
+          GST Amount (18%):{" "}
+          <Typography
+            variant="caption"
+            component={"p"}
+            fontWeight={600}
+            color="success"
+          >
+            {new Intl.NumberFormat("en-IN", {
+              style: "currency",
+              currency: "INR",
+              minimumFractionDigits: 2,
+            }).format(tgst)}
+          </Typography>
+        </Typography>
+        <Typography
+          variant="caption"
+          component={"p"}
+          mt={2}
+          title="Total Rider Premium + GST Amount"
+        >
+          Total Rider Premium + GST(18%):{" "}
+          <Typography
+            variant="caption"
+            component={"p"}
+            fontWeight={600}
+            color="success"
+          >
+            {new Intl.NumberFormat("en-IN", {
+              style: "currency",
+              currency: "INR",
+              minimumFractionDigits: 2,
+            }).format(trPremiumWithGST)}
+          </Typography>
+        </Typography>
+      </Grid2>
+      <Grid2
+        size={{ xs: 12, sm: 6, md: 2.4 }}
+        bgcolor={(theme) => theme?.palette.background.default}
+        p={1}
+        borderRadius={1}
+      >
+        <HeadlineTag
+          size={"small"}
+          titleColor={"#ff5c00"}
+          title={"First Year"}
+        />
+        <Typography
+          variant="caption"
+          component={"p"}
+          title={`  Base Premium + GST(${0}%) `}
+        >
+          Base Premium + GST({0}%) :{" "}
+          <Typography
+            variant="caption"
+            component={"p"}
+            fontWeight={600}
+            color="success"
+          >
+            {new Intl.NumberFormat("en-IN", {
+              style: "currency",
+              currency: "INR",
+              minimumFractionDigits: 2,
+            }).format(
+              CalculateGST(
+                CalculateDiscount(basePremium, discount)?.discountedBasePremium,
+                withGstPremium
+              )?.totalPremiumWithGST
+            )}
+          </Typography>
+        </Typography>
+
+        <Typography
+          variant="caption"
+          component={"p"}
+          mt={2}
+          title="  Total Rider Premium + GST(18%)"
+        >
+          Total Rider Premium + GST(18%) :{" "}
+          <Typography
+            variant="caption"
+            component={"p"}
+            fontWeight={600}
+            color="success"
+          >
+            {new Intl.NumberFormat("en-IN", {
+              style: "currency",
+              currency: "INR",
+              minimumFractionDigits: 2,
+            }).format(trPremiumWithGST)}
+          </Typography>
+        </Typography>
+
+        <Typography
+          variant="caption"
+          component={"p"}
+          mt={2}
+          title="Final Premium"
+        >
+          Final Premium :{" "}
+          <Typography
+            variant="caption"
+            component={"p"}
+            fontWeight={600}
+            color="success"
+          >
+            {new Intl.NumberFormat("en-IN", {
+              style: "currency",
+              currency: "INR",
+              minimumFractionDigits: 2,
+            }).format(
+              HandleAddition(
+                trPremiumWithGST,
+                CalculateGST(
+                  CalculateDiscount(basePremium, discount)
+                    ?.discountedBasePremium,
+                  withGstPremium
+                )?.totalPremiumWithGST
+              )
+            )}
+          </Typography>
+        </Typography>
+      </Grid2>
+      <Grid2
+        size={{ xs: 12, sm: 6, md: 2.4 }}
+        bgcolor={(theme) => theme?.palette.background.default}
+        p={1}
+        borderRadius={1}
+      >
+        <HeadlineTag
+          size={"small"}
+          titleColor={"#006eff"}
+          iconColor={"#006eff"}
+          title={"2nd Year Onwards"}
+        />
+        <Typography
+          variant="caption"
+          component={"p"}
+          title=" Base Premium + GST 2nd years onwards"
+        >
+          Base Premium + GST 2nd ({gst2ndyearonward}%):{" "}
+          <Typography
+            variant="caption"
+            component={"p"}
+            fontWeight={600}
+            color="success"
+          >
+            {new Intl.NumberFormat("en-IN", {
+              style: "currency",
+              currency: "INR",
+              minimumFractionDigits: 2,
+            }).format(
+              CalculateGST(parseInt(basePremium), gst2ndyearonward)
+                ?.totalPremiumWithGST
+            )}
+          </Typography>
+        </Typography>
+
+        <Typography
+          variant="caption"
+          component={"p"}
+          mt={2}
+          title="Total Rider Premium + GST(18%)"
+        >
+          Total Rider Premium + GST(18%) :{" "}
+          <Typography
+            variant="caption"
+            component={"p"}
+            fontWeight={600}
+            color="success"
+          >
+            {new Intl.NumberFormat("en-IN", {
+              style: "currency",
+              currency: "INR",
+              minimumFractionDigits: 2,
+            }).format(trPremiumWithGST)}
+          </Typography>
+        </Typography>
+
+        <Typography
+          variant="caption"
+          component={"p"}
+          mt={2}
+          title=" 2nd Year onwards Final Premium"
+        >
+          2nd Final Premium :{" "}
+          <Typography
+            variant="caption"
+            component={"p"}
+            fontWeight={600}
+            color="success"
+          >
+            {new Intl.NumberFormat("en-IN", {
+              style: "currency",
+              currency: "INR",
+              minimumFractionDigits: 2,
+            }).format(
+              HandleAddition(
+                trPremiumWithGST,
+                CalculateGST(parseInt(basePremium), gst2ndyearonward)
+                  ?.totalPremiumWithGST
+              )
+            )}
+          </Typography>
+        </Typography>
+      </Grid2>
+    </Grid2>
+  );
+};
+
+const CalculateDiscount = (basePremium, discount) => {
+  if (basePremium && discount) {
+    const discountAmount = (basePremium * discount) / 100;
+    const discountedBasePremium = basePremium - discountAmount;
+    return { discountAmount, discountedBasePremium };
+  }
+  return { discountAmount: 0, discountedBasePremium: 0 };
+};
+const CalculateGST = (discountedBasePremium, gst) => {
+  if (discountedBasePremium && gst) {
+    const gstAmount = (discountedBasePremium * gst) / 100;
+    const totalPremiumWithGST = discountedBasePremium + gstAmount;
+    return { gstAmount, totalPremiumWithGST };
+  }
+  return { gstAmount: 0, totalPremiumWithGST: 0 };
 };

@@ -168,7 +168,7 @@ const CompanySalesOverviews = () => {
 
         <TransparentBox
           rgbColor="rgb(65, 140, 3)"
-          value={` ${parseInt(chartData?.total)?.toLocaleString()}`}
+          value={chartData?.total || 0}
           caption={"Total Sales"}
         ></TransparentBox>
         <Stack
@@ -259,7 +259,11 @@ const CompanySalesOverviews = () => {
                     fontWeight={600}
                     color="success"
                   >
-                    &#8377; {parseInt(item?.amount)?.toLocaleString()}
+                    {new Intl.NumberFormat("en-IN", {
+                      style: "currency",
+                      currency: "INR",
+                      maximumFractionDigits: 2,
+                    }).format(item?.amount || 0)}
                   </Typography>
 
                   {/* <Button color="inherit"> Export</Button> */}

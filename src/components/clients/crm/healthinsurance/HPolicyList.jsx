@@ -18,12 +18,12 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import HeadlineTag from "../../../../options/HeadlineTag";
-import DynamicDataGrid from "../../../../options/DynamicDataGrid";
+import HeadlineTag from "../../../options/HeadlineTag";
+
 import { Edit, OpenInNew, QuestionMark } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import useEncryptedSessionStorage from "../../../../../hooks/useEncryptedSessionStorage";
-import { firestore } from "../../../../../firebase/config";
+import useEncryptedSessionStorage from "../../../../hooks/useEncryptedSessionStorage";
+import { firestore } from "../../../../firebase/config";
 import {
   collection,
   endAt,
@@ -33,38 +33,14 @@ import {
   startAt,
   where,
 } from "firebase/firestore";
-import { useTabs } from "../../../../../stores/TabsContex";
+import { useTabs } from "../../../../stores/TabsContex";
 
-const PolicyList = () => {
+const HPolicyList = () => {
   const [searchResult, setSearchResult] = useState([]);
   const { addTab } = useTabs();
   const [searchQ, setSearchQ] = useState("");
   const navigate = useNavigate();
-  const [isHestory, setIsHistory] = useEncryptedSessionStorage("lf-p-his", []);
-  const handleSubmit = () => {
-    const myHeaders = new Headers();
-    myHeaders.append("x-api-key", "5cf783e5-51a5-4dcc-9bc5-0b9a414c88a3");
-    myHeaders.append("Content-Type", "application/json");
-
-    const requestOptions = {
-      method: "GET",
-      headers: myHeaders,
-      redirect: "follow",
-    };
-
-    fetch(
-      `https://db.enivesh.com/firestore/all/life_insurance_policies?limit=10`,
-      requestOptions
-    )
-      .then((response) => response.json())
-      .then((result) => {
-        setSearchResult(result?.documents || []);
-      });
-  };
-  useEffect(() => {
-    // handleSubmit();
-    // console.log(isHestory);
-  }, []);
+  const [isHestory, setIsHistory] = useEncryptedSessionStorage("hi-p-his", []);
 
   const handleLinkOpen = (e, t) => {
     let newHis = isHestory?.filter(
@@ -77,11 +53,11 @@ const PolicyList = () => {
 
   const searchByName = async (e) => {
     try {
-      const usersRef = collection(firestore, "life_insurance_policies");
+      const usersRef = collection(firestore, "health_insurance_policies");
       const queryName = query(
         usersRef,
-        where("proposerName", ">=", searchQ),
-        where("proposerName", "<=", searchQ + "\uf8ff")
+        where("proposer_name", ">=", searchQ),
+        where("proposer_name", "<=", searchQ + "\uf8ff")
       );
       const snapshot1 = await getDocs(queryName);
       const searchResultsName = snapshot1.docs.map((doc) => ({
@@ -91,8 +67,8 @@ const PolicyList = () => {
 
       const queryPolicyNumber = query(
         usersRef,
-        where("policyNumber", ">=", searchQ),
-        where("policyNumber", "<=", searchQ + "\uf8ff")
+        where("policy_no", ">=", searchQ),
+        where("policy_no", "<=", searchQ + "\uf8ff")
       );
       const snapshot = await getDocs(queryPolicyNumber);
       const searchResultsPolicy = snapshot.docs.map((doc) => ({
@@ -102,8 +78,8 @@ const PolicyList = () => {
 
       const querypanNumber = query(
         usersRef,
-        where("panNumber", ">=", searchQ),
-        where("panNumber", "<=", searchQ + "\uf8ff")
+        where("pan_number", ">=", searchQ),
+        where("pan_number", "<=", searchQ + "\uf8ff")
       );
       const snapshotPan = await getDocs(querypanNumber);
       const searchResultsPan = snapshotPan.docs.map((doc) => ({
@@ -132,14 +108,14 @@ const PolicyList = () => {
     e.preventDefault();
     if (e?.ctrlKey === true) {
       addTab({
-        name: t?.policyNumber,
-        link: `/crm/life-insurance/policy/${t?.policyNumber}`,
+        name: t?.policy_no,
+        link: `/crm/health-insurance/policy/${t?.policy_no}`,
       });
-      navigate(`/crm/life-insurance/policy/${t?.policyNumber}`, {
+      navigate(`/crm/health-insurance/policy/${t?.policy_no}`, {
         state: { ...t },
       });
     } else {
-      navigate(`/crm/life-insurance/policy/${t?.policyNumber}`, {
+      navigate(`/crm/health-insurance/policy/${t?.policy_no}`, {
         state: { ...t },
       });
     }
@@ -182,23 +158,23 @@ const PolicyList = () => {
               <TableBody>
                 {isHestory?.map((t, i) => (
                   <TableRow hover>
-                    <TableCell sx={{ minWidth: 100 }}>
-                      {t?.policyNumber}
-                    </TableCell>
+                    <TableCell sx={{ minWidth: 100 }}>{t?.policy_no}</TableCell>
                     <TableCell
                       sx={{ minWidth: 100, textTransform: "capitalize" }}
                     >
-                      {t?.proposerName}
+                      {t?.proposer_name}
                     </TableCell>
                     <TableCell sx={{ minWidth: 100 }}>
-                      {t?.riders?.length}
+                      {t?.benifits?.length}
                     </TableCell>
-                    <TableCell sx={{ minWidth: 100 }}>{t?.startDate}</TableCell>
-                    <TableCell sx={{ minWidth: 120 }}>
-                      {t?.sumAssured}
+                    <TableCell sx={{ minWidth: 100 }}>
+                      {t?.start_date}
                     </TableCell>
                     <TableCell sx={{ minWidth: 120 }}>
-                      {t?.basePremium}
+                      {t?.sum_assured}
+                    </TableCell>
+                    <TableCell sx={{ minWidth: 120 }}>
+                      {t?.base_premium || t?.premium}
                     </TableCell>
                     <TableCell sx={{ minWidth: 30 }}>
                       <IconButton
@@ -285,7 +261,7 @@ const PolicyList = () => {
                 >
                   <Typography variant="body2" component={"p"} color="info">
                     {" "}
-                    {t?.policyNumber}
+                    {t?.policy_no}
                     {" - "}
                     <Typography
                       sx={{
@@ -295,7 +271,7 @@ const PolicyList = () => {
                       component={"span"}
                       variant="body2"
                     >
-                      {t?.proposerName} {"  -  "} {t?.cin}
+                      {t?.proposer_name} {"  -  "} {t?.cin}
                     </Typography>
                   </Typography>
                   <Divider />
@@ -309,4 +285,4 @@ const PolicyList = () => {
   );
 };
 
-export default PolicyList;
+export default HPolicyList;

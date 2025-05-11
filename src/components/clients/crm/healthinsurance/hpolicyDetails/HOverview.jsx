@@ -1,14 +1,20 @@
-import { Grid2, Typography } from "@mui/material";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  Grid2,
+  Typography,
+} from "@mui/material";
 import React from "react";
 import HeadlineTag from "../../../../options/HeadlineTag";
 import dayjs from "dayjs";
 
-const Overviews = ({ data }) => {
+const HOverviews = ({ data }) => {
   return (
     <Grid2 container spacing={1}>
       {/* ///======================Personal Details=======================/// */}
       <Grid2 size={{ xs: 12 }}>
-        <HeadlineTag title={"Personal Details"} my={1} />
+        <HeadlineTag title={"Personal Details"} my={2} />
         <Grid2
           container
           spacing={1}
@@ -18,7 +24,7 @@ const Overviews = ({ data }) => {
             borderRadius: 1,
           }}
         >
-          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
+          <Grid2 size={{ xs: 12, sm: 4, md: 3 }}>
             <Typography
               variant="body2"
               component={"p"}
@@ -33,7 +39,7 @@ const Overviews = ({ data }) => {
               {data?.id}
             </Typography>
           </Grid2>
-          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
+          <Grid2 size={{ xs: 12, sm: 4, md: 3 }}>
             <Typography
               variant="body2"
               component={"p"}
@@ -49,28 +55,10 @@ const Overviews = ({ data }) => {
               textTransform={"capitalize"}
               color="text.primary"
             >
-              {data?.proposerName}
+              {data?.proposer_name}
             </Typography>
           </Grid2>
-          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
-            <Typography
-              variant="body2"
-              component={"p"}
-              sx={{ cursor: "default" }}
-              color="text.secondary"
-              fontWeight={400}
-              gutterBottom
-            >
-              Life Assured
-            </Typography>
-            <Typography
-              variant="body1"
-              textTransform={"capitalize"}
-              color="text.primary"
-            >
-              {data?.lifeAssured}
-            </Typography>
-          </Grid2>
+
           <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
             <Typography
               variant="body2"
@@ -86,6 +74,27 @@ const Overviews = ({ data }) => {
               {data?.cin}
             </Typography>
           </Grid2>
+          {data?.group_name && (
+            <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
+              <Typography
+                variant="body2"
+                component={"p"}
+                sx={{ cursor: "default" }}
+                color="text.secondary"
+                fontWeight={400}
+                gutterBottom
+              >
+                Group Name
+              </Typography>
+              <Typography
+                variant="body1"
+                textTransform={"capitalize"}
+                color="text.primary"
+              >
+                {data?.group_name}
+              </Typography>
+            </Grid2>
+          )}
           <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
             <Typography
               variant="body2"
@@ -95,17 +104,21 @@ const Overviews = ({ data }) => {
               fontWeight={400}
               gutterBottom
             >
-              MIN
+              Client Name
             </Typography>
-            <Typography variant="body1" color="text.primary">
-              {data?.min}
+            <Typography
+              variant="body1"
+              textTransform={"capitalize"}
+              color="text.primary"
+            >
+              {data?.cleint_name}
             </Typography>
           </Grid2>
         </Grid2>
       </Grid2>
-      {/* ///======================Policy Details=======================/// */}
+      {/* ///======================Insured Details=======================/// */}
       <Grid2 size={{ xs: 12 }}>
-        <HeadlineTag title={"Policy Details"} my={1} />
+        <HeadlineTag title={`Insured (${data?.insured?.length})`} my={2} />
         <Grid2
           container
           spacing={1}
@@ -115,6 +128,99 @@ const Overviews = ({ data }) => {
             borderRadius: 1,
           }}
         >
+          {data?.insured?.map((it, i) => (
+            <Grid2 key={i} size={{ xs: 12, sm: 4, md: 3 }}>
+              <Typography
+                variant="body2"
+                component={"p"}
+                sx={{ cursor: "default" }}
+                color="text.secondary"
+                fontWeight={400}
+                gutterBottom
+              >
+                Member({i + 1})
+              </Typography>
+              <Typography
+                variant="body1"
+                textTransform={"capitalize"}
+                color="text.primary"
+              >
+                {it}
+              </Typography>
+            </Grid2>
+          ))}
+        </Grid2>
+      </Grid2>
+      {/* ///======================Policy Details=======================/// */}
+
+      <Grid2 size={{ xs: 12 }} mt={3}>
+        <HeadlineTag title={"Policy Details"} my={2} />
+        <Grid2
+          container
+          spacing={1}
+          sx={{
+            bgcolor: (theme) => theme.palette.background.default,
+            p: 2,
+            borderRadius: 1,
+          }}
+        >
+          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
+            <Typography
+              variant="body2"
+              component={"p"}
+              sx={{ cursor: "default" }}
+              color="text.secondary"
+              fontWeight={400}
+              gutterBottom
+            >
+              Policy Category
+            </Typography>
+            <Typography
+              variant="body1"
+              textTransform={"capitalize"}
+              color="text.primary"
+            >
+              {data?.policy_category}
+            </Typography>
+          </Grid2>
+          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
+            <Typography
+              variant="body2"
+              component={"p"}
+              sx={{ cursor: "default" }}
+              color="text.secondary"
+              fontWeight={400}
+              gutterBottom
+            >
+              Policy Type
+            </Typography>
+            <Typography
+              variant="body1"
+              textTransform={"capitalize"}
+              color="text.primary"
+            >
+              {data?.policy_category_plan}
+            </Typography>
+          </Grid2>
+          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
+            <Typography
+              variant="body2"
+              component={"p"}
+              sx={{ cursor: "default" }}
+              color="text.secondary"
+              fontWeight={400}
+              gutterBottom
+            >
+              Policy at Start
+            </Typography>
+            <Typography
+              variant="body1"
+              textTransform={"capitalize"}
+              color="text.primary"
+            >
+              {data?.policy_at_start}
+            </Typography>
+          </Grid2>
           <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
             <Typography
               variant="body2"
@@ -131,7 +237,7 @@ const Overviews = ({ data }) => {
               textTransform={"capitalize"}
               color="text.primary"
             >
-              {data?.startDate}
+              {dayjs(data?.start_date)?.format("DD MMM YYYY")}
             </Typography>
           </Grid2>
           <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
@@ -144,14 +250,14 @@ const Overviews = ({ data }) => {
               gutterBottom
               textTransform={"capitalize"}
             >
-              Plan
+              Plan Name
             </Typography>
             <Typography
               variant="body1"
               textTransform={"capitalize"}
               color="text.primary"
             >
-              {data?.plan}
+              {data?.plan_name}
             </Typography>
           </Grid2>
           <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
@@ -164,67 +270,20 @@ const Overviews = ({ data }) => {
               textTransform={"capitalize"}
               gutterBottom
             >
-              Pay Term
+              Cover Type
             </Typography>
             <Typography
               variant="body1"
               textTransform={"capitalize"}
               color="text.primary"
             >
-              {data?.payTerm}
-            </Typography>
-          </Grid2>
-          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
-            <Typography
-              variant="body2"
-              component={"p"}
-              sx={{ cursor: "default" }}
-              color="text.secondary"
-              fontWeight={400}
-              textTransform={"capitalize"}
-              gutterBottom
-            >
-              Policy Term
-            </Typography>
-            <Typography
-              variant="body1"
-              textTransform={"capitalize"}
-              color="text.primary"
-            >
-              {data?.policyTerm}
-            </Typography>
-          </Grid2>
-          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
-            <Typography
-              variant="body2"
-              component={"p"}
-              sx={{ cursor: "default" }}
-              textTransform={"capitalize"}
-              color="text.secondary"
-              fontWeight={400}
-              gutterBottom
-            >
-              Policy Type
-            </Typography>
-            <Typography
-              variant="body1"
-              textTransform={"capitalize"}
-              color="text.primary"
-            >
-              {data?.policyType?.split("-")?.join(" ")}
+              {data?.cover_type}
             </Typography>
           </Grid2>
         </Grid2>
       </Grid2>
       {/* // ///======================Sum Assured Details=======================/// */}
       <Grid2 size={{ xs: 12 }}>
-        {/* <HeadlineTag
-          title={"Second Year onward Premium"}
-          iconColor={"#108314"}
-          titleColor={"success"}
-          my={1}
-          size={"small"}
-        /> */}
         <Grid2
           container
           spacing={1}
@@ -250,7 +309,7 @@ const Overviews = ({ data }) => {
                 style: "currency",
                 currency: "INR",
                 maximumFractionDigits: 0,
-              }).format(data?.sumAssured || 0)}
+              }).format(data?.sum_assured || 0)}
             </Typography>
           </Grid2>
           <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
@@ -289,7 +348,7 @@ const Overviews = ({ data }) => {
               textTransform={"capitalize"}
               color="text.primary"
             >
-              {data?.paymentMode}
+              {data?.payment_mode}
             </Typography>
           </Grid2>
           <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
@@ -309,28 +368,7 @@ const Overviews = ({ data }) => {
               textTransform={"capitalize"}
               color="text.primary"
             >
-              {data?.frequencyPayment}
-            </Typography>
-          </Grid2>
-
-          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
-            <Typography
-              variant="body2"
-              component={"p"}
-              sx={{ cursor: "default" }}
-              color="text.secondary"
-              fontWeight={400}
-              textTransform={"capitalize"}
-              gutterBottom
-            >
-              Paid Up Value
-            </Typography>
-            <Typography
-              variant="body1"
-              textTransform={"capitalize"}
-              color="text.primary"
-            >
-              {data?.paidUpValue}
+              {data?.frequency_payment}
             </Typography>
           </Grid2>
           <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
@@ -343,14 +381,34 @@ const Overviews = ({ data }) => {
               textTransform={"capitalize"}
               gutterBottom
             >
-              Surrender Value
+              Tenure
             </Typography>
             <Typography
               variant="body1"
               textTransform={"capitalize"}
               color="text.primary"
             >
-              {data?.surrenderValue}
+              {data?.tenure}
+            </Typography>
+          </Grid2>
+          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
+            <Typography
+              variant="body2"
+              component={"p"}
+              sx={{ cursor: "default" }}
+              color="text.secondary"
+              fontWeight={400}
+              textTransform={"capitalize"}
+              gutterBottom
+            >
+              Client Type
+            </Typography>
+            <Typography
+              variant="body1"
+              textTransform={"capitalize"}
+              color="text.primary"
+            >
+              {data?.client_type?.split("-")?.join(" ")}
             </Typography>
           </Grid2>
         </Grid2>
@@ -394,17 +452,17 @@ const Overviews = ({ data }) => {
               textTransform={"capitalize"}
               gutterBottom
             >
-              Maturity Value
+              Policy Since
             </Typography>
             <Typography
               variant="body1"
               textTransform={"capitalize"}
               color="text.primary"
             >
-              {data?.maturityValue}
+              {dayjs(data?.policy_since).format("DD MMMM YYYY")}
             </Typography>
           </Grid2>
-          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
+          <Grid2 size={{ xs: 12, sm: 4, md: 4 }}>
             <Typography
               variant="body2"
               component={"p"}
@@ -414,25 +472,24 @@ const Overviews = ({ data }) => {
               textTransform={"capitalize"}
               gutterBottom
             >
-              Expected Return
+              Existing illness
             </Typography>
             <Typography
               variant="body1"
               textTransform={"capitalize"}
               color="text.primary"
             >
-              {data?.expectedReturn}
+              {data?.existing_illness}
             </Typography>
           </Grid2>
         </Grid2>
       </Grid2>
-      <Grid2 size={{ xs: 12 }}>
+      <Grid2 size={{ xs: 12 }} mt={3}>
         <HeadlineTag
-          title={"First Year Premium"}
+          title={"Premium"}
           iconColor={"#1976d2"}
           titleColor={"info"}
           my={1}
-          size={"small"}
         />
         <Grid2
           container
@@ -460,8 +517,10 @@ const Overviews = ({ data }) => {
                 currency: "INR",
                 maximumFractionDigits: 0,
               }).format(
-                discountCalculation(data?.basePremium || 0, data?.discount || 0)
-                  ?.basePremium || 0
+                discountCalculation(
+                  data?.base_premium || 0,
+                  data?.discount || 0
+                )?.basePremium || 0
               )}
             </Typography>
           </Grid2>
@@ -486,10 +545,7 @@ const Overviews = ({ data }) => {
                 style: "currency",
                 currency: "INR",
                 maximumFractionDigits: 0,
-              }).format(
-                discountCalculation(data?.basePremium || 0, data?.discount || 0)
-                  ?.discountAmount || 0
-              )}
+              }).format(data?.discount || 0)}
             </Typography>
           </Grid2>
           <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
@@ -515,10 +571,7 @@ const Overviews = ({ data }) => {
                 currency: "INR",
                 maximumFractionDigits: 0,
               }).format(
-                gstCalculation(
-                  data?.basePremium || 0,
-                  data?.withGstPremium || 0
-                )?.gstAmount || 0
+                handleSubtract(data?.with_gst_premium, data?.base_premium)
               )}
             </Typography>
           </Grid2>
@@ -544,31 +597,13 @@ const Overviews = ({ data }) => {
                 style: "currency",
                 currency: "INR",
                 maximumFractionDigits: 0,
-              }).format(
-                finalPremiumCalculation(
-                  discountCalculation(
-                    data?.basePremium || 0,
-                    data?.discount || 0
-                  )?.finalPremium,
-                  gstCalculation(
-                    data?.basePremium || 0,
-                    data?.withGstPremium || 0
-                  )?.gstAmount
-                ) || 0
-              )}
+              }).format(data?.with_gst_premium)}
             </Typography>
           </Grid2>
         </Grid2>
       </Grid2>
-
-      <Grid2 size={{ xs: 12 }}>
-        <HeadlineTag
-          title={"Second Year onward Premium"}
-          iconColor={"#108314"}
-          titleColor={"success"}
-          my={1}
-          size={"small"}
-        />
+      <Grid2 size={{ xs: 12 }} mt={3}>
+        <HeadlineTag title={"Communition Details"} my={1} />
         <Grid2
           container
           spacing={1}
@@ -578,28 +613,93 @@ const Overviews = ({ data }) => {
             borderRadius: 1,
           }}
         >
-          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
-            <Typography
-              variant="body2"
-              component={"p"}
-              sx={{ cursor: "default" }}
-              color="text.secondary"
-              fontWeight={400}
-              gutterBottom
-            >
-              Base Premium
-            </Typography>
-            <Typography variant="body1" color="success" fontWeight={600}>
-              {new Intl.NumberFormat("en-IN", {
-                style: "currency",
-                currency: "INR",
-                maximumFractionDigits: 0,
-              }).format(
-                discountCalculation(data?.basePremium || 0, 0)?.basePremium || 0
-              )}
-            </Typography>
+          <Grid2 size={{ xs: 12, sm: 4, md: 4 }}>
+            <Card variant="outlined">
+              <CardContent>
+                <Typography
+                  variant="body1"
+                  component={"p"}
+                  color="success"
+                  fontWeight={500}
+                >
+                  {data?.comment_from_client}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  fontWeight={600}
+                  color="grey"
+                  component={"h3"}
+                  textAlign={"center"}
+                  mt={2}
+                >
+                  Comment From Client
+                </Typography>
+              </CardContent>
+            </Card>
           </Grid2>
-          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
+          <Grid2 size={{ xs: 12, sm: 4, md: 4 }}>
+            <Card variant="outlined">
+              <CardContent>
+                <Typography
+                  variant="body1"
+                  component={"p"}
+                  color="success"
+                  fontWeight={500}
+                >
+                  {data?.comment_from_rm}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  fontWeight={600}
+                  color="grey"
+                  component={"h3"}
+                  textAlign={"center"}
+                  mt={2}
+                >
+                  Comment From RM
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid2>
+          <Grid2 size={{ xs: 12, sm: 4, md: 4 }}>
+            <Card variant="outlined">
+              <CardContent>
+                <Typography
+                  variant="body1"
+                  component={"p"}
+                  color="success"
+                  fontWeight={500}
+                >
+                  {data?.action}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  fontWeight={600}
+                  component={"h3"}
+                  color="grey"
+                  textAlign={"center"}
+                  mt={2}
+                >
+                  Action
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid2>
+        </Grid2>
+      </Grid2>
+
+      <Grid2 size={{ xs: 12 }} mt={3}>
+        <HeadlineTag title={"In House Details"} my={1} />
+        <Grid2
+          container
+          spacing={1}
+          sx={{
+            bgcolor: (theme) => theme.palette.background.default,
+            p: 2,
+            borderRadius: 1,
+          }}
+        >
+          <Grid2 size={{ xs: 12, sm: 4, md: 3 }}>
             <Typography
               variant="body2"
               component={"p"}
@@ -608,18 +708,18 @@ const Overviews = ({ data }) => {
               fontWeight={400}
               gutterBottom
             >
-              Discount (0%)
+              Sourcing
             </Typography>
             <Typography
               variant="body1"
               textTransform={"capitalize"}
-              color="success"
               fontWeight={600}
+              color="info"
             >
-              &#8377; 0.00
+              {data?.sourcing}
             </Typography>
           </Grid2>
-          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
+          <Grid2 size={{ xs: 12, sm: 4, md: 3 }}>
             <Typography
               variant="body2"
               component={"p"}
@@ -627,59 +727,51 @@ const Overviews = ({ data }) => {
               color="text.secondary"
               fontWeight={400}
               gutterBottom
-              textTransform={"capitalize"}
             >
-              GST ({data?.gst2ndyearonward}%)
+              Lead Source
             </Typography>
             <Typography
               variant="body1"
               textTransform={"capitalize"}
-              color="success"
               fontWeight={600}
+              color="info"
             >
-              {new Intl.NumberFormat("en-IN", {
-                style: "currency",
-                currency: "INR",
-                maximumFractionDigits: 0,
-              }).format(
-                gstCalculation(
-                  data?.basePremium || 0,
-                  data?.gst2ndyearonward || 0
-                )?.gstAmount || 0
-              )}
+              {data?.lead_source?.split("-").join(" ")}
             </Typography>
           </Grid2>
-          <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
+          <Grid2 size={{ xs: 12, sm: 4, md: 3 }}>
             <Typography
               variant="body2"
               component={"p"}
               sx={{ cursor: "default" }}
               color="text.secondary"
               fontWeight={400}
-              textTransform={"capitalize"}
               gutterBottom
             >
-              Final Premium
+              Insurance Planner
             </Typography>
             <Typography
               variant="body1"
               textTransform={"capitalize"}
-              color="success"
               fontWeight={600}
+              color="info"
             >
-              {new Intl.NumberFormat("en-IN", {
-                style: "currency",
-                currency: "INR",
-                maximumFractionDigits: 0,
-              }).format(
-                finalPremiumCalculation(
-                  data?.basePremium || 0,
-                  gstCalculation(
-                    data?.basePremium || 0,
-                    data?.gst2ndyearonward || 0
-                  )?.gstAmount
-                ) || 0
-              )}
+              {data?.insurance_planner}
+            </Typography>
+          </Grid2>
+          <Grid2 size={{ xs: 12, sm: 4, md: 3 }}>
+            <Typography
+              variant="body2"
+              component={"p"}
+              sx={{ cursor: "default" }}
+              color="text.secondary"
+              fontWeight={400}
+              gutterBottom
+            >
+              SRM
+            </Typography>
+            <Typography variant="body1" fontWeight={600} color="info">
+              {data?.srm}
             </Typography>
           </Grid2>
         </Grid2>
@@ -688,7 +780,7 @@ const Overviews = ({ data }) => {
   );
 };
 
-export default Overviews;
+export default HOverviews;
 
 const discountCalculation = (basePremium, discount) => {
   // Calculate the discount amount and return the final premium
@@ -758,4 +850,10 @@ const gstCalculation = (basePremium, gst) => {
 
 const finalPremiumCalculation = (discountedPremium, gst) => {
   return parseFloat(discountedPremium || 0) + parseFloat(gst || 0);
+};
+
+const handleSubtract = (a, b) => {
+  let a1 = parseInt(a);
+  let b1 = parseInt(b);
+  return a1 - b1;
 };

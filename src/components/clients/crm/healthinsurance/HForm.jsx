@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
+  Card,
+  CardContent,
   Divider,
   Grid2,
   List,
@@ -10,6 +12,9 @@ import {
   ListItemText,
   Paper,
   Typography,
+  CardHeader,
+  Avatar,
+  IconButton,
 } from "@mui/material";
 
 import InputWithValidation from "../../../forms/components/InputWithValidation"; // Ensure this path is correct
@@ -28,7 +33,48 @@ import {
 } from "firebase/firestore";
 import useEncryptedSessionStorage from "../../../../hooks/useEncryptedSessionStorage";
 import { useNavigate } from "react-router-dom";
+import { validate } from "uuid";
 
+const formKey = {
+  cin: "",
+  proposer_name: "",
+  policy_category: "",
+  policy_category_plan: "",
+  insured: [],
+  policy_no: "",
+  policy_at_start: "",
+  start_date: "",
+  policy_since: "",
+  plan_name: "",
+  cover_type: "",
+  tenure: "",
+  base_premium: 0,
+  with_gst_premium: 0,
+  payment_mode: "",
+  sum_assured: "",
+  company: "",
+  frequency_payment: "",
+  next_renewal_date: "",
+  existing_illness: "",
+  hurdles_at_claim: "",
+  exclusion: "",
+  comment_from_client: "",
+  comment_from_rm: "",
+  action: "",
+  sourcing: "",
+  lead_source: "",
+  sourcing_enivesh_rm: "",
+  sourcing_enivesh_officer: "",
+  benifits: [],
+  revenue: "",
+  commission_statement: "",
+  renewal_amount: "",
+  client_expenses: "",
+  partner_expenses: "",
+  gst: 0,
+  hurdlesat_claim: "",
+  company_rm: [],
+};
 const fetchData = async (id) => {
   try {
     const response = await axios.get(
@@ -46,54 +92,191 @@ const fetchData = async (id) => {
   }
 };
 
-const formKey = {
-  cin: "",
-  proposerName: "",
-  insured: [],
+const groupOption = [
+  {
+    name: "Group Mediclaim",
+    value: "Group Mediclaim",
+  },
+  {
+    name: "Group Personal Accident",
+    value: "Group Personal Accident",
+  },
+];
+const retailOption = [
+  {
+    name: "Mediclaim",
+    value: "Mediclaim",
+  },
+  {
+    name: "Personal Accident",
+    value: "Personal Accident",
+  },
+  {
+    name: "Critical Illness",
+    value: "Critical Illness",
+  },
+];
 
-  policyNumber: "",
-  policyatStart: "",
-  startDate: "",
-  policySince: "",
-  planName: "",
-  coverType: "",
-  tenure: "",
-  basePremium: 0,
-  withGstPremium: 0,
-  paymentMode: "",
-  sumAssured: "",
-  company: "",
-  frequencyPayment: "",
-  renewalDate: "",
-  existingIllness: "",
-  hurdlesAtClaim: "",
-  exclusion: "",
-  commentFromClient: "",
-  commentFromRm: "",
-  action: "",
-  sourcing: "",
-  leadSource: "",
-  srm: "",
-  insurancePlanner: "",
-  riders: [],
+const sharedFields = [
+  "policy_no",
+  "start_date",
+  "company",
+  "sum_assured",
+  "base_premium",
+  "next_renewal_date",
+  "frequency_payment",
+  "payment_mode",
+  "gst",
+  "policy_status",
+];
+
+const fieldsByCategory = {
+  "Critical Illness": [
+    ...sharedFields,
+    "policy_at_start",
+    "policy_since",
+    "plan_name",
+    "cover_type",
+    "tenure",
+  ],
+  Mediclaim: [
+    ...sharedFields,
+    "with_gst_premium",
+    "policy_at_start",
+    "policy_since",
+    "plan_name",
+    "cover_type",
+    "tenure",
+    "no_claim_bonus",
+  ],
+  "Personal Accident": [
+    ...sharedFields,
+    "policy_at_start",
+    "policy_since",
+    "plan_name",
+    "cover_type",
+    "tenure",
+    "existing_illness",
+  ],
+  "Group Mediclaim": [
+    ...sharedFields,
+    "plan_type",
+    "policy_documents",
+    "end_date",
+    "premium",
+    "members_covered",
+    "last_year_claim",
+    "corporate_buffer",
+  ],
+  "Group Personal Accident": [
+    ...sharedFields,
+    "plan_type",
+    "end_date",
+    "premium",
+    "plan",
+  ],
 };
+
+const dateFields = [
+  "start_date",
+  "end_date",
+  "next_renewal_date",
+  "policy_since",
+];
+const numaricFields = ["base_premium", "gst", "sum_assured"];
+const textArea = ["no_claim_bonus"];
+
+const selectFields = {
+  payment_mode: [
+    { name: "ECS Auto Debit" },
+    { name: "Cheque" },
+    { name: "Cash" },
+  ],
+  company: [
+    { name: "Care Health" },
+    { name: "TATA AIG" },
+    { name: "ICICI Lombard" },
+    { name: "SBI General " },
+    { name: "BAJAJ Allianz" },
+    { name: "Niva Bupa" },
+    { name: "Manipal Cigna" },
+    { name: "HDFC ERGO" },
+  ],
+  plan_type: [
+    { name: "Self Only" },
+    { name: "Floater With Parents" },
+    { name: "Floater Without Parents" },
+  ],
+  corporate_buffer: [{ name: "Yes" }, { name: "No" }],
+  frequency_payment: [{ name: "Annual" }, { name: "Half-Yearly " }],
+  tenure: [
+    { name: "1 Year" },
+    { name: "2 Year" },
+    { name: "3 Year" },
+    { name: "4 Year" },
+    { name: "5 Year" },
+  ],
+  policy_at_start: [
+    { name: "New" },
+    { name: "Renewal" },
+    { name: "Portibilty" },
+  ],
+  cover_type: [
+    { name: "Individual " },
+    { name: "Floater" },
+    { name: "Multi-Individual" },
+  ],
+  policy_status: [
+    { name: "Active" },
+    { name: "Grace Period" },
+    { name: "Lapsed" },
+  ],
+};
+
+const Requred = [
+  "policy_no",
+  "start_date",
+  "company",
+  "sum_assured",
+  "base_premium",
+  "next_renewal_date",
+  "frequency_payment",
+  "payment_mode",
+  "gst",
+  "policy_status",
+  "cover_type",
+  "tenure",
+  "plan_type",
+  "premium",
+  "end_date",
+];
+
 const HForm = () => {
   const navigate = useNavigate();
   const [riders, setRiders] = useState([]);
-  const [lfm, setLFM] = useEncryptedSessionStorage("lfm", { ...formKey });
-  const [fetchedLFM, setFetchedLFM] = useEncryptedSessionStorage("fe-lfm", {});
+  const [lfm, setLFM] = useEncryptedSessionStorage("hfm", null);
+  const [fetchedLFM, setFetchedLFM] = useEncryptedSessionStorage(
+    "fe-hfm",
+    null
+  );
   const [isSuggested, setIsSuggested] = useState(false);
-  const [insured, setInsured] = useState([]);
+  const [companyRM, setCompanyRM] = useState([]);
+  const [companyRMData, setCompanyRMData] = useState({
+    rm_contact: "",
+    rm_email: "",
+    rm_name: "",
+    rm_service_type: "",
+  });
   const [rider, setRider] = useState({
-    addedBenefitsPremium: "",
-    addedBenefits: "",
+    added_benefits_premium: "",
+    added_benefits: "",
   });
   const [totalRiderPremium, setTotalRiderPremium] = useState({
-    trPremium: 0,
-    trPremiumWithGST: 0,
+    tbPremium: 0,
+    tbPremiumWithGST: 0,
     tgst: 0,
   });
-  const [formData, setFormData] = useState({ ...formKey });
+  const [formData, setFormData] = useState(null);
 
   const [isFetchedUser, setIsFetchedUser] = useState(null);
   const [members, setMembers] = useState(null);
@@ -105,8 +288,8 @@ const HForm = () => {
     if (field === "renewalDate") {
       setIsSuggested(false);
     }
-    if (field === "proposerName") {
-      if (value.length >= 4) {
+    if (field === "proposer_name") {
+      if (value.length >= 4 && !formData?.cin) {
         searchByName();
       }
     }
@@ -130,16 +313,21 @@ const HForm = () => {
 
     const raw = JSON.stringify({
       collectionName: "health_insurance_policies",
-      docId: formData?.policyNumber,
+      docId: formData?.policy_no,
       data: {
         ...formData,
         branch: isFetchedUser?.branch,
-        clientType: isFetchedUser?.clientType,
-        panNumber: isFetchedUser?.panNumber,
-        primaryNumber: isFetchedUser?.primaryNumber,
+        cleint_name:
+          isFetchedUser?.firmName ||
+          `${isFetchedUser?.fname} ${isFetchedUser?.lname}`,
+
+        client_type: isFetchedUser?.clientType,
+        pan_number: isFetchedUser?.panNumber,
+        primary_number: isFetchedUser?.primaryNumber,
         gender: isFetchedUser?.gender,
         dob: isFetchedUser?.dob,
         email: isFetchedUser?.email,
+        group_name: isFetchedUser?.groupName || null,
       },
     });
 
@@ -150,35 +338,58 @@ const HForm = () => {
       redirect: "follow",
     };
 
-    if (formData?.cin && formData?.proposerName && formData?.policyNumber) {
-      fetch(`https://db.enivesh.com/firestore/set`, requestOptions)
-        .then((response) => response.text())
-        .then((result) => {
-          alert("Added");
-          setFormData({ ...formKey });
-          setRiders([]);
-          setIsFetchedUser(null);
-          setLFM({ ...formKey });
-          setFetchedLFM(null);
-        })
-        .catch((error) => console.error(error));
+    if (
+      formData?.cin &&
+      formData?.policy_no &&
+      formData?.proposer_name &&
+      formData?.policy_category &&
+      formData?.policy_category_plan
+    ) {
+      try {
+        fetch(`https://db.enivesh.com/firestore/set`, requestOptions)
+          .then((response) => response.text())
+          .then((result) => {
+            alert("Added");
+            setFormData(null);
+            setRiders([]);
+            setCompanyRM([]);
+            setIsFetchedUser(null);
+            setLFM(null);
+            setFetchedLFM(null);
+            setRider({
+              added_benefits: "",
+              added_benefits_premium: "",
+            });
+            setCompanyRMData({
+              rm_contact: "",
+              rm_email: "",
+              rm_name: "",
+              rm_service_type: "",
+            });
+            setTotalRiderPremium({
+              tbPremium: 0,
+              tbPremiumWithGST: 0,
+              tgst: 0,
+            });
+          })
+          .catch((error) => console.error(error));
+      } catch (error) {
+        console.error("error: ", error);
+      }
     } else {
-      alert("Please fill all fields before submitting.");
+      alert("Add Required data!");
     }
   };
   const hndleRider = (field, value) => {
     setRider({ ...rider, [field]: value });
   };
 
-  const hndleInsured = (field, value) => {
-    setInsured(value);
-  };
   const handleAddRider = () => {
-    if (rider?.addedBenefits && rider?.addedBenefitsPremium) {
+    if (rider?.added_benefits && rider?.added_benefits_premium) {
       setRiders((prevRiders) => [...prevRiders, { ...rider }]);
       setRider({
-        addedBenefits: "",
-        addedBenefitsPremium: "",
+        added_benefits_premium: "",
+        added_benefits: "",
       });
     } else {
       alert("Please fill all rider fields before adding.");
@@ -194,27 +405,31 @@ const HForm = () => {
       if (riders?.length > 0) {
         const sum = riders.reduce(
           (accumulator, item) =>
-            accumulator + parseInt(item?.riderPremium || 0),
+            accumulator + parseInt(item?.added_benefits_premium || 0),
           0
         );
         setTotalRiderPremium({
-          trPremium: sum,
-          trPremiumWithGST: parseFloat(sum * 1.18).toFixed(2),
+          tbPremium: sum,
+          tbPremiumWithGST: parseFloat(sum * 1.18).toFixed(2),
           tgst: parseFloat(sum * 0.18).toFixed(2),
         });
       } else {
         setTotalRiderPremium({
-          trPremium: 0,
-          trPremiumWithGST: 0,
+          tbPremium: 0,
+          tbPremiumWithGST: 0,
           tgst: 0,
         });
       }
     };
-    setFormData({ ...formData, riders: riders });
-
-    calculateRiderPremium();
+    if (riders?.length > 0) {
+      setFormData({ ...formData, benifits: riders });
+      calculateRiderPremium();
+    }
   }, [riders]);
 
+  useEffect(() => {
+    setFormData({ ...formData, company_rm: companyRM });
+  }, [companyRM]);
   useEffect(() => {
     const fetchUserData = async () => {
       if (formData?.cin && !isFetchedUser) {
@@ -224,14 +439,17 @@ const HForm = () => {
           setIsFetchedUser(user);
           setFormData((prevData) => ({
             ...prevData,
-            proposerName: user?.firmName || `${user?.fname} ${user?.lname}`,
+            proposer_name: user?.firmName || `${user?.fname} ${user?.lname}`,
           }));
           const familyList = flattenData(user?.members?.children || []);
           setMembers([
             {
               name: user?.fname
                 ? `${user?.fname} ${user?.lname}`
-                : `${isFetchedUser?.fname} ${isFetchedUser?.lname}` || "",
+                : `${isFetchedUser?.fname} ${isFetchedUser?.lname}` ||
+                  user?.firmName
+                ? `${user?.firmName} `
+                : `${isFetchedUser?.firmName} ` || "not set",
               id: 0,
               self: true,
               attributes: {
@@ -248,7 +466,7 @@ const HForm = () => {
         if (isFetchedUser) {
           setFormData((prevData) => ({
             ...prevData,
-            proposerName:
+            proposer_name:
               isFetchedUser?.firmName ||
               `${isFetchedUser?.fname} ${isFetchedUser?.lname}`,
           }));
@@ -258,7 +476,7 @@ const HForm = () => {
           setMembers([
             {
               name:
-                isFetchedUser?.fname ||
+                isFetchedUser?.firmName ||
                 `${isFetchedUser?.fname} ${isFetchedUser?.lname}` ||
                 "",
               id: 0,
@@ -282,20 +500,20 @@ const HForm = () => {
   }, [formData?.cin, isFetchedUser]);
 
   useEffect(() => {
-    if (formData?.startDate) {
+    if (formData?.start_date) {
       setIsSuggested(true);
-      const [y, m, d] = formData?.startDate?.split("-");
+      const [y, m, d] = formData?.start_date?.split("-");
       const renewDate = `${parseInt(y) + 1}-${m}-${d}`;
       setFormData((prevData) => ({ ...prevData, renewalDate: renewDate }));
     }
-  }, [formData?.startDate]);
+  }, [formData?.start_date]);
 
   const calculateWithPremium = (base = 0, gst = 0) => {
     let newBase = parseFloat(base);
     let newGST = parseInt(gst) / 100;
 
     let WGSTP = newBase + newBase * newGST;
-    setFormData({ ...formData, withGstPremium: WGSTP });
+    setFormData({ ...formData, with_gst_premium: WGSTP });
     return WGSTP;
   };
 
@@ -307,14 +525,14 @@ const HForm = () => {
       const q = query(
         usersRef,
         orderBy("fname"),
-        startAt(formData?.proposerName),
-        endAt(formData?.proposerName + "\uf8ff")
+        startAt(formData?.proposer_name),
+        endAt(formData?.proposer_name + "\uf8ff")
       );
       const q2 = query(
         usersRef,
         orderBy("firmName"),
-        startAt(formData?.proposerName),
-        endAt(formData?.proposerName + "\uf8ff")
+        startAt(formData?.proposer_name),
+        endAt(formData?.proposer_name + "\uf8ff")
       );
 
       const snapshot = await getDocs(q);
@@ -350,19 +568,48 @@ const HForm = () => {
   }, [isFormClear, formData]);
 
   const handeleFormClear = () => {
-    setLFM({ ...formKey });
+    setLFM(null);
     setFetchedLFM(null);
-    setFormData({ ...formKey });
+    setFormData(null);
     setRiders([]);
     setMembers([]);
     setIsFetchedUser(null);
+    setTotalRiderPremium({
+      tbPremium: 0,
+      tbPremiumWithGST: 0,
+      tgst: 0,
+    });
   };
 
   useEffect(() => {
-    // if (formData?.basePremium && formData?.gst) {
-    calculateWithPremium(formData?.basePremium, formData?.gst);
-    // }
-  }, [formData?.basePremium, formData?.gst]);
+    calculateWithPremium(formData?.base_premium, formData?.gst);
+  }, [formData?.base_premium, formData?.gst]);
+
+  const hndleCompanyRM = (field, value) => {
+    setCompanyRMData({ ...companyRMData, [field]: value });
+  };
+
+  const handleAddCompanyRM = () => {
+    if (
+      companyRMData?.rm_contact &&
+      companyRMData?.rm_email &&
+      companyRMData?.rm_service_type
+    ) {
+      setCompanyRM((precompanyrm) => [...precompanyrm, { ...companyRMData }]);
+      setCompanyRMData({
+        rm_contact: "",
+        rm_email: "",
+        rm_name: "",
+        rm_service_type: "",
+      });
+    } else {
+      alert("Please fill all CompanyRM fields before adding.");
+    }
+  };
+
+  const handleRemoveCompanyRM = (index) => {
+    setCompanyRM((companyRM) => companyRM.filter((_, i) => i !== index));
+  };
 
   return (
     <Box
@@ -404,10 +651,10 @@ const HForm = () => {
         </HeadlineTag>
 
         <Grid2 container spacing={2} mt={1}>
-          <Grid2 size={{ xs: 12, sm: 6, md: 2 }}>
+          <Grid2 size={{ xs: 12, sm: 6, md: 1 }}>
             <InputWithValidation
               label="CIN"
-              value={formData.cin}
+              value={formData?.cin}
               onChange={(value) => handleChange("cin", value)}
               onValidate={(error) => handleValidation("cin", error)}
               required
@@ -416,10 +663,12 @@ const HForm = () => {
           <Grid2 size={{ xs: 12, sm: 6, md: 3 }} position={"relative"}>
             <InputWithValidation
               label="Proposer Name"
-              value={formData.proposerName}
-              onChange={(value) => handleChange("proposerName", value)}
-              onValidate={(error) => handleValidation("proposerName", error)}
+              value={formData?.proposer_name}
+              onChange={(value) => handleChange("proposer_name", value)}
+              onValidate={(error) => handleValidation("proposer_name", error)}
               required
+              type={members?.length > 0 ? "select" : "text"}
+              options={members || []}
             />
 
             <Box
@@ -448,7 +697,7 @@ const HForm = () => {
                       onClick={() => {
                         setFormData({
                           ...formData,
-                          proposerName:
+                          proposer_name:
                             value?.firmName ||
                             `${value?.fname} ${value?.lname}`,
                           cin: value?.cin,
@@ -474,7 +723,7 @@ const HForm = () => {
               </List>
             </Box>
           </Grid2>
-          <Grid2 size={{ xs: 12, md: 6 }}>
+          <Grid2 size={{ xs: 12, md: 4 }}>
             <InputWithValidation
               label="Insured"
               onChange={(value) => handleChange("insured", value)}
@@ -482,7 +731,53 @@ const HForm = () => {
               type="select"
               value={formData?.insured}
               multiple
+              required
               options={members || []}
+            />
+          </Grid2>
+          <Grid2 size={{ xs: 12, md: 2 }}>
+            <InputWithValidation
+              required
+              label="Policy Category"
+              onChange={(value) => handleChange("policy_category", value)}
+              onValidate={(error) => handleValidation("policy_category", error)}
+              type="select"
+              value={formData?.policy_category}
+              options={
+                [
+                  {
+                    name: "retail",
+                    label: "Retail",
+                  },
+                  {
+                    name: "group",
+                    label: "Group",
+                  },
+                ] || []
+              }
+            />
+          </Grid2>
+          <Grid2 size={{ xs: 12, md: 2 }}>
+            <InputWithValidation
+              required
+              label={`Policy Type ${
+                formData?.policy_category === "group"
+                  ? "(Group)"
+                  : formData?.policy_category === "retail"
+                  ? "(Retail)"
+                  : ""
+              }`}
+              onChange={(value) => handleChange("policy_category_plan", value)}
+              onValidate={(error) =>
+                handleValidation("policy_category_plan", error)
+              }
+              type="select"
+              value={formData?.policy_category_plan}
+              options={
+                formData?.policy_category === "group"
+                  ? groupOption
+                  : retailOption || []
+              }
             />
           </Grid2>
         </Grid2>
@@ -524,6 +819,21 @@ const HForm = () => {
                   component={"p"}
                 >
                   {`${isFetchedUser?.gender} `}
+                </Typography>
+              </Grid2>
+            )}
+            {isFetchedUser?.groupName && (
+              <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+                <Typography color="grey" variant="caption" component={"p"}>
+                  Group Name
+                </Typography>
+                <Typography
+                  color=""
+                  textTransform={"capitalize"}
+                  variant="caption"
+                  component={"p"}
+                >
+                  {`${isFetchedUser?.groupName} `}
                 </Typography>
               </Grid2>
             )}
@@ -585,219 +895,103 @@ const HForm = () => {
           Policy Details
         </HeadlineTag>
         <Grid2 container spacing={2}>
-          <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
-            <InputWithValidation
-              label="Policy Number"
-              value={formData.policyNumber}
-              onChange={(value) => handleChange("policyNumber", value)}
-              onValidate={(error) => handleValidation("policyNumber", error)}
-            />
-          </Grid2>
-          <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
-            <InputWithValidation
-              label="Policy at Start"
-              value={formData.policyatStart}
-              onChange={(value) => handleChange("policyatStart", value)}
-              onValidate={(error) => handleValidation("policyatStart", error)}
-              type="date"
-            />
-          </Grid2>
+          {[...new Set(fieldsByCategory[formData?.policy_category_plan])].map(
+            (field) => {
+              const value = formData[field] || "";
 
-          <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
-            <InputWithValidation
-              label="Start Date"
-              value={formData.startDate}
-              onChange={(value) => handleChange("startDate", value)}
-              onValidate={(error) => handleValidation("startDate", error)}
-              type="date"
-            />
-          </Grid2>
-          <Grid2 size={{ xs: 12, md: 3 }}>
-            <InputWithValidation
-              label="Policy Since"
-              value={formData?.policySince}
-              onChange={(value) => handleChange("policySince", value)}
-              onValidate={(error) => handleValidation("policySince", error)}
-              type="date"
-            />
-          </Grid2>
-          <Grid2 size={{ xs: 12, md: 3 }}>
-            <InputWithValidation
-              label="Plan Name"
-              value={formData?.planName}
-              onChange={(value) => handleChange("planName", value)}
-              onValidate={(error) => handleValidation("planName", error)}
-              type="text"
-            />
-          </Grid2>
-          <Grid2 size={{ xs: 12, md: 3 }}>
-            <InputWithValidation
-              label="Cover Type "
-              value={formData?.coverType}
-              onChange={(value) => handleChange("coverType", value)}
-              onValidate={(error) => handleValidation("coverType", error)}
-              type="select"
-              options={[
-                {
-                  name: "Individual ",
-                  value: "Individual ",
-                },
-                {
-                  name: "Floater ",
-                  value: "Floater ",
-                },
-                {
-                  name: "Multi-Individual ",
-                  value: "Multi-Individual ",
-                },
-              ]}
-            />
-          </Grid2>
-          <Grid2 size={{ xs: 12, md: 3 }}>
-            <InputWithValidation
-              label="Tenure "
-              value={formData?.tenure}
-              onChange={(value) => handleChange("tenure", value)}
-              onValidate={(error) => handleValidation("tenure", error)}
-              type="select"
-              options={[
-                {
-                  name: "1 Year ",
-                  value: "1 Years ",
-                },
-                {
-                  name: "2 Years ",
-                  value: "2 Years ",
-                },
-                {
-                  name: "3 Years ",
-                  value: "3 Years ",
-                },
-                {
-                  name: "4 Years ",
-                  value: "4 Years ",
-                },
-                {
-                  name: "5 Years ",
-                  value: "5 Years ",
-                },
-              ]}
-            />
-          </Grid2>
-          <Grid2 size={{ xs: 12, md: 3 }}>
-            <InputWithValidation
-              label="Base Premium"
-              value={formData.basePremium}
-              onChange={(value) => handleChange("basePremium", value)}
-              onValidate={(error) => handleValidation("basePremium", error)}
-              type="number"
-            />
-          </Grid2>
-
-          <Grid2 size={{ xs: 12, md: 3 }}>
-            <InputWithValidation
-              label="GST (%)"
-              value={formData?.gst}
-              onChange={(value) => handleChange("gst", value)}
-              onValidate={(error) => handleValidation("gst", error)}
-              type="number"
-            />
-          </Grid2>
-          <Grid2 size={{ xs: 12, md: 3 }}>
-            <InputWithValidation
-              label=" With GST Premium"
-              value={formData?.withGstPremium}
-              onChange={(value) => handleChange("withGstPremium", value)}
-              onValidate={(error) => handleValidation("withGstPremium", error)}
-              type="number"
-            />
-          </Grid2>
-
-          <Grid2 size={{ xs: 12, md: 3 }}>
-            <InputWithValidation
-              label="Payment Mode"
-              value={formData.paymentMode}
-              onChange={(value) => handleChange("paymentMode", value)}
-              onValidate={(error) => handleValidation("paymentMode", error)}
-              type="select"
-              options={[
-                {
-                  value: "ECS-Auto-Debit",
-                  label: "ECS - Auto Debit",
-                },
-                {
-                  value: "Cash/Cheque",
-                  label: "Cash / Cheque",
-                },
-              ]}
-            />
-          </Grid2>
-          <Grid2 size={{ xs: 12, md: 3 }}>
-            <InputWithValidation
-              label="Sum Assured"
-              value={formData.sumAssured}
-              onChange={(value) => handleChange("sumAssured", value)}
-              onValidate={(error) => handleValidation("sumAssured", error)}
-              type="number"
-            />
-          </Grid2>
-          <Grid2 size={{ xs: 12, md: 3 }}>
-            <InputWithValidation
-              label="Company"
-              value={formData.company}
-              onChange={(value) => handleChange("company", value)}
-              onValidate={(error) => handleValidation("company", error)}
-              type="select"
-              options={[
-                {
-                  label: "HDFC Life",
-                  value: "HDFC Life",
-                },
-                {
-                  name: "ICICI Prudential Life",
-                  value: "ICICI Prudential Life",
-                },
-                {
-                  label: "Max Life",
-                  value: "Max Life",
-                },
-                {
-                  label: "Bajaj Allianz Life",
-                  value: "Bajaj Allianz Life",
-                },
-                {
-                  name: "PNB Metlife ",
-                  value: "PNB Metlife ",
-                },
-                {
-                  label: "LIC",
-                  value: "LIC",
-                },
-              ]}
-            />
-          </Grid2>
-
-          <Grid2 size={{ xs: 12, md: 3 }}>
-            <InputWithValidation
-              label="Frequency Payment"
-              value={formData.frequencyPayment}
-              onChange={(value) => handleChange("frequencyPayment", value)}
-              onValidate={(error) =>
-                handleValidation("frequencyPayment", error)
+              if (dateFields.includes(field)) {
+                return (
+                  <Grid2 key={field} size={{ xs: 12, md: 3 }}>
+                    <InputWithValidation
+                      label={field?.split("_")?.join(" ")}
+                      value={value}
+                      onChange={(value) => handleChange(field, value)}
+                      onValidate={(error) => handleValidation(field, error)}
+                      type="date"
+                      required={Requred.includes(field)}
+                    />
+                  </Grid2>
+                );
               }
-              type="select"
-              options={[
-                {
-                  value: "half-yearly",
-                  label: "Half-Yearly",
-                },
-                {
-                  value: "Annually",
-                  label: "Annually",
-                },
-              ]}
-            />
-          </Grid2>
+
+              if (numaricFields.includes(field)) {
+                return (
+                  <Grid2 key={field} size={{ xs: 12, md: 3 }}>
+                    <InputWithValidation
+                      label={field?.split("_")?.join(" ")}
+                      value={value}
+                      required={Requred.includes(field)}
+                      onChange={(value) => handleChange(field, value)}
+                      onValidate={(error) => handleValidation(field, error)}
+                      type="number"
+                    />
+                  </Grid2>
+                );
+              }
+              if (textArea.includes(field)) {
+                return (
+                  <Grid2 key={field} size={{ xs: 12, md: 3 }}>
+                    <InputWithValidation
+                      label={field?.split("_")?.join(" ")}
+                      value={value}
+                      onChange={(value) => handleChange(field, value)}
+                      onValidate={(error) => handleValidation(field, error)}
+                      type="text"
+                      maxChars={500}
+                      multiline
+                      required={Requred.includes(field)}
+                      maxRows={5}
+                    />
+                  </Grid2>
+                );
+              }
+
+              if (Object.keys(selectFields).includes(field)) {
+                return (
+                  <Grid2 size={{ xs: 12, md: 3 }} key={field}>
+                    <InputWithValidation
+                      label={field?.split("_")?.join(" ")}
+                      value={value}
+                      required={Requred.includes(field)}
+                      onChange={(value) => handleChange(field, value)}
+                      onValidate={(error) => handleValidation(field, error)}
+                      type="select"
+                      options={selectFields[field] || []}
+                    />
+                  </Grid2>
+                );
+              }
+
+              return (
+                <Grid2 size={{ xs: 12, md: 3 }} key={field}>
+                  <InputWithValidation
+                    required={Requred.includes(field)}
+                    label={field?.split("_")?.join(" ")}
+                    value={value}
+                    onChange={(value) => handleChange(field, value)}
+                    onValidate={(error) => handleValidation(field, error)}
+                    type="text"
+                    maxChars={field === "no_claim_bonus" && 250}
+                  />
+                </Grid2>
+              );
+            }
+          )}
+          {formData?.corporate_buffer === "Yes" && (
+            <Grid2 size={{ xs: 12, md: 3 }}>
+              <InputWithValidation
+                label={"Corporate Buffer Vlaue"}
+                value={formData?.corporate_buffer_value}
+                onChange={(value) =>
+                  handleChange("corporate_buffer_value", value)
+                }
+                onValidate={(error) =>
+                  handleValidation("corporate_buffer_value", error)
+                }
+                type="text"
+              />
+            </Grid2>
+          )}
         </Grid2>
       </Paper>
       {/* ======================benefits=====================================================benefits========================================== */}
@@ -811,12 +1005,41 @@ const HForm = () => {
           title={"What it covers and how it covers			 "}
           flexWrap={"wrap"}
         >
-          <Grid2
-            container
-            spacing={1}
-            width={"100%"}
-            wrap="wrap-reverse"
-          ></Grid2>
+          <Grid2 container spacing={1} width={"100%"} wrap="wrap-reverse">
+            <Grid2 size={{ xs: 12, sm: 4, md: 3 }}>
+              {" "}
+              <Typography variant="caption" title="Total Rider Premium">
+                All Benifits :{" "}
+                <Typography variant="caption" fontWeight={600} color="success">
+                  {riders?.length}
+                </Typography>
+              </Typography>
+            </Grid2>
+            <Grid2 size={{ xs: 12, sm: 4, md: 3 }}>
+              {" "}
+              <Typography variant="caption" title="Total Rider Premium">
+                All Benifits Premium :{" "}
+                <Typography variant="caption" fontWeight={600} color="success">
+                  {new Intl.NumberFormat("en-IN", {
+                    style: "currency",
+                    currency: "INR",
+                  }).format(totalRiderPremium?.tbPremium)}
+                </Typography>
+              </Typography>
+            </Grid2>
+            <Grid2 size={{ xs: 12, sm: 4, md: 3 }}>
+              {" "}
+              <Typography variant="caption" title="Total Rider Premium">
+                All Benifits Premium + GST (18%) :{" "}
+                <Typography variant="caption" fontWeight={600} color="success">
+                  {new Intl.NumberFormat("en-IN", {
+                    style: "currency",
+                    currency: "INR",
+                  }).format(totalRiderPremium?.tbPremiumWithGST)}
+                </Typography>
+              </Typography>
+            </Grid2>
+          </Grid2>
         </HeadlineTag>
         <Grid2 container spacing={1}>
           {riders?.map((rider, index) => (
@@ -847,10 +1070,10 @@ const HForm = () => {
                     <InputWithValidation
                       readOnly={true}
                       label="Added Benefits"
-                      value={rider?.addedBenefits}
-                      onChange={(value) => hndleRider("addedBenefits", value)}
+                      value={rider?.added_benefits}
+                      onChange={(value) => hndleRider("added_benefits", value)}
                       onValidate={(error) =>
-                        handleValidation("addedBenefits", error)
+                        handleValidation("added_benefits", error)
                       }
                       type="text"
                     />
@@ -860,12 +1083,12 @@ const HForm = () => {
                     <InputWithValidation
                       label="Added Benefits Premium"
                       readOnly={true}
-                      value={rider?.addedBenefitsPremium}
+                      value={rider?.added_benefits_premium}
                       onChange={(value) =>
-                        hndleRider("addedBenefitsPremium", value)
+                        hndleRider("added_benefits_premium", value)
                       }
                       onValidate={(error) =>
-                        handleValidation("addedBenefitsPremium", error)
+                        handleValidation("added_benefits_premium", error)
                       }
                       type="number"
                     />
@@ -902,66 +1125,90 @@ const HForm = () => {
             <Grid2 size={{ xs: 12, sm: 4, md: 5 }}>
               <InputWithValidation
                 label="Added Benefits"
-                value={rider?.addedBenefits}
-                onChange={(value) => hndleRider("addedBenefits", value)}
-                onValidate={(error) => handleValidation("addedBenefits", error)}
+                value={rider?.added_benefits}
+                onChange={(value) => hndleRider("added_benefits", value)}
+                onValidate={(error) =>
+                  handleValidation("added_benefits", error)
+                }
                 type="select"
-                options={[
-                  {
-                    name: "Health Check Up",
-                    value: "Health Check Up ",
-                  },
-                  {
-                    name: "OPD Benefits ",
-                    value: "OPD Benefits  ",
-                  },
-                  {
-                    name: "Maternity Benefits ",
-                    value: "Maternity Benefits  ",
-                  },
-                  {
-                    name: "Fitness Benefits  ",
-                    value: "Fitness Benefits   ",
-                  },
-                  {
-                    name: "Dental OPD ",
-                    value: "Dental OPD  ",
-                  },
-                  {
-                    name: "International Coverage ",
-                    value: "International Coverage  ",
-                  },
-                  {
-                    name: "Air Ambulance ",
-                    value: "Air Ambulance  ",
-                  },
-                  {
-                    name: "Compassionate Travel",
-                    value: "Compassionate Travel ",
-                  },
-                  {
-                    name: "Consumable Coverage",
-                    value: "Consumable Coverage ",
-                  },
-                  {
-                    name: "Accident Death Benefit",
-                    value: "Accident Death Benefit ",
-                  },
-                  {
-                    name: "Hi-End Dignostic OPD",
-                    value: "Hi-End Dignostic OPD ",
-                  },
-                ]}
+                options={
+                  formData?.policy_category === "group"
+                    ? [
+                        {
+                          name: "Health Check Up",
+                        },
+                        {
+                          name: "OPD Benefits",
+                        },
+                        {
+                          name: "Robotic Procedures",
+                        },
+                        { name: "Fitness Benefits" },
+                        { name: "Air Ambulance" },
+                        { name: "Domicilary Coverage" },
+                        { name: "Organ Donar" },
+                        { name: "Day Care" },
+                        { name: "Auto Reacharge" },
+                      ]
+                    : [
+                        {
+                          name: "Health Check Up",
+                          value: "Health Check Up ",
+                        },
+                        {
+                          name: "OPD Benefits ",
+                          value: "OPD Benefits  ",
+                        },
+                        {
+                          name: "Maternity Benefits ",
+                          value: "Maternity Benefits  ",
+                        },
+                        {
+                          name: "Fitness Benefits  ",
+                          value: "Fitness Benefits   ",
+                        },
+                        {
+                          name: "Dental OPD ",
+                          value: "Dental OPD  ",
+                        },
+                        {
+                          name: "International Coverage ",
+                          value: "International Coverage  ",
+                        },
+                        {
+                          name: "Air Ambulance ",
+                          value: "Air Ambulance  ",
+                        },
+                        {
+                          name: "Compassionate Travel",
+                          value: "Compassionate Travel ",
+                        },
+                        {
+                          name: "Consumable Coverage",
+                          value: "Consumable Coverage ",
+                        },
+                        {
+                          name: "Accident Death Benefit",
+                          value: "Accident Death Benefit ",
+                        },
+                        {
+                          name: "Hi-End Dignostic OPD",
+                          value: "Hi-End Dignostic OPD ",
+                        },
+                      ]
+                }
               />
             </Grid2>
 
             <Grid2 size={{ xs: 8, sm: 4, md: 5 }}>
               <InputWithValidation
                 label="Added Benefits Premium"
-                value={rider?.addedBenefitsPremium}
-                onChange={(value) => hndleRider("addedBenefitsPremium", value)}
+                value={rider?.added_benefits_premium}
+                onChange={(value) =>
+                  hndleRider("added_benefits_premium", value)
+                }
                 onValidate={(error) =>
-                  handleValidation("addedBenefitsPremium", error)
+                  handleValidation("added_benefits_premium", error)
                 }
                 type="number"
               />
@@ -982,204 +1229,369 @@ const HForm = () => {
         </Box>
 
         <Divider sx={{ my: 2 }} />
-        <Paper
-          sx={{ p: 2, bgcolor: (theme) => theme.palette.background.default }}
-          variant="outlined"
-        >
+        {(formData?.policy_category_plan === "Mediclaim" ||
+          formData?.policy_category_plan === "Group Mediclaim") && (
+          <Paper
+            sx={{
+              p: 2,
+              bgcolor: (theme) => theme.palette.background.default,
+            }}
+            variant="outlined"
+          >
+            <HeadlineTag
+              variant="caption"
+              textAlign={"center"}
+              iconHide
+              my={1}
+              position={"space-between"}
+              title={"Base Benefits"}
+              flexWrap={"wrap"}
+            />
+            <Grid2 container spacing={2} my={1}>
+              <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+                <InputWithValidation
+                  label="Room Category Criteria"
+                  value={formData?.room_category_criteria}
+                  onChange={(value) =>
+                    handleChange("room_category_criteria", value)
+                  }
+                  onValidate={(error) =>
+                    handleValidation("room_category_criteria", error)
+                  }
+                  type="select"
+                  options={[
+                    {
+                      name: "2% & 4% of SI",
+                      value: "2% & 4% of SI",
+                    },
+                    {
+                      name: "Up to Single Private AC Room",
+                      value: "Up to Single Private AC Room",
+                    },
+                    {
+                      name: "No Sub Limit",
+                      value: "No Sub Limit",
+                    },
+                  ]}
+                />
+              </Grid2>
+              <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+                <InputWithValidation
+                  label="Pre Hopsitalisation"
+                  value={formData?.pre_hopsitalisation}
+                  onChange={(value) =>
+                    handleChange("pre_hopsitalisation", value)
+                  }
+                  onValidate={(error) =>
+                    handleValidation("pre_hopsitalisation", error)
+                  }
+                  type="select"
+                  options={[
+                    {
+                      name: "30 Days",
+                      value: "30 Days",
+                    },
+                    {
+                      name: "60 Days",
+                      value: "60 Days",
+                    },
+                    {
+                      name: "90 Days",
+                      value: "90 Days",
+                    },
+                  ]}
+                />
+              </Grid2>
+              <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+                <InputWithValidation
+                  label="Post Hospitalisation"
+                  value={formData?.post_hospitalisation}
+                  onChange={(value) =>
+                    handleChange("post_hospitalisation", value)
+                  }
+                  onValidate={(error) =>
+                    handleValidation("post_hospitalisation", error)
+                  }
+                  type="select"
+                  options={[
+                    {
+                      name: "60 Days",
+                      value: "60 Days",
+                    },
+                    {
+                      name: "90 Days",
+                      value: "90 Days",
+                    },
+                    {
+                      name: "180 Days",
+                      value: "180 Days",
+                    },
+                  ]}
+                />
+              </Grid2>
+            </Grid2>
+          </Paper>
+        )}
+      </Paper>
+      {/* //Company RM		=======================================================Company RM		=============== */}
+      {formData?.policy_category === "group" && (
+        <Paper elevation={0} sx={{ p: 2, mt: 2 }}>
           <HeadlineTag
             variant="caption"
             textAlign={"center"}
-            iconHide
             my={1}
-            position={"space-between"}
-            title={"Inbuilt Benefts"}
-            flexWrap={"wrap"}
-          />
-
-          <Grid2 container my={1} spacing={2}>
-            <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
-              <InputWithValidation
-                label="Auto Restoration"
-                value={formData?.autoRestoration}
-                onChange={(value) => handleChange("autoRestoration", value)}
-                onValidate={(error) =>
-                  handleValidation("autoRestoration", error)
-                }
-                type="text"
-              />
-            </Grid2>
-            <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
-              <InputWithValidation
-                label="Organ Donor"
-                value={formData?.organDonor}
-                onChange={(value) => handleChange("organDonor", value)}
-                onValidate={(error) => handleValidation("organDonor", error)}
-                type="text"
-              />
-            </Grid2>
-            <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
-              <InputWithValidation
-                label="Day Care"
-                value={formData?.dayCare}
-                onChange={(value) => handleChange("dayCare", value)}
-                onValidate={(error) => handleValidation("dayCare", error)}
-                type="text"
-              />
-            </Grid2>
-            <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
-              <InputWithValidation
-                label="Domicilliary"
-                value={formData?.domicilliary}
-                onChange={(value) => handleChange("domicilliary", value)}
-                onValidate={(error) => handleValidation("domicilliary", error)}
-                type="text"
-              />
-            </Grid2>
+            iconColor={"#00aeff"}
+          >
+            Company RM
+          </HeadlineTag>
+          <Grid2 container spacing={2}>
+            {companyRM?.map((item, i) => (
+              <Grid2 size={{ xs: 12, sm: 6, md: 3 }} key={i}>
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    p: 1,
+                    my: 2,
+                    bgcolor: (theme) => theme?.palette?.background?.default,
+                    position: "relative",
+                  }}
+                >
+                  <Typography
+                    variant="subtitle2"
+                    textTransform={"capitalize"}
+                    fontWeight={600}
+                    color="success"
+                    component={"h3"}
+                  >
+                    {item?.rm_name}
+                  </Typography>
+                  <Typography
+                    mt={0.5}
+                    variant="caption"
+                    textTransform={"capitalize"}
+                    component={"h3"}
+                    color="grey"
+                  >
+                    {item?.rm_email}
+                  </Typography>
+                  <Typography
+                    mt={0.5}
+                    variant="caption"
+                    textTransform={"capitalize"}
+                    component={"h3"}
+                    fontSize={8}
+                    fontWeight={600}
+                    color="black"
+                  >
+                    {item?.rm_contact}
+                  </Typography>
+                  <Typography
+                    mt={0.5}
+                    sx={{
+                      position: "absolute",
+                      right: 2,
+                      bottom: 2,
+                      fontSize: 8,
+                    }}
+                    variant="caption"
+                    textTransform={"capitalize"}
+                    component={"h3"}
+                    color="info"
+                    fontWeight={600}
+                  >
+                    {item?.rm_service_type}
+                  </Typography>
+                  <IconButton
+                    size="small"
+                    sx={{ position: "absolute", right: 2, top: 2 }}
+                    onClick={() => handleRemoveCompanyRM(i)}
+                  >
+                    <Close fontSize="10px" />
+                  </IconButton>
+                </Paper>
+              </Grid2>
+            ))}
           </Grid2>
-          <Divider sx={{ my: 2 }} />
-          <HeadlineTag
-            variant="caption"
-            textAlign={"center"}
-            iconHide
-            my={1}
-            position={"space-between"}
-            title={"Base Benefits"}
-            flexWrap={"wrap"}
-          />
-          <Grid2 container spacing={2} my={1}>
+          <Grid2 container spacing={2}>
             <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
               <InputWithValidation
-                label="Room Category Criteria"
-                value={formData?.roomCategoryCriteria}
-                onChange={(value) =>
-                  handleChange("roomCategoryCriteria", value)
-                }
-                onValidate={(error) =>
-                  handleValidation("roomCategoryCriteria", error)
-                }
-                type="select"
-                options={[
-                  {
-                    name: "2% & 4% of SI",
-                    value: "2% & 4% of SI",
-                  },
-                  {
-                    name: "Up to Single Private AC Room",
-                    value: "Up to Single Private AC Room",
-                  },
-                  {
-                    name: "No Sub Limit",
-                    value: "No Sub Limit",
-                  },
-                ]}
+                label="Name "
+                value={companyRMData?.rm_name}
+                onChange={(value) => hndleCompanyRM("rm_name", value)}
+                onValidate={(error) => handleValidation("rm_name", error)}
+                type="text"
               />
             </Grid2>
             <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
               <InputWithValidation
-                label="Pre Hopsitalisation"
-                value={formData?.preHopsitalisation}
-                onChange={(value) => handleChange("preHopsitalisation", value)}
-                onValidate={(error) =>
-                  handleValidation("preHopsitalisation", error)
-                }
-                type="select"
-                options={[
-                  {
-                    name: "30 Days",
-                    value: "30 Days",
-                  },
-                  {
-                    name: "60 Days",
-                    value: "60 Days",
-                  },
-                  {
-                    name: "90 Days",
-                    value: "90 Days",
-                  },
-                ]}
+                label="Contact"
+                value={companyRMData?.rm_contact}
+                onChange={(value) => hndleCompanyRM("rm_contact", value)}
+                onValidate={(error) => handleValidation("rm_contact", error)}
+                type="text"
               />
             </Grid2>
             <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
               <InputWithValidation
-                label="Post Hospitalisation"
-                value={formData?.postHospitalisation}
-                onChange={(value) => handleChange("postHospitalisation", value)}
+                label="Email"
+                value={companyRMData?.rm_email}
+                onChange={(value) => hndleCompanyRM("rm_email", value)}
+                onValidate={(error) => handleValidation("rm_email", error)}
+                type="email"
+              />
+            </Grid2>
+            <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
+              <InputWithValidation
+                label="Service Type"
+                value={companyRMData?.rm_service_type}
+                onChange={(value) => hndleCompanyRM("rm_service_type", value)}
                 onValidate={(error) =>
-                  handleValidation("postHospitalisation", error)
+                  handleValidation("rm_service_type", error)
                 }
                 type="select"
                 options={[
                   {
-                    name: "60 Days",
-                    value: "60 Days",
+                    name: "Sales",
                   },
-                  {
-                    name: "90 Days",
-                    value: "90 Days",
-                  },
-                  {
-                    name: "180 Days",
-                    value: "180 Days",
-                  },
+                  { name: "Service/Claims" },
+                  { name: "Intimate Claim" },
                 ]}
               />
+            </Grid2>
+            <Grid2 size={{ xs: 4, sm: 4, md: 2 }}>
+              <Button
+                variant="outlined"
+                sx={{ fontSize: 12 }}
+                color="info"
+                size="small"
+                startIcon={<Add fontSize="10px" />}
+                onClick={() => handleAddCompanyRM()}
+              >
+                Add
+              </Button>
             </Grid2>
           </Grid2>
         </Paper>
-      </Paper>
-
+      )}
       {/* //Special Condition		======================================================Special Condition		=============== */}
-      <Paper elevation={0} sx={{ p: 2, mt: 2 }}>
-        <HeadlineTag
-          variant="caption"
-          textAlign={"center"}
-          my={1}
-          iconColor={"#00aeff"}
-        >
-          Special Condition
-        </HeadlineTag>
-        <Grid2 container spacing={2}>
-          <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
-            <InputWithValidation
-              label="Existing Illness "
-              value={formData?.existingIllness}
-              onChange={(value) => handleChange("existingIllness", value)}
-              onValidate={(error) => handleValidation("existingIllness", error)}
-              type="text"
-              multiline
-              minRows={4}
-              maxRows={4}
-              maxChars={500}
-            />
-          </Grid2>
-          <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
-            <InputWithValidation
-              label="Hurdles at Claim "
-              value={formData?.hurdlesatClaim}
-              onChange={(value) => handleChange("hurdlesatClaim", value)}
-              onValidate={(error) => handleValidation("hurdlesatClaim", error)}
-              type="text"
-              multiline
-              maxRows={4}
-              maxChars={500}
-              minRows={4}
-            />
-          </Grid2>
-          <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
-            <InputWithValidation
-              label="Exclusion"
-              value={formData.exclusion}
-              onChange={(value) => handleChange("exclusion", value)}
-              onValidate={(error) => handleValidation("exclusion", error)}
-              type="text"
-              multiline
-              maxRows={4}
-              maxChars={500}
-              minRows={4}
-            />
-          </Grid2>
-        </Grid2>
-      </Paper>
+      {formData?.policy_category === "retail" &&
+        formData?.policy_category_plan === "Mediclaim" && (
+          <Paper elevation={0} sx={{ p: 2, mt: 2 }}>
+            <HeadlineTag
+              variant="caption"
+              textAlign={"center"}
+              my={1}
+              iconColor={"#00aeff"}
+            >
+              Special Condition
+            </HeadlineTag>
+            <Grid2 container spacing={2}>
+              <HeadlineTag variant="caption" textAlign={"center"} iconHide>
+                Hurdles at Claim
+              </HeadlineTag>
+              <Grid2 size={{ xs: 12 }}>
+                <Grid2 container spacing={2}>
+                  <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
+                    <InputWithValidation
+                      label="Co Payment"
+                      value={formData?.co_payment}
+                      onChange={(value) => handleChange("co_payment", value)}
+                      onValidate={(error) =>
+                        handleValidation("co_payment", error)
+                      }
+                      type="select"
+                      options={[
+                        {
+                          value: 5,
+                          label: "5%",
+                        },
+                        {
+                          value: 10,
+                          label: "10%",
+                        },
+                        {
+                          value: 15,
+                          label: "15%",
+                        },
+                        {
+                          value: 20,
+                          label: "20%",
+                        },
+                        {
+                          value: 25,
+                          label: "20%",
+                        },
+                        {
+                          value: 30,
+                          label: "30%",
+                        },
+                      ]}
+                    />
+                  </Grid2>
+                  <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
+                    <InputWithValidation
+                      label="Surgery Capping"
+                      value={formData?.surgery_capping}
+                      onChange={(value) =>
+                        handleChange("surgery_capping", value)
+                      }
+                      onValidate={(error) =>
+                        handleValidation("surgery_capping", error)
+                      }
+                      type="text"
+                      multiline
+                      maxRows={4}
+                      maxChars={200}
+                    />
+                  </Grid2>
+                  <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
+                    <InputWithValidation
+                      label="Deductible"
+                      value={formData?.deductible}
+                      onChange={(value) => handleChange("deductible", value)}
+                      onValidate={(error) =>
+                        handleValidation("deductible", error)
+                      }
+                      type="text"
+                      multiline
+                      maxRows={4}
+                      maxChars={200}
+                    />
+                  </Grid2>
+                </Grid2>
+              </Grid2>
+              <Grid2 size={{ xs: 12, sm: 6, md: 6 }}>
+                <InputWithValidation
+                  label="Existing Illness "
+                  value={formData?.existing_illness}
+                  onChange={(value) => handleChange("existing_illness", value)}
+                  onValidate={(error) =>
+                    handleValidation("existing_illness", error)
+                  }
+                  type="text"
+                  multiline
+                  minRows={4}
+                  maxRows={4}
+                  maxChars={500}
+                />
+              </Grid2>
+
+              <Grid2 size={{ xs: 12, sm: 6 }}>
+                <InputWithValidation
+                  label="Exclusion"
+                  value={formData?.exclusion}
+                  onChange={(value) => handleChange("exclusion", value)}
+                  onValidate={(error) => handleValidation("exclusion", error)}
+                  type="text"
+                  multiline
+                  maxRows={4}
+                  maxChars={500}
+                  minRows={4}
+                />
+              </Grid2>
+            </Grid2>
+          </Paper>
+        )}
 
       {/* =========================================================================Final Amount========================================================= */}
 
@@ -1197,10 +1609,10 @@ const HForm = () => {
           <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
             <InputWithValidation
               label="Comment from Client"
-              value={formData.commentFromClient}
-              onChange={(value) => handleChange("commentFromClient", value)}
+              value={formData?.comment_from_client}
+              onChange={(value) => handleChange("comment_from_client", value)}
               onValidate={(error) =>
-                handleValidation("commentFromClient", error)
+                handleValidation("comment_from_client", error)
               }
               type="text"
               multiline
@@ -1212,9 +1624,9 @@ const HForm = () => {
           <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
             <InputWithValidation
               label="Comment from RM "
-              value={formData.commentFromRm}
-              onChange={(value) => handleChange("commentFromRm", value)}
-              onValidate={(error) => handleValidation("commentFromRm", error)}
+              value={formData?.comment_from_rm}
+              onChange={(value) => handleChange("comment_from_rm", value)}
+              onValidate={(error) => handleValidation("comment_from_rm", error)}
               type="text"
               multiline
               maxRows={4}
@@ -1225,7 +1637,7 @@ const HForm = () => {
           <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
             <InputWithValidation
               label="Action"
-              value={formData.action}
+              value={formData?.action}
               onChange={(value) => handleChange("action", value)}
               onValidate={(error) => handleValidation("action", error)}
               type="text"
@@ -1251,7 +1663,7 @@ const HForm = () => {
           <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
             <InputWithValidation
               label="Sourcing"
-              value={formData.sourcing}
+              value={formData?.sourcing}
               onChange={(value) => handleChange("sourcing", value)}
               onValidate={(error) => handleValidation("sourcing", error)}
               type="select"
@@ -1271,9 +1683,9 @@ const HForm = () => {
             <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
               <InputWithValidation
                 label="Lead Source"
-                value={formData.leadSource}
-                onChange={(value) => handleChange("leadSource", value)}
-                onValidate={(error) => handleValidation("leadSource", error)}
+                value={formData?.lead_source}
+                onChange={(value) => handleChange("lead_source", value)}
+                onValidate={(error) => handleValidation("lead_source", error)}
                 type="select"
                 options={[
                   {
@@ -1307,7 +1719,7 @@ const HForm = () => {
           <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
             <InputWithValidation
               label="SRM"
-              value={formData.srm}
+              value={formData?.srm}
               onChange={(value) => handleChange("srm", value)}
               onValidate={(error) => handleValidation("srm", error)}
               type="text"
@@ -1317,12 +1729,12 @@ const HForm = () => {
           <Grid2 size={{ xs: 12, sm: 6, md: 3 }}>
             <InputWithValidation
               label="Insurance Planner"
-              value={formData.insurancePlanner}
-              onChange={(value) => handleChange("insurancePlanner", value)}
+              value={formData?.insurance_planner}
+              onChange={(value) => handleChange("insurance_planner", value)}
               onValidate={(error) =>
-                handleValidation("insurancePlanner", error)
+                handleValidation("insurance_planner", error)
               }
-              type="number"
+              type="text"
             />
           </Grid2>
         </Grid2>

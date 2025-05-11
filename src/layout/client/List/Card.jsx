@@ -1,6 +1,7 @@
 import React from "react";
 import { Typography, Avatar, Grid2, Paper, Divider } from "@mui/material";
-import { Stack, styled } from "@mui/system";
+import { Stack } from "@mui/system";
+import { getSmartAgoString } from "../../../firebase/utils/getFirebaseDate.js";
 
 const ClientDetailsCard = ({ client }) => {
   const {
@@ -12,10 +13,15 @@ const ClientDetailsCard = ({ client }) => {
     communication,
     avatarUrl,
     clientType,
+    status,
   } = client;
 
   return (
-    <Paper elevation={4} variant="outlined" sx={{ width: "100%" }}>
+    <Paper
+      elevation={4}
+      variant="outlined"
+      sx={{ width: "100%", position: "relative" }}
+    >
       <Grid2 container spacing={2} p={1}>
         <Grid2 size={{ xs: 12, sm: 4, md: 2.5 }} sx={{ cursor: "default" }}>
           <Stack
@@ -82,8 +88,12 @@ const ClientDetailsCard = ({ client }) => {
             justifyContent={"flex-start"}
             gap={2}
           >
-            <Typography variant="subtitle2" sx={{ cursor: "pointer" }}>
-              {communication?.permanentAddress?.slice(0, 20) + "..."}
+            <Typography variant="body2" sx={{ cursor: "pointer" }}>
+              {clientType === "group"
+                ? communication?.officeAddress?.slice(0, 30) + "..."
+                : communication?.permanentAddress
+                ? communication?.permanentAddress?.slice(0, 20) + "..."
+                : "Not Set"}
             </Typography>
           </Stack>
         </Grid2>{" "}
@@ -107,6 +117,19 @@ const ClientDetailsCard = ({ client }) => {
           </Stack>
         </Grid2>{" "}
       </Grid2>
+      <Typography
+        position={"absolute"}
+        fontSize={8}
+        px={0.5}
+        borderRadius={2}
+        fontWeight={600}
+        color={status === "updated" ? "info.dark" : "success.dark"}
+        top={1}
+        right={1}
+        textTransform={"uppercase"}
+      >
+        {getSmartAgoString(client?.updatedAt)} {status}
+      </Typography>
     </Paper>
   );
 };

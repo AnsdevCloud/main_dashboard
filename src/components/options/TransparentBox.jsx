@@ -18,6 +18,7 @@ const TransparentBox = ({
   labelText,
   children,
   onNavigate,
+  target,
   labelPadding,
   overflow,
   fontWeight,
@@ -72,7 +73,17 @@ const TransparentBox = ({
                   textAlign={"center"}
                   textTransform={textTransform}
                 >
-                  {rupeeLabal ? <>&#8377; {value?.toLocaleString()}</> : value}
+                  {rupeeLabal ? (
+                    <>
+                      {new Intl.NumberFormat("en-IN", {
+                        style: "currency",
+                        currency: "INR",
+                        maximumFractionDigits: 0,
+                      }).format(value || 0)}
+                    </>
+                  ) : (
+                    value
+                  )}
                 </Typography>
                 <Typography
                   component={"p"}
@@ -112,6 +123,8 @@ const TransparentBox = ({
             pointerEvents: onNavigate ? "auto" : "none",
           }}
           to={onNavigate || ""}
+          target={target || "_self"}
+          rel={target ? "noopener noreferrer" : ""}
           position={"relative"}
           width={fullWidth ? "100%" : width ? width : "auto"}
           height={fullHeight ? "100%" : height ? height : "auto"}
@@ -138,7 +151,17 @@ const TransparentBox = ({
                 textAlign={"center"}
                 textTransform={textTransform}
               >
-                {rupeeLabal ? <>&#8377; {value?.toLocaleString()}</> : value}
+                {rupeeLabal ? (
+                  <>
+                    {new Intl.NumberFormat("en-IN", {
+                      style: "currency",
+                      currency: "INR",
+                      maximumFractionDigits: 0,
+                    }).format(value || 0)}
+                  </>
+                ) : (
+                  value
+                )}
               </Typography>
               <Typography
                 component={"p"}

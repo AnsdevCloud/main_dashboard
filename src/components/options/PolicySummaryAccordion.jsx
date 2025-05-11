@@ -114,29 +114,41 @@ export default function PolicySummaryAccordion({ policyData }) {
                   bgcolor: "background.paper",
                   borderBottom: "1px solid grey.200",
                   borderColor: "divider",
+                  "&.Mui-expanded": {
+                    bgcolor: "background.paper",
+                  },
+                  "&:hover": {
+                    bgcolor: "background.default",
+                  },
                 }}
               >
-                <Typography
-                  fontWeight={500}
-                  color="primary.main"
-                  textTransform={"capitalize"}
-                  display={"flex"}
-                  component={"h4"}
-                  alignItems={"center"}
-                  gap={2}
-                  justifyContent={"space-between"}
+                <Link
+                  style={{ textDecoration: "none" }}
+                  to={`/crm/clients/${item}`}
                 >
-                  {proposerName}
                   <Typography
-                    component={"p"}
-                    color="text.secondary"
-                    fontSize={12}
+                    fontWeight={500}
+                    color="primary.main"
+                    textTransform={"capitalize"}
+                    display={"flex"}
+                    component={"h4"}
+                    sx={{ ":hover": { color: "info.dark" } }}
+                    alignItems={"center"}
+                    gap={2}
+                    justifyContent={"space-between"}
                   >
-                    {summary.policyNumbers.length > 0
-                      ? `(${summary.policyNumbers.length} Policies)`
-                      : ""}
+                    {proposerName}
+                    <Typography
+                      component={"p"}
+                      color="text.secondary"
+                      fontSize={12}
+                    >
+                      {summary.policyNumbers.length > 0
+                        ? `(${summary.policyNumbers.length} Policies)`
+                        : ""}
+                    </Typography>
                   </Typography>
-                </Typography>
+                </Link>
               </AccordionSummary>
 
               <AccordionDetails sx={{ bgcolor: "background.paper" }}>
@@ -159,6 +171,16 @@ export default function PolicySummaryAccordion({ policyData }) {
                       rgbColor="rgb(8, 155, 150)"
                       value={summary.totalBasePremium}
                       caption="Total Base Premium"
+                      captionSize={14}
+                    />
+                  </Grid2>
+                  <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
+                    <TransparentBox
+                      fontSize={22}
+                      fontWeight={700}
+                      rgbColor="rgb(8, 155, 150)"
+                      value={summary.totalGstAmount}
+                      caption="Total GST Amount"
                       captionSize={14}
                     />
                   </Grid2>
@@ -205,7 +227,18 @@ export default function PolicySummaryAccordion({ policyData }) {
                       captionSize={14}
                     />
                   </Grid2>
-
+                  <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
+                    <TransparentBox
+                      fontSize={22}
+                      fontWeight={700}
+                      value={
+                        summary.totalRiderPremiumWithGst -
+                        summary.totalRiderPremium
+                      }
+                      caption="Total Rider GST Amount"
+                      captionSize={14}
+                    />
+                  </Grid2>
                   <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
                     <TransparentBox
                       fontSize={22}
@@ -268,6 +301,26 @@ export default function PolicySummaryAccordion({ policyData }) {
                             </Typography>
                             <Typography fontWeight={600} color="success.main">
                               {summary.ridersByPolicy[policyNo] || 0}
+                            </Typography>
+                          </Box>
+                          <Box display="flex" flexDirection="column">
+                            <Typography variant="body2" color="text.secondary">
+                              Status
+                            </Typography>
+
+                            <Typography
+                              fontWeight={600}
+                              color={
+                                summary?.policyDetails?.[policyNo]?.status ===
+                                "Active"
+                                  ? "success.main"
+                                  : summary?.policyDetails?.[policyNo]
+                                      ?.status === "Grace Period"
+                                  ? "warning.main"
+                                  : "error.main"
+                              }
+                            >
+                              {summary?.policyDetails?.[policyNo]?.status || ""}
                             </Typography>
                           </Box>
                         </Box>

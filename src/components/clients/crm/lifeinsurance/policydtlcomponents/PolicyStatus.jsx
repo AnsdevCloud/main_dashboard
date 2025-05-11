@@ -15,6 +15,7 @@ import {
 import HeadlineTag from "../../../../options/HeadlineTag";
 import TransparentBox from "../../../../options/TransparentBox";
 import {
+  Divider,
   Grid2,
   IconButton,
   Paper,
@@ -38,18 +39,6 @@ const PolicyStatusCalculator = ({ data }) => {
   const [premiumStatus, setPremiumStatus] = useState(null);
   const [isDirence, stIsDirence] = useState(null);
   // Calculate next renewal date based on frequency
-  const getNextRenewalDate = (date, frequency) => {
-    switch (frequency) {
-      case "monthly":
-        return addMonths(date, 1);
-      case "quarterly":
-        return addMonths(date, 3);
-      case "yearly":
-        return addYears(date, 1);
-      default:
-        return addYears(date, 1);
-    }
-  };
 
   const calculateStatus = () => {
     if (!startDate || !renewalDate) return null;
@@ -165,6 +154,20 @@ const PolicyStatusCalculator = ({ data }) => {
       daysMessage,
     };
   };
+
+  const getNextRenewalDate = (date, frequency) => {
+    switch (frequency) {
+      case "monthly":
+        return addMonths(date, 1);
+      case "quarterly":
+        return addMonths(date, 3);
+      case "yearly":
+        return addYears(date, 1);
+      default:
+        return addYears(date, 1);
+    }
+  };
+
   const getYearsBetweenDates = (startDate, renewalDate) => {
     const start =
       typeof startDate === "string" ? parseISO(startDate) : startDate;
@@ -250,6 +253,7 @@ const PolicyStatusCalculator = ({ data }) => {
       alert("All Field Required");
     }
   };
+
   return (
     <Paper elevation={0}>
       <HeadlineTag className="text-2xl font-bold mb-4 text-center">
@@ -261,8 +265,82 @@ const PolicyStatusCalculator = ({ data }) => {
           <Grid2 container spacing={1}>
             <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
               <TransparentBox
+                captionSize={"medium"}
+                rgbColor={"rgb(254, 61, 27)"}
+                value={data?.sumAssured}
+                caption={"SumAssured"}
+                rupeeLabal={true}
+              />
+            </Grid2>
+            <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
+              <TransparentBox
+                captionSize={"medium"}
+                rgbColor={"rgb(111, 132, 239)"}
+                value={Addition(
+                  data?.basePremium,
+                  (parseInt(data?.basePremium) * data?.withGstPremium) / 100
+                )}
+                caption={"With GST Premium (1st) "}
+                rupeeLabal={true}
+              />
+            </Grid2>
+            <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
+              <TransparentBox
+                captionSize={"medium"}
+                rgbColor={"rgb(47, 140, 69)"}
+                value={Addition(
+                  data?.basePremium,
+                  (parseInt(data?.basePremium) * data?.gst2ndyearonward) / 100
+                )}
+                caption={"With GST Premium (2st Onward) "}
+                rupeeLabal={true}
+              />
+            </Grid2>
+            <Grid2 size={{ xs: 12 }}>
+              <Divider sx={{ my: 2 }}>Riders</Divider>
+            </Grid2>
+            <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
+              <TransparentBox
+                captionSize={"medium"}
+                rgbColor={"rgb(25, 67, 8)"}
+                value={data?.riders?.length}
+                caption={"Riders"}
+                rupeeLabal={false}
+              />
+            </Grid2>
+            <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
+              <TransparentBox
+                captionSize={"medium"}
+                rgbColor={"rgb(111, 132, 239)"}
+                value={data?.riders?.reduce(
+                  (sum, policy) => sum + parseInt(policy?.sumAssured || 0),
+                  0
+                )}
+                caption={"Riders SumAssured  "}
+                rupeeLabal={true}
+              />
+            </Grid2>
+            <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
+              <TransparentBox
+                captionSize={"medium"}
+                rgbColor={"rgb(47, 140, 69)"}
+                value={data?.riders.reduce((sum, rider) => {
+                  const gstAmount = parseInt(rider.riderPremium || 0) * 0.18;
+                  return sum + parseInt(rider.riderPremium) + gstAmount;
+                }, 0)}
+                caption={"Riders Premium + GST(18%) "}
+                rupeeLabal={true}
+              />
+            </Grid2>
+            <Grid2 size={{ xs: 12 }}>
+              <Divider sx={{ my: 2 }} />
+            </Grid2>
+            <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
+              <TransparentBox
+                captionSize={"medium"}
                 rgbColor={"rgb(135, 111, 239)"}
                 // fontSize={"large"}
+
                 fullWidth
                 value={policyTerm}
                 caption={"Policy Term"}
@@ -272,6 +350,7 @@ const PolicyStatusCalculator = ({ data }) => {
             </Grid2>
             <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
               <TransparentBox
+                captionSize={"medium"}
                 rgbColor={"rgb(48, 128, 207)"}
                 // fontSize={"large"}
                 fullWidth
@@ -284,6 +363,7 @@ const PolicyStatusCalculator = ({ data }) => {
 
             <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
               <TransparentBox
+                captionSize={"medium"}
                 rgbColor={"rgb(167, 88, 14)"}
                 // fontSize={"large"}
                 height={150}
@@ -296,6 +376,7 @@ const PolicyStatusCalculator = ({ data }) => {
 
             <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
               <TransparentBox
+                captionSize={"medium"}
                 rgbColor={"rgb(61, 170, 201)"}
                 // fontSize={"large"}
                 fullWidth
@@ -309,6 +390,7 @@ const PolicyStatusCalculator = ({ data }) => {
 
             <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
               <TransparentBox
+                captionSize={"medium"}
                 rgbColor={"rgb(119, 143, 23)"}
                 // fontSize={"large"}
                 height={150}
@@ -320,6 +402,7 @@ const PolicyStatusCalculator = ({ data }) => {
             </Grid2>
             <Grid2 size={{ xs: 12, sm: 6, md: 4 }}>
               <TransparentBox
+                captionSize={"medium"}
                 rgbColor={"rgb(7, 143, 131)"}
                 value={payTermEndDate}
                 height={150}
@@ -334,6 +417,7 @@ const PolicyStatusCalculator = ({ data }) => {
           <Grid2 container spacing={1}>
             <Grid2 size={{ xs: 12 }}>
               <TransparentBox
+                captionSize={"medium"}
                 rgbColor={
                   result?.status === "Active"
                     ? "rgb(17, 133, 17)"
@@ -351,6 +435,7 @@ const PolicyStatusCalculator = ({ data }) => {
             </Grid2>
             <Grid2 size={{ xs: 12 }}>
               <TransparentBox
+                captionSize={"medium"}
                 rgbColor={"rgb(6, 138, 145)"}
                 fontSize={"small"}
                 value={result?.daysMessage}
@@ -364,6 +449,7 @@ const PolicyStatusCalculator = ({ data }) => {
                 <Grid2 container spacing={2}>
                   <Grid2 size={{ xs: 12, sm: 6 }}>
                     <TransparentBox
+                      captionSize={"medium"}
                       rgbColor={"rgb(101, 152, 5)"}
                       fontSize={"large"}
                       fullWidth
@@ -375,6 +461,7 @@ const PolicyStatusCalculator = ({ data }) => {
                   </Grid2>
                   <Grid2 size={{ xs: 12, sm: 6 }}>
                     <TransparentBox
+                      captionSize={"medium"}
                       rgbColor={"rgb(7, 162, 35)"}
                       fontSize={"large"}
                       fontWeight={600}
@@ -434,6 +521,7 @@ const PolicyStatusCalculator = ({ data }) => {
                 </>
               ) : (
                 <TransparentBox
+                  captionSize={"medium"}
                   rgbColor={"rgb(255, 143, 7)"}
                   fontSize={"large"}
                   fullWidth
@@ -485,6 +573,7 @@ const PolicyStatusCalculator = ({ data }) => {
                 </>
               ) : (
                 <TransparentBox
+                  captionSize={"medium"}
                   rgbColor={"rgb(20, 180, 25)"}
                   fontSize={"large"}
                   fullWidth
@@ -504,6 +593,12 @@ const PolicyStatusCalculator = ({ data }) => {
 };
 
 export default PolicyStatusCalculator;
+
+const Addition = (a, b) => {
+  let a1 = parseFloat(a);
+  let b1 = parseFloat(b);
+  return a1 + b1;
+};
 
 const getPaytermEndDate = (startDate, years) => {
   const start = typeof startDate === "string" ? parseISO(startDate) : startDate;

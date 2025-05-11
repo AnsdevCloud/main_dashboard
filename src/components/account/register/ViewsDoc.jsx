@@ -12,6 +12,7 @@ import TransparentBox from "../../options/TransparentBox";
 import HeadlineTag from "../../options/HeadlineTag";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { DocumentScanner } from "@mui/icons-material";
+import dayjs from "dayjs";
 
 const ViewsDoc = () => {
   const { state } = useLocation();
@@ -91,15 +92,16 @@ const ViewsDoc = () => {
                   component={"p"}
                   color="grey"
                 >
-                  Date : {value?.date}
+                  Date : {dayjs(value?.date).format("DD MMMM YYYY")}
                 </Typography>
                 <Typography
                   position={"absolute"}
                   top={0}
                   right={0}
                   variant="body2"
-                  component={Link}
-                  to=""
+                  component={Button}
+                  disabled
+                  to="#"
                   color="blue"
                 >
                   Open Doc

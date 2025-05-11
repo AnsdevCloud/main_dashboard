@@ -26,6 +26,7 @@ const InputWithValidation = ({
   fullWidth = true,
   suggested = false,
   title,
+  labelTranform,
   multiple = false, // <-- New prop to control multiple selection
 }) => {
   const [value, setValue] = useState(externalValue);
@@ -129,7 +130,9 @@ const InputWithValidation = ({
       label={
         label +
         (required ? (suggested ? "Suggested" : "*") : "") +
-        (maxChars ? ` (${maxChars - value?.length})` : "")
+        (maxChars
+          ? ` (${maxChars - value?.length < 0 ? 0 : maxChars - value?.length})`
+          : "")
       }
       fullWidth={fullWidth}
       type={type === "select" ? undefined : type}
@@ -160,7 +163,7 @@ const InputWithValidation = ({
         },
         inputLabel: {
           shrink: true,
-          sx: { fontSize: 16 },
+          sx: { fontSize: 16, textTransform: labelTranform || "capitalize" },
         },
       }}
     >

@@ -27,10 +27,33 @@ const Riders = ({ data }) => {
                   fontWeight={400}
                   gutterBottom
                 >
-                  Rider Premium
+                  Sum Assured
                 </Typography>
-                <Typography variant="body1" color="success">
-                  &#x20B9; {item?.riderPremium}
+                <Typography variant="body1" fontWeight={600} color="success">
+                  {new Intl.NumberFormat("en-IN", {
+                    style: "currency",
+                    currency: "INR",
+                    maximumFractionDigits: 0,
+                  }).format(item?.sumAssured || 0)}
+                </Typography>
+              </Grid2>
+              <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
+                <Typography
+                  variant="body2"
+                  component={"p"}
+                  sx={{ cursor: "default" }}
+                  color="text.secondary"
+                  fontWeight={400}
+                  gutterBottom
+                >
+                  Premium
+                </Typography>
+                <Typography variant="body1" fontWeight={600} color="success">
+                  {new Intl.NumberFormat("en-IN", {
+                    style: "currency",
+                    currency: "INR",
+                    maximumFractionDigits: 0,
+                  }).format(item?.riderPremium || 0)}
                 </Typography>
               </Grid2>
               <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
@@ -48,12 +71,16 @@ const Riders = ({ data }) => {
                   variant="body1"
                   textTransform={"capitalize"}
                   color="success"
+                  fontWeight={600}
                 >
-                  &#x20B9;{" "}
-                  {
+                  {new Intl.NumberFormat("en-IN", {
+                    style: "currency",
+                    currency: "INR",
+                    maximumFractionDigits: 0,
+                  }).format(
                     gstCalculation(item?.riderPremium, item?.riderGst)
-                      ?.gstAmount
-                  }
+                      ?.gstAmount || 0
+                  )}
                 </Typography>
               </Grid2>
               <Grid2 size={{ xs: 12, sm: 4, md: 2 }}>
@@ -67,7 +94,11 @@ const Riders = ({ data }) => {
                 >
                   Rider Pay Term
                 </Typography>
-                <Typography variant="body1" color="text.primary">
+                <Typography
+                  variant="body1"
+                  fontWeight={600}
+                  color="text.primary"
+                >
                   {item?.riderPayTerm}
                 </Typography>
               </Grid2>
@@ -82,7 +113,11 @@ const Riders = ({ data }) => {
                 >
                   Rider Policy Term
                 </Typography>
-                <Typography variant="body1" color="text.primary">
+                <Typography
+                  variant="body1"
+                  fontWeight={600}
+                  color="text.primary"
+                >
                   {item?.riderPolicyTerm}
                 </Typography>
               </Grid2>
@@ -97,12 +132,17 @@ const Riders = ({ data }) => {
                 >
                   Final Premium
                 </Typography>
-                <Typography variant="body1" color="success">
-                  &#x20B9;{" "}
-                  {finalPremiumCalculation(
-                    item?.riderPremium,
-                    gstCalculation(item?.riderPremium, item?.riderGst)
-                      ?.gstAmount
+                <Typography variant="body1" fontWeight={600} color="success">
+                  {new Intl.NumberFormat("en-IN", {
+                    style: "currency",
+                    currency: "INR",
+                    maximumFractionDigits: 0,
+                  }).format(
+                    finalPremiumCalculation(
+                      item?.riderPremium,
+                      gstCalculation(item?.riderPremium, item?.riderGst)
+                        ?.gstAmount
+                    ) || 0
                   )}
                 </Typography>
               </Grid2>

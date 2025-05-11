@@ -20,6 +20,16 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useTabs } from "../../../stores/TabsContex";
 import useEncryptedSessionStorage from "../../../hooks/useEncryptedSessionStorage";
+import {
+  collection,
+  endAt,
+  getDocs,
+  orderBy,
+  query,
+  startAt,
+} from "firebase/firestore";
+import { firestore } from "../../../firebase/config";
+import { getLastMonthClientsWithStatus } from "../../../firebase/utils/getTodaysClients";
 
 const clientsData = [
   {
@@ -57,56 +67,156 @@ const clientsData = [
 
 const ClientsLandingPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [premiumFilter, setPremiumFilter] = useState(false);
-  const [labelFilter, setLabelFilter] = useState("");
-  const [data, setData] = useState([]);
+  const [recentActivity, setRecentActivity] = useState([]);
   const navigate = useNavigate();
   const { addTab } = useTabs();
-  const [isData, setDataList] = useEncryptedSessionStorage("clientData", null);
+  const [isData, setDataList] = useEncryptedSessionStorage("clientData", []);
+  const [searchResults, setResults] = useState([]);
+
+  const searchByName = async (e) => {
+    try {
+      const usersRef = collection(firestore, "crm_clients");
+      const q = query(
+        usersRef,
+        orderBy("fname"),
+        startAt(searchTerm),
+        endAt(searchTerm + "\uf8ff")
+      );
+      const q3 = query(
+        usersRef,
+        orderBy("lname"),
+        startAt(searchTerm),
+        endAt(searchTerm + "\uf8ff")
+      );
+      const q2 = query(
+        usersRef,
+        orderBy("firmName"),
+        startAt(searchTerm),
+        endAt(searchTerm + "\uf8ff")
+      );
+
+      const snapshot = await getDocs(q);
+      const searchResults = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      const snapshot2 = await getDocs(q2);
+      const searchResults2 = snapshot2.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      const snapshot3 = await getDocs(q3);
+
+      const searchResults3 = snapshot3.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      // Filter out duplicates based on the 'id' field
+      const email = query(
+        usersRef,
+        orderBy("email"),
+        startAt(searchTerm),
+        endAt(searchTerm + "\uf8ff")
+      );
+      const panNumber = query(
+        usersRef,
+        orderBy("panNumber"),
+        startAt(searchTerm),
+        endAt(searchTerm + "\uf8ff")
+      );
+      const primaryNumber = query(
+        usersRef,
+        orderBy("primaryNumber"),
+        startAt(searchTerm),
+        endAt(searchTerm + "\uf8ff")
+      );
+      const snapshotEmail = await getDocs(email);
+
+      const searchResultsEmail = snapshotEmail.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      const snapshotphone = await getDocs(primaryNumber);
+
+      const searchResultsphone = snapshotphone.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      const snapshotPan = await getDocs(panNumber);
+
+      const searchResultsPan = snapshotPan.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      const uniqueResults = [
+        ...searchResults,
+        ...searchResults2,
+        ...searchResults3,
+        ...searchResultsEmail,
+        ...searchResultsPan,
+        ...searchResultsphone,
+      ]?.filter(
+        (item, index, self) =>
+          index === self.findIndex((t) => t.cin === item.cin)
+      );
+
+      setResults(uniqueResults);
+    } catch (error) {
+      console.error("Error fetching documents: ", error);
+    }
+  };
+
+  const handleSearch = (searchTerm) => {
+    const caselater = searchTerm.toLowerCase();
+    setSearchTerm(searchTerm);
+    if (searchTerm?.length >= 3) {
+      searchByName(caselater);
+    } else {
+      setResults(isData || []);
+    }
+  };
+
+  useEffect(() => {
+    const uniqueByCin = [...isData, ...recentActivity]?.filter(
+      (item, index, self) => index === self.findIndex((t) => t.cin === item.cin)
+    );
+    setDataList(uniqueByCin);
+    if (searchTerm?.length < 3) {
+      setResults(uniqueByCin);
+    }
+  }, []);
+
+  const handleOpen = (e, client) => {
+    e.preventDefault();
+    if (e.ctrlKey || e.altKey) {
+      addTab({
+        label: client.fname || client.firmName,
+        name: client.id,
+        link: `/crm/clients/${client.id}`,
+      });
+      navigate(`/crm/clients/${client.id}`, {
+        state: { ...client },
+      });
+      setDataList([...isData, client]);
+    } else {
+      navigate(`/crm/clients/${client.id}`, {
+        state: { ...client },
+      });
+      setDataList([...isData, client]);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
-      if (isData) {
-        setData(isData);
-        setDataList(isData);
-      } else {
-        try {
-          const response = await axios.get(
-            "https://db.enivesh.com/firestore/all/crm_clients?limit=10",
-            {
-              headers: {
-                "x-api-key": "5cf783e5-51a5-4dcc-9bc5-0b9a414c88a3",
-                "Content-Type": "application/json",
-              },
-            }
-          );
-          setData(response.data?.documents);
-          console.log("response.data?.documents: ", response.data?.documents);
-          setDataList(response.data?.documents);
-        } catch (error) {
-          console.error("Error fetching data:", error);
-        }
-      }
+      const data = await getLastMonthClientsWithStatus();
+      setRecentActivity(data || []);
     };
-
     fetchData();
   }, []);
-
-  // Filter clients based on search term, premium status, and label
-  const filteredClients = data.filter((client) => {
-    const searchMatch =
-      client?.fname.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client?.lname.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client?.panNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client?.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const premiumMatch = premiumFilter ? client.premium === true : true;
-    const labelMatch = labelFilter ? client.label === labelFilter : true;
-    return searchMatch && premiumMatch && labelMatch;
-  });
-
-  // Extract unique labels for the dropdown
-  const labels = Array.from(new Set(clientsData.map((client) => client.label)));
-
   return (
     <Box sx={{ padding: 4, minHeight: "100vh" }}>
       {/* Filters and Search Controls */}
@@ -137,7 +247,7 @@ const ClientsLandingPage = () => {
             variant="standard"
             size="small"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => handleSearch(e.target.value)}
             sx={{ flex: 2 }}
           />
         </Box>
@@ -145,33 +255,29 @@ const ClientsLandingPage = () => {
 
       {/* Display Client Cards */}
       <Grid2 container spacing={2} justifyContent="center">
-        {filteredClients?.map((client) => (
+        <Grid2 size={{ xs: 12, md: 8 }}>
+          {" "}
+          {searchTerm.length < 3 ? (
+            <Typography variant="body2" color="grey" fontWeight={600}>
+              Searched Record
+            </Typography>
+          ) : (
+            <Typography variant="body2" color="success.dark" fontWeight={600}>
+              Results
+            </Typography>
+          )}
+        </Grid2>
+        {searchResults?.map((client) => (
           <Grid2 size={{ xs: 12, md: 8 }} key={client.id}>
             <Link
               style={{ textDecoration: "none" }}
-              onClick={(e) => {
-                e.preventDefault();
-                if (e.ctrlKey || e.altKey) {
-                  addTab({
-                    label: client.fname || client.firmName,
-                    name: client.id,
-                    link: `/crm/clients/${client.id}`,
-                  });
-                  navigate(`/crm/clients/${client.id}`, {
-                    state: { ...client },
-                  });
-                } else {
-                  navigate(`/crm/clients/${client.id}`, {
-                    state: { ...client },
-                  });
-                }
-              }}
+              onClick={(e) => handleOpen(e, client)}
             >
               <ClientDetailsCard client={client} />
             </Link>
           </Grid2>
         ))}
-        {filteredClients.length === 0 && (
+        {searchResults.length === 0 && (
           <Grid2 size={{ xs: 12, md: 8 }}>
             <Card variant="outlined">
               <CardContent>

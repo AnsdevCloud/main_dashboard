@@ -37,6 +37,8 @@ import PolicyList from "../components/clients/crm/lifeinsurance/policydtlcompone
 import CommissionCalculator from "../test/Epanse";
 import PolicyStatus from "../test/Epanse";
 import HForm from "../components/clients/crm/healthinsurance/HForm";
+import HPolicyList from "../components/clients/crm/healthinsurance/HPolicyList";
+import HPolicyDetails from "../components/clients/crm/healthinsurance/HPolicyDetails";
 
 // Lazy-loaded clients components
 const GlobelIndex = React.lazy(() =>
@@ -240,11 +242,11 @@ const router = createBrowserRouter([
               },
               {
                 path: "policy",
-                element: <PolicyList />,
+                element: <HPolicyList />,
               },
               {
                 path: "policy/:policyID",
-                element: <PolicyDetails />,
+                element: <HPolicyDetails />,
               },
             ],
           },

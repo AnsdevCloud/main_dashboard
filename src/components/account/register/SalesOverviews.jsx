@@ -201,7 +201,7 @@ const SalesOverviews = () => {
           <TransparentBox
             width={{ xs: "100%", md: "50%" }}
             rgbColor="rgb(65, 140, 3)"
-            value={`${parseInt(totalSalesAmount)?.toLocaleString() || 0}`}
+            value={totalSalesAmount || 0}
             caption={"Total Sales"}
           ></TransparentBox>
           <Stack
@@ -369,7 +369,11 @@ const ListCard = ({ slug, startDate, endDate, data }) => {
                   component={"h1"}
                   color="success"
                 >
-                  &#8377; {parseInt(data?.totalAmount)?.toLocaleString()}
+                  {new Intl.NumberFormat("en-IN", {
+                    style: "currency",
+                    currency: "INR",
+                    maximumFractionDigits: 0,
+                  }).format(data?.totalAmount || 0)}
                 </Typography>
               </Link>
               <Tooltip
@@ -393,7 +397,10 @@ const ListCard = ({ slug, startDate, endDate, data }) => {
                   <Button color="info">Views Doc</Button>
                 </Link>
               </Tooltip>
-              <Button color="inherit"> Export</Button>
+              <Button color="inherit" disabled>
+                {" "}
+                Export
+              </Button>
             </Stack>
           </Stack>
         </CardContent>

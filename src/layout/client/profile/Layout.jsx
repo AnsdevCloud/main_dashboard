@@ -14,6 +14,7 @@ import {
   Divider,
   Grid2,
   IconButton,
+  LinearProgress,
   Paper,
   Stack,
   Tooltip,
@@ -22,13 +23,7 @@ import {
 import axios from "axios";
 
 import React, { useEffect, useState } from "react";
-import {
-  collection,
-  query,
-  where,
-  onSnapshot,
-  Firestore,
-} from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc } from "firebase/firestore";
 
 import { FaCar, FaDotCircle, FaEye, FaEyeSlash } from "react-icons/fa";
 import { GiLifeBar } from "react-icons/gi";
@@ -36,10 +31,14 @@ import { HiDotsVertical } from "react-icons/hi";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { firestore } from "../../../firebase/config";
 import useEncryptedSessionStorage from "../../../hooks/useEncryptedSessionStorage";
+import TransparentBox from "../../../components/options/TransparentBox";
+
+import HeadlineTag from "../../../components/options/HeadlineTag";
+import TabsContainer from "../../../components/forms/container/TabsContainer";
 
 const Layout = ({ sts = true }) => {
   const { state } = useLocation();
-
+  const [loading, setLoading] = useState(false);
   const { profile } = useParams();
 
   const [hideDetails, setHideDetils] = useState(false);
@@ -57,7 +56,10 @@ const Layout = ({ sts = true }) => {
   const location = useLocation();
   const [policyDocs, setPolicyDocs] = useState(null);
 
+  const [clientPolicy, setClientPolicy] = useState(null);
+
   const fetchData = async (id) => {
+    setLoading(true);
     try {
       const response = await axios.get(
         `https://db.enivesh.com/firestore/single/crm_clients/${id}`,
@@ -70,11 +72,14 @@ const Layout = ({ sts = true }) => {
       );
       setData(response?.data);
       setStoreData(response?.data);
+      setLoading(false);
     } catch (error) {
       console.error("Error fetching data:", error);
+      setLoading(false);
     }
   };
   const handleFetchPolicy = async (id) => {
+    setLoading(true);
     const q = query(
       collection(firestore, "crm_relationship_value_documents"),
       where("cin", "==", id)
@@ -88,6 +93,7 @@ const Layout = ({ sts = true }) => {
       setPolicyData(polices);
 
       handleDocsMining(polices);
+      setLoading(false);
     });
   };
 
@@ -104,6 +110,13 @@ const Layout = ({ sts = true }) => {
   };
 
   useEffect(() => {
+    const unsubscribeDeatis = listenToChart(
+      (data) => {
+        setClientPolicy(data);
+      },
+      "LTD",
+      "overview"
+    );
     if (storeData?.data) {
       setData(storeData);
     } else if (state) {
@@ -117,6 +130,10 @@ const Layout = ({ sts = true }) => {
       handleFetchPolicy(profile);
     }
     handleDocsMining(policyData);
+
+    return () => {
+      unsubscribeDeatis();
+    };
   }, [location?.pathname]);
 
   const arr = [
@@ -222,6 +239,34 @@ const Layout = ({ sts = true }) => {
   const handleRefres = () => {
     fetchData(profile);
   };
+
+  const tabsConfig = [
+    {
+      label: "Life Insurance",
+      key: "life-insurance",
+    },
+    {
+      label: "Heath Insurance",
+      key: "health-insurance",
+    },
+    {
+      label: "Group Insurance",
+      key: "group-insurance",
+    },
+    {
+      label: "MSME Insurance",
+      key: "msme-insurance",
+    },
+    {
+      label: "Car Insurance",
+      key: "car-insurance",
+    },
+    {
+      label: "home Insurance",
+      key: "home-insurance",
+    },
+  ];
+
   return (
     <>
       <Grid2 container spacing={1} p={{ xs: 0, md: 2 }}>
@@ -274,12 +319,13 @@ const Layout = ({ sts = true }) => {
                     }}
                     color="inherit"
                     startIcon={<ArrowBack fontSize={"8px"} />}
-                    onClick={() => navigate(-1)}
+                    onClick={() => navigate("/crm/clients")}
                   >
                     Back
                   </Button>
                 </Stack>
               </Typography>
+              {loading && <LinearProgress />}
 
               <Grid2 container spacing={1}>
                 <Grid2 size={{ xs: 12, md: 6 }}>
@@ -562,7 +608,7 @@ const Layout = ({ sts = true }) => {
                     justifyContent={"flex-start"}
                     gap={1}
                   >
-                    <FaDotCircle /> Active (2)
+                    <FaDotCircle /> Active
                   </Box>
                   <Box
                     bgcolor={(theme) => theme?.palette.background.default}
@@ -591,18 +637,18 @@ const Layout = ({ sts = true }) => {
                     justifyContent={"space-around"}
                   >
                     <TransparentBox
-                      value={policyData?.length}
+                      fontSize="20px"
+                      captionSize="14px"
+                      captionColor="grey"
+                      rupeeLabal={false}
+                      value={
+                        clientPolicy?.policySummery[profile]?.policyNumbers
+                          ?.length || 0
+                      }
                       caption={"Total Policy"}
                       rgbColor="rgb(9, 153, 255)"
                       fullWidth
                     />
-                    {/* <TransparentBox
-                      fullWidth
-                      value={4}
-                      tooltipText={"(H,L,M)"}
-                      caption={"Policy Type"}
-                    /> */}
-                    {/* <TransparentBox value={34} label={"Toatal Insurances"} /> */}
                   </Stack>
                 </Grid2>{" "}
                 <Grid2 size={{ xs: 12, md: 10 }}>
@@ -615,145 +661,91 @@ const Layout = ({ sts = true }) => {
                     justifyContent={"space-around"}
                   >
                     <TransparentBox
-                      value={policyData
-                        .reduce((sum, policy) => sum + policy.sumassured, 0)
-                        ?.toLocaleString()}
+                      fontSize="20px"
+                      captionSize="14px"
+                      captionColor="grey"
+                      value={
+                        clientPolicy?.policySummery[profile]?.totalSumAssured
+                      }
                       caption={"Sum Assured"}
-                      labelText="Rs"
                       rgbColor="rgb(5, 173, 22)"
                       fullWidth
                     />
                     <TransparentBox
+                      fontSize="20px"
+                      captionSize="14px"
+                      captionColor="grey"
                       fullWidth
-                      value={policyData
-                        .reduce((sum, policy) => sum + policy.premium, 0)
-                        ?.toLocaleString()}
-                      rgbColor="rgb(5, 138, 227)"
-                      labelText="Rs"
+                      value={
+                        clientPolicy?.policySummery[profile]
+                          ?.totalBasePremium || 0
+                      }
+                      rgbColor="rgb(29, 167, 22)"
                       caption={"Total Premium"}
                     />
-                    {/* <TransparentBox value={34} label={"Toatal Insurances"} /> */}
+                    {/* <TransparentBox
+                    fontSize="20px"
+                    captionSize="14px"
+                    captionColor="grey" value={34} label={"Toatal Insurances"} /> */}
                   </Stack>
                 </Grid2>
-                {/* <Grid2 size={{ xs: 12, md: 12 }}>
+                <Grid2 size={{ xs: 12, md: 10 }}>
                   <Stack
                     flexDirection={"row"}
                     alignItems={"center"}
-                    justifyContent={"space-between"}
-                    alignContent={"center"}
                     width={"100%"}
+                    height={"100%"}
+                    gap={1}
+                    justifyContent={"space-around"}
                   >
-                    <Typography
-                      variant="subtitle1"
-                      component={"h1"}
-                      fontWeight={600}
-                      color="textSecondary"
-                      display={"flex"}
-                      alignItems={"center"}
-                      gap={1}
-                    >
-                      <HiDotsVertical color="#ff5c00" />
-                      Transection
-                    </Typography>
+                    <TransparentBox
+                      fontSize="20px"
+                      captionSize="14px"
+                      captionColor="grey"
+                      value={parseInt(
+                        clientPolicy?.policySummery[profile]?.totalRiders || 0
+                      ).toLocaleString()}
+                      rupeeLabal={false}
+                      caption={"Total Riders"}
+                      rgbColor="rgb(101, 65, 208)"
+                      fullWidth
+                    />
+                    <TransparentBox
+                      fontSize="20px"
+                      captionSize="14px"
+                      captionColor="grey"
+                      fullWidth
+                      value={
+                        clientPolicy?.policySummery[profile]
+                          ?.totalRiderPremium || 0
+                      }
+                      rgbColor="rgb(101, 65, 208)"
+                      caption={"Total Rider Premium"}
+                    />
+                    {/* <TransparentBox
+                     value={34} label={"Toatal Insurances"} /> */}
                   </Stack>
-
-                  <TableContainer sx={{ overflowX: "auto" }}>
-                    <Table>
-                      <TableHead>
-                        <TableRow>
-                          <TableCell
-                            sx={{
-                              width: 20,
-                              color: "#ff5c00",
-                              fontWeight: 600,
-                            }}
-                          >
-                            S.n.
-                          </TableCell>
-                          <TableCell
-                            sx={{
-                              minWidth: 100,
-                              color: "#ff5c00",
-                              fontWeight: 600,
-                            }}
-                          >
-                            Date
-                          </TableCell>
-
-                          <TableCell
-                            sx={{
-                              minWidth: 100,
-                              color: "#ff5c00",
-                              fontWeight: 600,
-                            }}
-                          >
-                            Name
-                          </TableCell>
-                          <TableCell
-                            sx={{
-                              minWidth: 100,
-                              color: "#ff5c00",
-                              fontWeight: 600,
-                            }}
-                          >
-                            Amount
-                          </TableCell>
-                          <TableCell
-                            sx={{
-                              minWidth: 100,
-                              color: "#ff5c00",
-                              fontWeight: 600,
-                            }}
-                          >
-                            Status
-                          </TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {transection?.map((item, index) => (
-                          <TableRow key={index}>
-                            <TableCell
-                              sx={{
-                                color: "#ff5c00",
-                                fontWeight: 600,
-                              }}
-                            >
-                              {index + 1}
-                            </TableCell>
-                            <TableCell sx={{ minWidth: 100 }}>
-                              {item?.date}
-                            </TableCell>
-                            <TableCell sx={{ minWidth: 100 }}>
-                              {item?.name}
-                            </TableCell>
-                            <TableCell sx={{ minWidth: 100 }}>
-                              {item?.amount}
-                            </TableCell>
-                            <TableCell
-                              sx={{
-                                minWidth: 100,
-                                bgcolor: item?.sts
-                                  ? "rgba(0, 255, 0, 0.182)"
-                                  : "rgba(255, 0, 0, 0.158)",
-                                color: item?.sts ? "rgb(6, 113, 6)" : "#b30909",
-                              }}
-                            >
-                              {item?.sts ? "Paided" : " Failed"}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </Grid2> */}
+                </Grid2>
+                <Grid2 size={{ xs: 12 }}>
+                  <Card
+                    variant="outlined"
+                    sx={{ mt: 3, maxHeight: 400, overflowY: "auto" }}
+                  >
+                    {" "}
+                    <CardContent>
+                      <HeadlineTag title="Policy Numbers" size="small" />
+                      <TabsContainer tabs={tabsConfig}>
+                        <TabsListData
+                          clientPolicy={clientPolicy}
+                          id={profile}
+                        />
+                      </TabsContainer>
+                    </CardContent>
+                  </Card>
+                </Grid2>
               </Grid2>
             </Box>
           </Paper>
-          {/* <Paper sx={{ p: 2, my: 2 }} elevation={0}>
-            {policyData?.map((el, i) => (
-              <Typography key={i}>{el?.cin}</Typography>
-            ))}
-          </Paper> */}
         </Grid2>
 
         {/* Bottom side //////////////////////////////////////////////////////////////////////////////*/}
@@ -789,19 +781,6 @@ const Layout = ({ sts = true }) => {
                       justifyContent={"flex-start"}
                       gap={2}
                     >
-                      {/* <Box
-                        bgcolor={(theme) => theme?.palette.background.default}
-                        padding={0.5}
-                        fontSize={12}
-                        borderRadius={1}
-                        color={"green"}
-                        display={"flex"}
-                        alignItems={"center"}
-                        justifyContent={"flex-start"}
-                        gap={1}
-                      >
-                        <FaDotCircle /> PDF
-                      </Box> */}
                       <Box
                         bgcolor={(theme) => theme?.palette.background.default}
                         padding={0.5}
@@ -826,6 +805,8 @@ const Layout = ({ sts = true }) => {
                   >
                     <Box width={{ xs: "100%", sm: "48%" }}>
                       <TransparentBox
+                        textTransform={"capitalize"}
+                        rupeeLabal={false}
                         value={
                           data?.leads?.leadSource?.split("_")?.join(" ") || ""
                         }
@@ -837,6 +818,8 @@ const Layout = ({ sts = true }) => {
                     </Box>
                     <Box width={{ xs: "100%", sm: "48%" }}>
                       <TransparentBox
+                        rupeeLabal={false}
+                        textTransform={"capitalize"}
                         fontSize={20}
                         caption={"Sourcing "}
                         value={
@@ -848,6 +831,8 @@ const Layout = ({ sts = true }) => {
                     </Box>
                     <Box width={{ xs: "100%", sm: "48%" }}>
                       <TransparentBox
+                        textTransform={"capitalize"}
+                        rupeeLabal={false}
                         fontSize={20}
                         caption={"Servicing Manager"}
                         value={
@@ -861,6 +846,8 @@ const Layout = ({ sts = true }) => {
                     </Box>{" "}
                     <Box width={{ xs: "100%", sm: "48%" }}>
                       <TransparentBox
+                        textTransform={"capitalize"}
+                        rupeeLabal={false}
                         fontSize={20}
                         caption={"Financial Goal Organiser "}
                         value={
@@ -939,6 +926,23 @@ const Layout = ({ sts = true }) => {
                         />
                       </Box>
                     )}
+                    {data?.documents?.map((value, index) => {
+                      return (
+                        <Box key={index} width={{ xs: "100%", sm: "48%" }}>
+                          <TransparentBox
+                            onNavigate={value?.url}
+                            fontSize={"50px"}
+                            value={value?.type?.split("/")?.slice(1)}
+                            textTransform={"uppercase"}
+                            target={"_blank"}
+                            rupeeLabal={false}
+                            caption={`${value?.title}`}
+                            fullWidth
+                            rgbColor="rgb(99, 199, 0)"
+                          />
+                        </Box>
+                      );
+                    })}
                   </Stack>
                 </Grid2>
               </Grid2>
@@ -1023,98 +1027,194 @@ const GridRow = ({ data = [], p, title, viewLimit }) => {
   );
 };
 
-const TransparentBox = ({
-  value,
-  caption,
-  fontSize = 30,
-  rgbColor = "rgb(255, 77, 0)",
-  bgTransparency = 0.2,
-  width,
-  height,
-  fullHeight = false,
-  fullWidth = false,
-  tooltipText = null,
-  tooltipPlacement = "auto",
-  labelColor,
-  labelText,
-  children,
-  onNavigate,
-}) => {
-  // Function to calculate 20% of typography color
-  const getBoxBgColor = (rgbColor) => {
-    // Remove 'rgb(' and ')' then split into R, G, B
-    const [r, g, b] = rgbColor.replace("rgb(", "").replace(")", "").split(",");
-    return `rgba(${r.trim()}, ${g.trim()}, ${b.trim()}, ${bgTransparency})`; // Add alpha (20%)
-  };
+// const TransparentBox = ({
+//   value,
+//   caption,
+//   fontSize = 30,
+//   rgbColor = "rgb(255, 77, 0)",
+//   bgTransparency = 0.2,
+//   width,
+//   height,
+//   fullHeight = false,
+//   fullWidth = false,
+//   tooltipText = null,
+//   tooltipPlacement = "auto",
+//   labelColor,
+//   labelText,
+//   children,
+//   onNavigate,
+// }) => {
+//   // Function to calculate 20% of typography color
+//   const getBoxBgColor = (rgbColor) => {
+//     // Remove 'rgb(' and ')' then split into R, G, B
+//     const [r, g, b] = rgbColor.replace("rgb(", "").replace(")", "").split(",");
+//     return `rgba(${r.trim()}, ${g.trim()}, ${b.trim()}, ${bgTransparency})`; // Add alpha (20%)
+//   };
 
+//   return (
+//     <Tooltip
+//       title={tooltipText ? tooltipText : ""}
+//       placement={tooltipPlacement === "" ? "auto" : tooltipPlacement}
+//     >
+//       <Box
+//         component={Link}
+//         padding={1}
+//         sx={{
+//           textDecoration: "none",
+//           pointerEvents: onNavigate ? "auto" : "none",
+//         }}
+//         to={onNavigate || ""}
+//         position={"relative"}
+//         width={fullWidth ? "100%" : width ? width : "auto"}
+//         height={fullHeight ? "100%" : height ? height : "auto"}
+//         minWidth={100}
+//         bgcolor={getBoxBgColor(rgbColor)}
+//         borderRadius={1}
+//         display={children ? "block" : "flex"}
+//         alignItems={"center"}
+//         justifyContent={"center"}
+//         flexDirection={"column"}
+//         alignContent={"center"}
+//       >
+//         {children ? (
+//           children
+//         ) : (
+//           <>
+//             <Typography
+//               component={"h1"}
+//               variant="body2"
+//               color={rgbColor}
+//               fontSize={fontSize}
+//               fontWeight={600}
+//               textAlign={"center"}
+//               textTransform={"capitalize"}
+//             >
+//               {value}
+//             </Typography>
+//             <Typography
+//               component={"p"}
+//               variant="caption"
+//               color="grey"
+//               bgcolor={"transparent"}
+//               textAlign={"center"}
+//               fontWeight={500}
+//             >
+//               {caption}
+//             </Typography>
+//           </>
+//         )}
+//         {labelText && (
+//           <Box
+//             fontSize={12}
+//             fontWeight={500}
+//             position={"absolute"}
+//             top={"-5px"}
+//             left={0}
+//             p={0.5}
+//             // bgcolor={"rgba(24, 87, 2, 0.315)"}
+//             borderRadius={1}
+//             color={labelColor || "#045f04"}
+//           >
+//             {labelText || "Rs "}
+//           </Box>
+//         )}
+//       </Box>
+//     </Tooltip>
+//   );
+// };
+
+const listenToChart = (callback, collectionName, id) => {
+  const chartRef = doc(
+    firestore,
+    "dashbords_data",
+    "life_insurance_EN-10",
+    collectionName,
+    id
+  );
+
+  const unsubscribe = onSnapshot(
+    chartRef,
+    (docSnap) => {
+      if (docSnap.exists()) {
+        callback({ id: docSnap.id, ...docSnap.data() });
+      } else {
+        console.log("No such document!");
+      }
+    },
+    (error) => {
+      console.error("Snapshot error:", error);
+    }
+  );
+
+  return unsubscribe; // Call this to stop listening
+};
+
+const TabsListData = ({ clientPolicy, id }) => {
+  console.log("clientPolicy: ", clientPolicy);
   return (
-    <Tooltip
-      title={tooltipText ? tooltipText : ""}
-      placement={tooltipPlacement === "" ? "auto" : tooltipPlacement}
-    >
-      <Box
-        component={Link}
-        padding={1}
-        sx={{
-          textDecoration: "none",
-          pointerEvents: onNavigate ? "auto" : "none",
-        }}
-        to={onNavigate || ""}
-        position={"relative"}
-        width={fullWidth ? "100%" : width ? width : "auto"}
-        height={fullHeight ? "100%" : height ? height : "auto"}
-        minWidth={100}
-        bgcolor={getBoxBgColor(rgbColor)}
-        borderRadius={1}
-        display={children ? "block" : "flex"}
-        alignItems={"center"}
-        justifyContent={"center"}
-        flexDirection={"column"}
-        alignContent={"center"}
-      >
-        {children ? (
-          children
-        ) : (
-          <>
+    <Stack gap={2} flexDirection="column" p={1}>
+      {clientPolicy?.policySummery[id]?.policyNumbers?.map((policyNo) => (
+        <Box
+          key={policyNo}
+          p={2}
+          borderRadius={2}
+          border={1}
+          borderColor="divider"
+          display="flex"
+          flexWrap="wrap"
+          alignItems="center"
+          justifyContent="space-between"
+          bgcolor="background.default"
+          sx={{
+            transition: "all 0.3s",
+            "&:hover": { boxShadow: 1 },
+          }}
+        >
+          <Box display="flex" flexDirection="column">
+            <Typography variant="body2" color="text.secondary">
+              Policy Number
+            </Typography>
             <Typography
-              component={"h1"}
-              variant="body2"
-              color={rgbColor}
-              fontSize={fontSize}
+              component={Link}
+              to={`/crm/life-insurance/policy/${policyNo}`}
               fontWeight={600}
-              textAlign={"center"}
-              textTransform={"capitalize"}
+              color="primary.main"
+              sx={{ textDecoration: "none" }}
             >
-              {value}
+              {policyNo}
+            </Typography>
+          </Box>
+          <Box display="flex" flexDirection="column">
+            <Typography variant="body2" color="text.secondary">
+              Company
+            </Typography>
+            <Typography fontWeight={600} color="success.main">
+              {clientPolicy?.policySummery[id]?.policyDetails[policyNo]
+                ?.company || "Unknown Company"}
+            </Typography>
+          </Box>
+          <Box display="flex" flexDirection="column">
+            <Typography variant="body2" color="text.secondary">
+              Status
             </Typography>
             <Typography
-              component={"p"}
-              variant="caption"
-              color="grey"
-              bgcolor={"transparent"}
-              textAlign={"center"}
-              fontWeight={500}
+              fontWeight={600}
+              color={
+                clientPolicy?.policySummery[id]?.policyDetails?.[policyNo]
+                  ?.status === "Active"
+                  ? "success.main"
+                  : clientPolicy?.policySummery[id]?.policyDetails?.[policyNo]
+                      ?.status === "Grace Period"
+                  ? "warning.main"
+                  : "error.main"
+              }
             >
-              {caption}
+              {clientPolicy?.policySummery[id]?.policyDetails[policyNo]
+                ?.status || ""}
             </Typography>
-          </>
-        )}
-        {labelText && (
-          <Box
-            fontSize={12}
-            fontWeight={500}
-            position={"absolute"}
-            top={"-5px"}
-            left={0}
-            p={0.5}
-            // bgcolor={"rgba(24, 87, 2, 0.315)"}
-            borderRadius={1}
-            color={labelColor || "#045f04"}
-          >
-            {labelText || "Rs "}
           </Box>
-        )}
-      </Box>
-    </Tooltip>
+        </Box>
+      ))}
+    </Stack>
   );
 };

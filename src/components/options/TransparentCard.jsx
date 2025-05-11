@@ -71,7 +71,18 @@ const TransparentCard = ({
                   textAlign={"center"}
                   textTransform={textTransform}
                 >
-                  {rupeeLabal ? <>&#8377; {value?.toLocaleString()}</> : value}
+                  {rupeeLabal ? (
+                    <>
+                      {" "}
+                      {new Intl.NumberFormat("en-IN", {
+                        style: "currency",
+                        currency: "INR",
+                        maximumFractionDigits: 0,
+                      }).format(value || 0)}
+                    </>
+                  ) : (
+                    value
+                  )}
                 </Typography>
                 <Typography
                   component={"p"}
@@ -151,7 +162,18 @@ const TransparentCard = ({
                 textAlign={"center"}
                 textTransform={textTransform}
               >
-                {rupeeLabal ? <>&#8377; {value?.toLocaleString()}</> : value}
+                {rupeeLabal ? (
+                  <>
+                    {" "}
+                    {new Intl.NumberFormat("en-IN", {
+                      style: "currency",
+                      currency: "INR",
+                      maximumFractionDigits: 0,
+                    }).format(value || 0)}
+                  </>
+                ) : (
+                  value
+                )}
               </Typography>
             </div>
           )}
